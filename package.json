@@ -1,5 +1,11 @@
 {
-  "dependencies": {
-    "eslint": "^7.32.0"
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-html": "^6.1.2",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "standard": "^16.0.3"
   }
 }

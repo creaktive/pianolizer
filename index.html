@@ -1,34 +1,33 @@
 <!DOCTYPE html>
 <html lang="en-US">
     <head>
-        <title>count words</title>
+        <title>sdft</title>
     </head>
     <body>
         <button>Play</button>
         <audio src="t.mp3" controls></audio>
-        <input type=range min=0.5 max=10 step=0.1 value=0.5></input>
+        <input type="range" min="0.5" max="10" step="0.1" value="0.5">
         <script>
-            let ac = new AudioContext;
-            let audioElement = document.querySelector("audio");
-            let source = ac.createMediaElementSource(audioElement);
+            const ac = new AudioContext()
+            const audioElement = document.querySelector('audio')
+            const source = ac.createMediaElementSource(audioElement)
 
-            async function play() {
-            await ac.audioWorklet.addModule('clipper.js');
+            async function play () {
+              await ac.audioWorklet.addModule('clipper.js')
+              ac.resume()
+              audioElement.play()
 
-            ac.resume();
-            audioElement.play();
+              const softclipper = new AudioWorkletNode(ac, 'soft-clipper-node')
+              source.connect(softclipper).connect(ac.destination)
 
-            let softclipper = new AudioWorkletNode(ac, 'soft-clipper-node');
-            source.connect(softclipper).connect(ac.destination);
-
-            document.querySelector("input").oninput = function(e) {
-                console.log("Amount is now " + e.target.value);
-                softclipper.parameters.get("amount").value = e.target.value;
+              document.querySelector('input').oninput = function (e) {
+                console.log('Amount is now ' + e.target.value)
+                softclipper.parameters.get('amount').value = e.target.value
+              }
             }
-            };
 
-            document.querySelector("button").onclick = function() {
-            play();
+            document.querySelector('button').onclick = function () {
+              play()
             }
         </script>
     </body>
