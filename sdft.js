@@ -1,4 +1,4 @@
-class SoftClipper extends AudioWorkletProcessor {
+class SlidingDFT extends AudioWorkletProcessor {
   // constructor () {
   //   super()
   // }
@@ -38,4 +38,4 @@ class SoftClipper extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('soft-clipper-node', SoftClipper)
+registerProcessor('sliding-dft-node', SlidingDFT)

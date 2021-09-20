@@ -13,16 +13,16 @@
             const source = ac.createMediaElementSource(audioElement)
 
             async function play () {
-              await ac.audioWorklet.addModule('clipper.js')
+              await ac.audioWorklet.addModule('sdft.js')
               ac.resume()
               audioElement.play()
 
-              const softclipper = new AudioWorkletNode(ac, 'soft-clipper-node')
-              source.connect(softclipper).connect(ac.destination)
+              const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
+              source.connect(sdft).connect(ac.destination)
 
               document.querySelector('input').oninput = function (e) {
                 console.log('Amount is now ' + e.target.value)
-                softclipper.parameters.get('amount').value = e.target.value
+                sdft.parameters.get('amount').value = e.target.value
               }
             }
 
