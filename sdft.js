@@ -1,3 +1,43 @@
+class Complex {
+  constructor (re, im) {
+    this.re = re
+    this.im = im
+  }
+
+  add (z) {
+    return new Complex(
+      this.re + z.re,
+      this.im + z.im
+    )
+  }
+
+  sub (z) {
+    return new Complex(
+      this.re - z.re,
+      this.im - z.im
+    )
+  }
+
+  mul (z) {
+    if (z.im === 0 && this.im === 0) {
+      return new Complex(this.re * z.re, 0)
+    }
+
+    return new Complex(
+      this.re * z.re - this.im * z.im,
+      this.re * z.im + this.im * z.re
+    )
+  }
+
+  exp () {
+    const tmp = Math.exp(this.re)
+    return new Complex(
+      tmp * Math.cos(this.im),
+      tmp * Math.sin(this.im)
+    )
+  }
+}
+
 class SlidingDFT extends AudioWorkletProcessor {
   // constructor () {
   //   super()
