@@ -1,5 +1,5 @@
 class Complex {
-  constructor (re, im) {
+  constructor (re = 0, im = 0) {
     this.re = re
     this.im = im
   }
@@ -43,9 +43,9 @@ class Complex {
 
 class RingBuffer {
   constructor (bits = 16) {
-    this.size = 1 << bits
-    this.mask = this.size - 1
-    this.buffer = new Float32Array(this.size)
+    const size = 1 << bits
+    this.mask = size - 1
+    this.buffer = new Float32Array(size)
     this.index = 0
   }
 
@@ -68,32 +68,12 @@ class SlidingDFT extends AudioWorkletProcessor {
     // eslint-disable-next-line no-undef
     this.N = sampleRate
     this.coeff = (new Complex(0, 2 * Math.PI * (this.k / this.N))).exp()
-    this.dft = new Complex(0, 0)
+    this.dft = new Complex()
 
     // console.log(this)
   }
 
-  // static get parameterDescriptors () {
-  //   return [{
-  //     name: 'amount',
-  //     defaultValue: 0.5,
-  //     minValue: 0,
-  //     maxValue: 10,
-  //     automationRate: 'k-rate'
-  //   }]
-  // }
-
   process (input, output, parameters) {
-    // `input` is an array of input ports, each having multiple channels.
-    // For each channel of each input port, a Float32Array holds the audio
-    // input data.
-    // `output` is an array of output ports, each having multiple channels.
-    // For each channel of each output port, a Float32Array must be filled
-    // to output data.
-    // `parameters` is an object having a property for each parameter
-    // describing its value over time.
-    // const amount = parameters.amount[0]
-
     // mix down the inputs into single array
     const samples = new Float32Array(128)
     let count = 0
