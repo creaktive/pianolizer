@@ -32,6 +32,13 @@ class Complex {
       tmp * Math.sin(this.im)
     )
   }
+
+  get magnitude () {
+    return Math.sqrt(
+      this.re * this.re +
+      this.im * this.im
+    )
+  }
 }
 
 class RingBuffer {
@@ -61,6 +68,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     // eslint-disable-next-line no-undef
     this.N = sampleRate
     this.coeff = (new Complex(0, 2 * Math.PI * (this.k / this.N))).exp()
+    this.dft = new Complex(0, 0)
 
     // console.log(this)
   }
@@ -105,7 +113,14 @@ class SlidingDFT extends AudioWorkletProcessor {
 
     // normalize & store in the ring buffer
     for (let i = 0; i < samples.length; i++) {
-      this.ringBuffer.write(samples[i] /= count)
+      const sample = new Complex(samples[i] / count, 0)
+      this.ringBuffer.write(sample.re)
+      const previousSample = new Complex(this.ringBuffer.read(this.N), 0)
+
+      this.dft = this.dft
+        .sub(previousSample)
+        .add(sample)
+        .mul(this.coeff)
     }
 
     return true
