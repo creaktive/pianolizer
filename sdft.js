@@ -34,9 +34,28 @@ class Complex {
   }
 }
 
+class RingBuffer {
+  constructor (bits = 16) {
+    this.size = 1 << bits
+    this.mask = this.size - 1
+    this.buffer = new Float32Array(this.size)
+    this.index = 0
+  }
+
+  write (value) {
+    this.buffer[(this.index++) & this.mask] = value
+  }
+
+  read (index) {
+    return this.buffer[(this.index + (~index)) & this.mask]
+  }
+}
+
 class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
+
+    this.ringBuffer = new RingBuffer()
 
     this.k = 440
     // eslint-disable-next-line no-undef
@@ -84,9 +103,9 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
-    // normalize
+    // normalize & store in the ring buffer
     for (let i = 0; i < samples.length; i++) {
-      samples[i] /= count
+      this.ringBuffer.write(samples[i] /= count)
     }
 
     return true
