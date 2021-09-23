@@ -5,7 +5,7 @@
     </head>
     <body>
         <button>Play</button>
-        <audio src="saw.wav" controls></audio>
+        <audio src="sin.wav" controls></audio>
         <script>
             const ac = new AudioContext()
             const audioElement = document.querySelector('audio')
@@ -17,6 +17,11 @@
               audioElement.play()
 
               const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
+              sdft.port.onmessage = event => {
+                if (event.data.magnitude) {
+                  // console.log(event.data.magnitude)
+                }
+              }
               source.connect(sdft).connect(ac.destination)
             }
 

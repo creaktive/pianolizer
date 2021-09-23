@@ -62,6 +62,9 @@ class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
 
+    this.updateIntervalInMS = 1000 / 60 // to be rendered at 60fps
+    this.nextUpdateFrame = this.updateIntervalInMS
+
     this.ringBuffer = new RingBuffer()
 
     this.k = 440
@@ -73,9 +76,15 @@ class SlidingDFT extends AudioWorkletProcessor {
     // console.log(this)
   }
 
+  get intervalInFrames () {
+    return this.updateIntervalInMS / 1000 * this.N
+  }
+
   process (input, output, parameters) {
+    const windowSize = 128
+
     // mix down the inputs into single array
-    const samples = new Float32Array(128)
+    const samples = new Float32Array(windowSize)
     let count = 0
     const inputPortCount = input.length
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
@@ -92,8 +101,9 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     // normalize & store in the ring buffer
-    for (let i = 0; i < samples.length; i++) {
-      const sample = new Complex(samples[i] / count, 0)
+    const n = count / windowSize
+    for (let i = 0; i < windowSize; i++) {
+      const sample = new Complex(samples[i] / n, 0)
       this.ringBuffer.write(sample.re)
       const previousSample = new Complex(this.ringBuffer.read(this.N), 0)
 
@@ -101,6 +111,13 @@ class SlidingDFT extends AudioWorkletProcessor {
         .sub(previousSample)
         .add(sample)
         .mul(this.coeff)
+    }
+
+    // Update and sync the volume property with the main thread.
+    this.nextUpdateFrame -= windowSize
+    if (this.nextUpdateFrame < 0) {
+      this.nextUpdateFrame += this.intervalInFrames
+      this.port.postMessage({ magnitude: this.dft.magnitude })
     }
 
     return true
