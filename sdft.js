@@ -19,10 +19,6 @@ class Complex {
   }
 
   mul (z) {
-    if (z.im === 0 && this.im === 0) {
-      return new Complex(this.re * z.re, 0)
-    }
-
     return new Complex(
       this.re * z.re - this.im * z.im,
       this.re * z.im + this.im * z.re
@@ -39,19 +35,26 @@ class Complex {
 }
 
 class SlidingDFT extends AudioWorkletProcessor {
-  // constructor () {
-  //   super()
-  // }
+  constructor () {
+    super()
 
-  static get parameterDescriptors () {
-    return [{
-      name: 'amount',
-      defaultValue: 0.5,
-      minValue: 0,
-      maxValue: 10,
-      automationRate: 'k-rate'
-    }]
+    this.k = 440
+    // eslint-disable-next-line no-undef
+    this.N = sampleRate
+    this.coeff = (new Complex(0, 2 * Math.PI * (this.k / this.N))).exp()
+
+    // console.log(this)
   }
+
+  // static get parameterDescriptors () {
+  //   return [{
+  //     name: 'amount',
+  //     defaultValue: 0.5,
+  //     minValue: 0,
+  //     maxValue: 10,
+  //     automationRate: 'k-rate'
+  //   }]
+  // }
 
   process (input, output, parameters) {
     // `input` is an array of input ports, each having multiple channels.
@@ -62,18 +65,30 @@ class SlidingDFT extends AudioWorkletProcessor {
     // to output data.
     // `parameters` is an object having a property for each parameter
     // describing its value over time.
-    const amount = parameters.amount[0]
-    // const inputPortCount = input.length
-    for (let portIndex = 0; portIndex < input.length; portIndex++) {
+    // const amount = parameters.amount[0]
+
+    // mix down the inputs into single array
+    const samples = new Float32Array(128)
+    let count = 0
+    const inputPortCount = input.length
+    for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
       const channelCount = input[portIndex].length
       for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
         const sampleCount = input[portIndex][channelIndex].length
         for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
-          output[0][channelIndex][sampleIndex] =
-            Math.tanh(amount * input[portIndex][channelIndex][sampleIndex])
+          const sample = input[portIndex][channelIndex][sampleIndex]
+          output[portIndex][channelIndex][sampleIndex] = sample
+          samples[sampleIndex] += sample
+          count++
         }
       }
     }
+
+    // normalize
+    for (let i = 0; i < samples.length; i++) {
+      samples[i] /= count
+    }
+
     return true
   }
 }
