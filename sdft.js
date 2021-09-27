@@ -110,9 +110,12 @@ class SlidingDFT extends AudioWorkletProcessor {
       this.ringBuffer.write(currentSample)
       const previousSample = this.ringBuffer.read(this.N)
 
+      const previousComplexSample = new Complex(previousSample, 0)
+      const currentComplexSample = new Complex(currentSample, 0)
+
       this.dft = this.dft
-        .sub(new Complex(previousSample, 0))
-        .add(new Complex(currentSample, 0))
+        .sub(previousComplexSample)
+        .add(currentComplexSample)
         .mul(this.coeff)
 
       this.totalPower -= previousSample * previousSample
