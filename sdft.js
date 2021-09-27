@@ -62,7 +62,7 @@ class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
 
-    this.updateIntervalInMS = 1000 / 60 // to be rendered at 60fps
+    this.updateIntervalInMS = 1000 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = this.updateIntervalInMS
 
     this.ringBuffer = new RingBuffer()
