@@ -18,8 +18,8 @@
 
               const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
               sdft.port.onmessage = event => {
-                if (event.data.magnitude) {
-                  // console.log(event.data.magnitude)
+                if (event.data.level) {
+                  console.log(event.data)
                 }
               }
               source.connect(sdft).connect(ac.destination)

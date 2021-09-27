@@ -73,6 +73,8 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.coeff = (new Complex(0, 2 * Math.PI * (this.k / this.N))).exp()
     this.dft = new Complex()
 
+    this.totalPower = 0
+
     // console.log(this)
   }
 
@@ -111,13 +113,18 @@ class SlidingDFT extends AudioWorkletProcessor {
         .sub(new Complex(previousSample, 0))
         .add(new Complex(currentSample, 0))
         .mul(this.coeff)
+
+      this.totalPower -= previousSample * previousSample
+      this.totalPower += currentSample * currentSample
     }
+
+    const level = this.dft.magnitude / Math.sqrt(this.totalPower / this.N)
 
     // Update and sync the volume property with the main thread.
     this.nextUpdateFrame -= windowSize
     if (this.nextUpdateFrame < 0) {
       this.nextUpdateFrame += this.intervalInFrames
-      this.port.postMessage({ magnitude: this.dft.magnitude })
+      this.port.postMessage({ level: level })
     }
 
     return true
