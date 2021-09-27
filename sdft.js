@@ -70,6 +70,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.k = 440
     // eslint-disable-next-line no-undef
     this.N = sampleRate
+    this.bands = this.N / 2
     this.coeff = (new Complex(0, 2 * Math.PI * (this.k / this.N))).exp()
     this.dft = new Complex()
 
@@ -118,7 +119,7 @@ class SlidingDFT extends AudioWorkletProcessor {
       this.totalPower += currentSample * currentSample
     }
 
-    const level = this.dft.magnitude / Math.sqrt(this.totalPower / this.N)
+    const level = (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
 
     // Update and sync the volume property with the main thread.
     this.nextUpdateFrame -= windowSize
