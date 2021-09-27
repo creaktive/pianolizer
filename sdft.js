@@ -103,13 +103,13 @@ class SlidingDFT extends AudioWorkletProcessor {
     // normalize & store in the ring buffer
     const n = count / windowSize
     for (let i = 0; i < windowSize; i++) {
-      const sample = new Complex(samples[i] / n, 0)
-      this.ringBuffer.write(sample.re)
-      const previousSample = new Complex(this.ringBuffer.read(this.N), 0)
+      const currentSample = samples[i] / n
+      this.ringBuffer.write(currentSample)
+      const previousSample = this.ringBuffer.read(this.N)
 
       this.dft = this.dft
-        .sub(previousSample)
-        .add(sample)
+        .sub(new Complex(previousSample, 0))
+        .add(new Complex(currentSample, 0))
         .mul(this.coeff)
     }
 
