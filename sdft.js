@@ -99,8 +99,12 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.sampleRate = sampleRate
 
     this.bins = []
-    this.bins.push(new DFTBin(440, this.sampleRate))
-    this.bins.push(new DFTBin(880, this.sampleRate))
+    // middle octave
+    for (let i = 40; i < 52; i++) {
+    // https://en.wikipedia.org/wiki/Piano_key_frequencies
+      const k = 440 * Math.pow(2, (i - 49) / 12)
+      this.bins.push(new DFTBin(Math.round(k), this.sampleRate))
+    }
   }
 
   get intervalInFrames () {
