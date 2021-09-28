@@ -98,7 +98,9 @@ class SlidingDFT extends AudioWorkletProcessor {
     // eslint-disable-next-line no-undef
     this.sampleRate = sampleRate
 
-    this.bin = new DFTBin(440, this.sampleRate)
+    this.bins = []
+    this.bins.push(new DFTBin(440, this.sampleRate))
+    this.bins.push(new DFTBin(880, this.sampleRate))
   }
 
   get intervalInFrames () {
@@ -130,18 +132,19 @@ class SlidingDFT extends AudioWorkletProcessor {
     for (let i = 0; i < windowSize; i++) {
       const currentSample = samples[i] / n
       this.ringBuffer.write(currentSample)
-      const previousSample = this.ringBuffer.read(this.bin.N)
 
-      this.bin.update(previousSample, currentSample)
+      for (const bin of this.bins) {
+        const previousSample = this.ringBuffer.read(bin.N)
+        bin.update(previousSample, currentSample)
+      }
     }
-
-    const level = this.bin.level
 
     // Update and sync the volume property with the main thread.
     this.nextUpdateFrame -= windowSize
     if (this.nextUpdateFrame < 0) {
       this.nextUpdateFrame += this.intervalInFrames
-      this.port.postMessage({ level: level })
+      const levels = this.bins.map(bin => bin.level)
+      this.port.postMessage({ levels: levels })
     }
 
     return true
