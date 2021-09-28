@@ -4,8 +4,7 @@
         <title>sdft</title>
     </head>
     <body>
-        <button>Play</button>
-        <audio src="sin.wav" controls></audio>
+        <audio src="saw.wav" controls></audio>
         <script>
             const ac = new AudioContext()
             const audioElement = document.querySelector('audio')
@@ -25,9 +24,12 @@
               source.connect(sdft).connect(ac.destination)
             }
 
-            document.querySelector('button').onclick = function () {
+            audioElement.addEventListener('play', () => {
               play()
-            }
+            })
+            audioElement.addEventListener('ended', () => {
+              ac.suspend()
+            })
         </script>
     </body>
 </html>
