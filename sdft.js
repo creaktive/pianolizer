@@ -58,6 +58,23 @@ class RingBuffer {
   }
 }
 
+class DFTBin {
+  constructor (k, N) {
+    this.k = k
+    this.N = N
+    this.bands = N / 2
+    this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
+    this.dft = new Complex()
+  }
+
+  update (previousComplexSample, currentComplexSample) {
+    this.dft = this.dft
+      .sub(previousComplexSample)
+      .add(currentComplexSample)
+      .mul(this.coeff)
+  }
+}
+
 class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
@@ -65,22 +82,17 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.updateIntervalInMS = 1000 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = this.updateIntervalInMS
 
-    this.ringBuffer = new RingBuffer()
-
-    this.k = 440
     // eslint-disable-next-line no-undef
-    this.N = sampleRate
-    this.bands = this.N / 2
-    this.coeff = (new Complex(0, 2 * Math.PI * (this.k / this.N))).exp()
-    this.dft = new Complex()
+    this.sampleRate = sampleRate
 
+    this.ringBuffer = new RingBuffer()
     this.totalPower = 0
 
-    // console.log(this)
+    this.bin = new DFTBin(440, this.sampleRate)
   }
 
   get intervalInFrames () {
-    return this.updateIntervalInMS / 1000 * this.N
+    return this.updateIntervalInMS / 1000 * this.sampleRate
   }
 
   process (input, output, parameters) {
@@ -108,21 +120,18 @@ class SlidingDFT extends AudioWorkletProcessor {
     for (let i = 0; i < windowSize; i++) {
       const currentSample = samples[i] / n
       this.ringBuffer.write(currentSample)
-      const previousSample = this.ringBuffer.read(this.N)
+      const previousSample = this.ringBuffer.read(this.sampleRate)
 
       const previousComplexSample = new Complex(previousSample, 0)
       const currentComplexSample = new Complex(currentSample, 0)
 
-      this.dft = this.dft
-        .sub(previousComplexSample)
-        .add(currentComplexSample)
-        .mul(this.coeff)
+      this.bin.update(previousComplexSample, currentComplexSample)
 
       this.totalPower -= previousSample * previousSample
       this.totalPower += currentSample * currentSample
     }
 
-    const level = (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
+    const level = (this.bin.dft.magnitude / this.bin.bands) / Math.sqrt(this.totalPower / this.bin.bands)
 
     // Update and sync the volume property with the main thread.
     this.nextUpdateFrame -= windowSize
