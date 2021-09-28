@@ -65,13 +65,24 @@ class DFTBin {
     this.bands = N / 2
     this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
     this.dft = new Complex()
+    this.totalPower = 0
   }
 
-  update (previousComplexSample, currentComplexSample) {
+  update (previousSample, currentSample) {
+    this.totalPower -= previousSample * previousSample
+    this.totalPower += currentSample * currentSample
+
+    const previousComplexSample = new Complex(previousSample, 0)
+    const currentComplexSample = new Complex(currentSample, 0)
+
     this.dft = this.dft
       .sub(previousComplexSample)
       .add(currentComplexSample)
       .mul(this.coeff)
+  }
+
+  get level () {
+    return (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
   }
 }
 
@@ -79,14 +90,13 @@ class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
 
+    this.ringBuffer = new RingBuffer()
+
     this.updateIntervalInMS = 1000 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = this.updateIntervalInMS
 
     // eslint-disable-next-line no-undef
     this.sampleRate = sampleRate
-
-    this.ringBuffer = new RingBuffer()
-    this.totalPower = 0
 
     this.bin = new DFTBin(440, this.sampleRate)
   }
@@ -120,18 +130,12 @@ class SlidingDFT extends AudioWorkletProcessor {
     for (let i = 0; i < windowSize; i++) {
       const currentSample = samples[i] / n
       this.ringBuffer.write(currentSample)
-      const previousSample = this.ringBuffer.read(this.sampleRate)
+      const previousSample = this.ringBuffer.read(this.bin.N)
 
-      const previousComplexSample = new Complex(previousSample, 0)
-      const currentComplexSample = new Complex(currentSample, 0)
-
-      this.bin.update(previousComplexSample, currentComplexSample)
-
-      this.totalPower -= previousSample * previousSample
-      this.totalPower += currentSample * currentSample
+      this.bin.update(previousSample, currentSample)
     }
 
-    const level = (this.bin.dft.magnitude / this.bin.bands) / Math.sqrt(this.totalPower / this.bin.bands)
+    const level = this.bin.level
 
     // Update and sync the volume property with the main thread.
     this.nextUpdateFrame -= windowSize
