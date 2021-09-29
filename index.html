@@ -2,10 +2,17 @@
 <html lang="en-US">
     <head>
         <title>sdft</title>
+        <script src="piano.js"></script>
     </head>
     <body>
         <audio src="saw.wav" controls></audio>
+        <svg data-ref="piano" width="1200" height="150"></svg>
         <script>
+            // eslint-disable-next-line no-undef
+            const po = new PianoOctave()
+            const piano = document.querySelector('svg')
+            po.draw(piano)
+
             const ac = new AudioContext()
             const audioElement = document.querySelector('audio')
             const source = ac.createMediaElementSource(audioElement)
