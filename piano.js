@@ -1,10 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 class PianoOctave {
   // Shamelessly stolen from http://www.quadibloc.com/other/cnv05.htm
-  constructor (scale = 1.0, blackColor = 63, whiteColor = 255) {
+  constructor (scale = 1.0) {
     this.scale = scale
-    this.blackColor = blackColor
-    this.whiteColor = whiteColor
 
     this.whiteHeight = 150 * scale
     this.blackHeight = 100 * scale
@@ -17,7 +15,7 @@ class PianoOctave {
   }
 
   // Inspired by https://github.com/davidgilbertson/sight-reader/blob/master/app/client/Piano.js
-  draw (svgId, keyColor = [], firstKey = 1, lastKey = 12) {
+  draw (svgId) {
     const ns = 'http://www.w3.org/2000/svg'
 
     // render whites
@@ -27,20 +25,12 @@ class PianoOctave {
       i < this.whiteKeys.length;
       offset += this.whiteKeys[i++]
     ) {
-      const tone = this.whiteTone[i]
-      if (tone < firstKey) { continue } else
-      if (tone > lastKey) { break }
+      // const tone = this.whiteTone[i]
 
-      /*
-      fill(
-        keyColor[tone - 1] !== undefined
-          ? keyColor[tone - 1]
-          : this.whiteColor
-      )
-      */
       const keyElement = document.createElementNS(ns, 'rect')
       keyElement.setAttribute('x', offset)
       keyElement.setAttribute('y', 0)
+      keyElement.setAttribute('rx', 2)
       keyElement.setAttribute('width', this.whiteKeys[i])
       keyElement.setAttribute('height', this.whiteHeight)
       keyElement.setAttribute('style', 'stroke: #000; fill: #fff')
@@ -56,23 +46,15 @@ class PianoOctave {
       offset += this.blackKeys[i++]
     ) {
       const tone = this.blackTone[i]
-      if (tone === 0) { continue } else
-      if (tone < firstKey) { continue } else
-      if (tone > lastKey) { break }
+      if (tone === 0) { continue }
 
-      /*
-      fill(
-        keyColor[tone - 1] !== undefined
-          ? keyColor[tone - 1]
-          : this.blackColor
-      )
-      */
       const keyElement = document.createElementNS(ns, 'rect')
       keyElement.setAttribute('x', offset)
       keyElement.setAttribute('y', 0)
+      keyElement.setAttribute('rx', 2)
       keyElement.setAttribute('width', this.blackKeys[i])
       keyElement.setAttribute('height', this.blackHeight)
-      keyElement.setAttribute('style', 'stroke: #000; fill: #000')
+      keyElement.setAttribute('style', 'stroke: #000; fill: #fff')
       blackKeyGroup.appendChild(keyElement)
     }
     svgId.appendChild(blackKeyGroup)
