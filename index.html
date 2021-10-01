@@ -3,15 +3,21 @@
     <head>
         <title>sdft</title>
         <script src="piano.js"></script>
+        <style>
+          .piano-key {
+            stroke: #000;
+            fill: #fff;
+          }
+        </style>
     </head>
     <body>
         <audio id="input" src="saw.wav" controls></audio>
         <svg id="output" width="1280" height="150"></svg>
         <script>
             // eslint-disable-next-line no-undef
-            const po = new PianoOctave(document.querySelector('#output'))
-            po.drawKeyboard()
-            po.keys[48].style.fill = '#f00'
+            const keyboard = new PianoKeyboard(document.querySelector('#output'))
+            keyboard.drawKeyboard()
+            keyboard.keys[48].style.fill = '#f00'
 
             const ac = new AudioContext()
             const audioElement = document.querySelector('#input')

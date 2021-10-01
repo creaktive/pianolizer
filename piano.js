@@ -1,10 +1,11 @@
 // eslint-disable-next-line no-unused-vars
-class PianoOctave {
+class PianoKeyboard {
   // Shamelessly stolen from http://www.quadibloc.com/other/cnv05.htm
   constructor (svg, scale = 1) {
     this.svg = svg
     this.scale = scale
 
+    this.roundCorners = 2
     this.whiteHeight = 150 * scale
     this.blackHeight = 100 * scale
     this.whiteKeys = [23, 24, 23, 24, 23, 23, 24].map(x => x * scale)
@@ -20,10 +21,10 @@ class PianoOctave {
     const keyElement = document.createElementNS(this.ns, 'rect')
     keyElement.setAttribute('x', offset)
     keyElement.setAttribute('y', 0)
-    keyElement.setAttribute('rx', 2)
+    keyElement.setAttribute('rx', this.roundCorners)
     keyElement.setAttribute('width', width)
     keyElement.setAttribute('height', height)
-    keyElement.setAttribute('style', 'stroke: #000; fill: #fff')
+    keyElement.classList.add('piano-key')
     this.keys[index] = keyElement
     group.appendChild(keyElement)
   }
