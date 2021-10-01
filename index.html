@@ -5,8 +5,8 @@
         <script src="piano.js"></script>
         <style>
           .piano-key {
-            stroke: #000;
-            fill: #fff;
+            stroke: #fff;
+            fill: #000;
           }
         </style>
     </head>
@@ -17,7 +17,6 @@
             // eslint-disable-next-line no-undef
             const keyboard = new PianoKeyboard(document.querySelector('#output'))
             keyboard.drawKeyboard()
-            keyboard.keys[48].style.fill = '#f00'
 
             const ac = new AudioContext()
             const audioElement = document.querySelector('#input')
@@ -31,7 +30,12 @@
               const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
               sdft.port.onmessage = event => {
                 if (event.data.levels) {
-                  console.log(event.data.levels)
+                  for (let i = 0; i < keyboard.keys.length; i++) {
+                    const color = Math.round(event.data.levels[i] * 256)
+                      .toString(16)
+                      .padStart(2, '0')
+                    keyboard.keys[i].style.fill = `#00${color}00`
+                  }
                 }
               }
               source.connect(sdft).connect(ac.destination)
