@@ -45,7 +45,7 @@ class RingBuffer {
   constructor (bits = 16) {
     const size = 1 << bits
     this.mask = size - 1
-    this.buffer = new Float32Array(size)
+    this.buffer = new Float64Array(size)
     this.index = 0
   }
 
@@ -96,20 +96,21 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.nextUpdateFrame = this.updateIntervalInMS
 
     // eslint-disable-next-line no-undef
-    this.sampleRate = sampleRate
+    this.N = sampleRate
 
     this.bins = new Array(88)
     for (let i = 0; i < this.bins.length; i++) {
       // https://en.wikipedia.org/wiki/Piano_key_frequencies
-      const k = 440 * Math.pow(2, (i - 48) / 12)
-      this.bins[i] = new DFTBin(k, this.sampleRate)
+      const freq = 440 * Math.pow(2, (i - 48) / 12)
+      const k = Math.round(freq)
+      this.bins[i] = new DFTBin(k, this.N)
     }
 
-    this.levels = new Float32Array(this.bins.length)
+    this.levels = new Float64Array(this.bins.length)
   }
 
   get intervalInFrames () {
-    return this.updateIntervalInMS / 1000 * this.sampleRate
+    return this.updateIntervalInMS / 1000 * this.N
   }
 
   process (input, output, parameters) {
@@ -117,7 +118,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     const windowSize = input[0][0].length
 
     // mix down the inputs into single array
-    const samples = new Float32Array(windowSize)
+    const samples = new Float64Array(windowSize)
     let count = 0
     const inputPortCount = input.length
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
