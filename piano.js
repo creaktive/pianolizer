@@ -38,7 +38,7 @@ class PianoKeyboard {
     let whiteOffset = 0
     let whiteIndex = 5 // A0
     const startFrom = 9
-    for (let i = startFrom; i < 88 + startFrom; i++) {
+    for (let i = startFrom; i < this.keys.length + startFrom; i++) {
       // black
       const blackIndex = i % this.blackKeys.length
       const blackWidth = this.blackKeys[blackIndex]
