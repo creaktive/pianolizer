@@ -87,30 +87,26 @@ class DFTBin {
 }
 
 class SlidingDFT extends AudioWorkletProcessor {
+  /* global currentTime, sampleRate */
   constructor () {
     super()
 
     this.ringBuffer = new RingBuffer()
 
-    this.updateIntervalInMS = 1000 / 60 // to be rendered at 60fps
-    this.nextUpdateFrame = this.updateIntervalInMS
+    this.updateInterval = 1 / 60 // to be rendered at 60fps
+    this.nextUpdateFrame = currentTime + this.updateInterval
 
-    // eslint-disable-next-line no-undef
-    this.N = sampleRate
-
+    this.bandwidth = 5 // Hz
+    this.N = sampleRate / this.bandwidth
     this.bins = new Array(88)
     for (let i = 0; i < this.bins.length; i++) {
       // https://en.wikipedia.org/wiki/Piano_key_frequencies
       const freq = 440 * Math.pow(2, (i - 48) / 12)
-      const k = Math.round(freq)
+      const k = Math.round(freq / this.bandwidth)
       this.bins[i] = new DFTBin(k, this.N)
     }
 
     this.levels = new Float64Array(this.bins.length)
-  }
-
-  get intervalInFrames () {
-    return this.updateIntervalInMS / 1000 * this.N
   }
 
   process (input, output, parameters) {
@@ -150,9 +146,8 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     // Update and sync the volume property with the main thread.
-    this.nextUpdateFrame -= windowSize
-    if (this.nextUpdateFrame < 0) {
-      this.nextUpdateFrame += this.intervalInFrames
+    if (this.nextUpdateFrame <= currentTime) {
+      this.nextUpdateFrame = currentTime + this.updateInterval
       this.port.postMessage({ levels: this.levels })
     }
 
