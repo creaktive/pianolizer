@@ -92,18 +92,20 @@ class SlidingDFT extends AudioWorkletProcessor {
 
     this.ringBuffer = new RingBuffer()
 
-    this.updateIntervalInMS = 1000 / 30 // to be rendered at 30fps
+    this.updateIntervalInMS = 1000 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = this.updateIntervalInMS
 
     // eslint-disable-next-line no-undef
     this.sampleRate = sampleRate
 
-    this.bins = []
-    for (let i = 1; i <= 88; i++) {
-    // https://en.wikipedia.org/wiki/Piano_key_frequencies
-      const k = 440 * Math.pow(2, (i - 49) / 12)
-      this.bins.push(new DFTBin(k, this.sampleRate))
+    this.bins = new Array(88)
+    for (let i = 0; i < this.bins.length; i++) {
+      // https://en.wikipedia.org/wiki/Piano_key_frequencies
+      const k = 440 * Math.pow(2, (i - 48) / 12)
+      this.bins[i] = new DFTBin(k, this.sampleRate)
     }
+
+    this.levels = new Float32Array(this.bins.length)
   }
 
   get intervalInFrames () {
@@ -111,7 +113,8 @@ class SlidingDFT extends AudioWorkletProcessor {
   }
 
   process (input, output, parameters) {
-    const windowSize = 128
+    // I hope all the channels have the same # of samples
+    const windowSize = input[0][0].length
 
     // mix down the inputs into single array
     const samples = new Float32Array(windowSize)
@@ -120,8 +123,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
       const channelCount = input[portIndex].length
       for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
-        const sampleCount = input[portIndex][channelIndex].length
-        for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+        for (let sampleIndex = 0; sampleIndex < windowSize; sampleIndex++) {
           const sample = input[portIndex][channelIndex][sampleIndex]
           output[portIndex][channelIndex][sampleIndex] = sample
           samples[sampleIndex] += sample
@@ -142,12 +144,15 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
+    for (let i = 0; i < this.bins.length; i++) {
+      this.levels[i] = this.bins[i].level
+    }
+
     // Update and sync the volume property with the main thread.
     this.nextUpdateFrame -= windowSize
     if (this.nextUpdateFrame < 0) {
       this.nextUpdateFrame += this.intervalInFrames
-      const levels = this.bins.map(bin => bin.level)
-      this.port.postMessage({ levels: levels })
+      this.port.postMessage({ levels: this.levels })
     }
 
     return true
