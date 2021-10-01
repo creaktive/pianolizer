@@ -5,16 +5,16 @@
         <script src="piano.js"></script>
     </head>
     <body>
-        <audio src="saw.wav" controls></audio>
-        <svg data-ref="piano" width="1200" height="150"></svg>
+        <audio id="input" src="saw.wav" controls></audio>
+        <svg id="output" width="1280" height="150"></svg>
         <script>
             // eslint-disable-next-line no-undef
-            const po = new PianoOctave()
-            const piano = document.querySelector('svg')
-            po.drawKeyboard(piano)
+            const po = new PianoOctave(document.querySelector('#output'))
+            po.drawKeyboard()
+            po.keys[48].style.fill = '#f00'
 
             const ac = new AudioContext()
-            const audioElement = document.querySelector('audio')
+            const audioElement = document.querySelector('#input')
             const source = ac.createMediaElementSource(audioElement)
 
             async function play () {
