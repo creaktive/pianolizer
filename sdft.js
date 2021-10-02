@@ -107,6 +107,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     this.levels = new Float64Array(this.bins.length)
+    this.samples = new Float64Array(512)
   }
 
   process (input, output, parameters) {
@@ -114,7 +115,6 @@ class SlidingDFT extends AudioWorkletProcessor {
     const windowSize = input[0][0].length
 
     // mix down the inputs into single array
-    const samples = new Float64Array(windowSize)
     let count = 0
     const inputPortCount = input.length
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
@@ -123,7 +123,7 @@ class SlidingDFT extends AudioWorkletProcessor {
         for (let sampleIndex = 0; sampleIndex < windowSize; sampleIndex++) {
           const sample = input[portIndex][channelIndex][sampleIndex]
           output[portIndex][channelIndex][sampleIndex] = sample
-          samples[sampleIndex] += sample
+          this.samples[sampleIndex] += sample
           count++
         }
       }
@@ -132,7 +132,8 @@ class SlidingDFT extends AudioWorkletProcessor {
     // normalize & store in the ring buffer
     const n = count / windowSize
     for (let i = 0; i < windowSize; i++) {
-      const currentSample = samples[i] / n
+      const currentSample = this.samples[i] / n
+      this.samples[i] = 0
       this.ringBuffer.write(currentSample)
 
       for (const bin of this.bins) {
@@ -141,13 +142,13 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
-    for (let i = 0; i < this.bins.length; i++) {
-      this.levels[i] = this.bins[i].level
-    }
-
     // Update and sync the volume property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
       this.nextUpdateFrame = currentTime + this.updateInterval
+
+      for (let i = 0; i < this.bins.length; i++) {
+        this.levels[i] = this.bins[i].level
+      }
       this.port.postMessage({ levels: this.levels })
     }
 
