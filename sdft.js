@@ -107,12 +107,15 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     this.levels = new Float64Array(this.bins.length)
-    this.samples = new Float64Array(512)
   }
 
   process (input, output, parameters) {
-    // I hope all the channels have the same # of samples
+    // I hope all the channels have the same # of samples,
+    // and that it stays constand during the lifetime of the worklet
     const windowSize = input[0][0].length
+    if (this.samples === undefined) {
+      this.samples = new Float64Array(windowSize)
+    }
 
     // mix down the inputs into single array
     let count = 0
@@ -142,7 +145,7 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
-    // Update and sync the volume property with the main thread.
+    // update and sync the volume property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
       this.nextUpdateFrame = currentTime + this.updateInterval
 
