@@ -26,6 +26,11 @@
             const source = ac.createMediaElementSource(audioElement)
 
             async function play () {
+              let palette
+              await fetch('palette.json')
+                .then(response => response.json())
+                .then(data => { palette = data })
+
               await ac.audioWorklet.addModule('sdft.js')
               ac.resume()
               audioElement.play()
@@ -34,10 +39,13 @@
               sdft.port.onmessage = event => {
                 if (event.data.levels) {
                   for (let i = 0; i < keyboard.keys.length; i++) {
-                    const color = Math.round(event.data.levels[i] * 256)
-                      .toString(16)
-                      .padStart(2, '0')
-                    keyboard.keys[i].style.fill = `#00${color}00`
+                    const level = event.data.levels[i]
+                    const color = palette[(i + 9) % 12].map(c =>
+                      Math.round(level * c)
+                        .toString(16)
+                        .padStart(2, '0')
+                    )
+                    keyboard.keys[i].style.fill = `#${color[0]}${color[1]}${color[2]}`
                   }
                 }
               }
