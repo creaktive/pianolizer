@@ -58,23 +58,24 @@ sub convert_wave_length_nm_to_rgb ($wave_length_nm, $gamma = 0.8) {
     } ( $red, $green, $blue );
 }
 
+my $scale = 64;
 my @wavelengths = map { 299792.458 / (440 * (2 ** ($_ / 12))) } -2 .. 9;
 my @rainbow;
 for my $nm (@wavelengths) {
-    for (1 .. 10) {
+    for ( 1 .. $scale ) {
         push @rainbow =>
             sprintf '%3d %3d %3d',
                 map {
                     POSIX::round( $_ * 255 )
-                } convert_wave_length_nm_to_rgb( $nm );
+                } convert_wave_length_nm_to_rgb( $nm, 0.5 );
     }
 }
 
 print << "END_PPM";
 P3
-@{[ scalar @rainbow ]} 10
+@{[ scalar @rainbow ]} $scale
 255
 END_PPM
 
 say join( "\t", @rainbow )
-    for 1 .. 10;
+    for 1 .. $scale
