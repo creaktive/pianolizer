@@ -25,13 +25,13 @@ for my $key ( 0 .. 87 ) {
     } until ( $new_freq - $freq <= 0 );
     my $new_bandwidth = $sample_rate / $N;
 
-    printf "%d\t%f\t%f\t%d\t%f\t%f\t%f\n",
+    printf "%d\t%f\t%f\t%d\t%f\t%f\t%f%%\n",
         $key,
         $freq,
         $bandwidth,
         $N,
         $new_freq,
         $new_bandwidth,
-        $new_freq - $freq,
+        100 * ( $freq - $new_freq ) / $freq,
     ;
 }
