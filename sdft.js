@@ -96,14 +96,17 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.updateInterval = 1 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = currentTime + this.updateInterval
 
-    this.bandwidth = 5 // Hz
-    this.N = sampleRate / this.bandwidth
+    const bandwidth = 5 // Hz
+    const N = sampleRate / bandwidth
+    if (N !== Math.round(N)) {
+      throw new Error('N is not an integer!')
+    }
     this.bins = new Array(88)
     for (let i = 0; i < this.bins.length; i++) {
       // https://en.wikipedia.org/wiki/Piano_key_frequencies
       const freq = 440 * Math.pow(2, (i - 48) / 12)
-      const k = Math.round(freq / this.bandwidth)
-      this.bins[i] = new DFTBin(k, this.N)
+      const k = Math.round(freq / bandwidth)
+      this.bins[i] = new DFTBin(k, N)
     }
 
     this.levels = new Float64Array(this.bins.length)
