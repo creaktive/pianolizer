@@ -18,14 +18,20 @@ for my $key ( 0 .. 87 ) {
     my $N = POSIX::ceil( $sample_rate / $bandwidth );
     my $k = POSIX::ceil( $freq / $bandwidth );
 
-    my $new_freq = $sample_rate * ( $k / $N );
+    my $new_freq;
+    do {
+        $N++;
+        $new_freq = $sample_rate * ( $k / $N );
+    } until ( $new_freq - $freq <= 0 );
+    my $new_bandwidth = $sample_rate / $N;
 
-    printf "%d\t%f\t%f\t%d\t%f\t%f\n",
+    printf "%d\t%f\t%f\t%d\t%f\t%f\t%f\n",
         $key,
         $freq,
         $bandwidth,
         $N,
         $new_freq,
+        $new_bandwidth,
         $new_freq - $freq,
     ;
 }
