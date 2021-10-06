@@ -14,7 +14,7 @@ my $sample_rate = 44100;
 
 for my $key ( 0 .. 87 ) {
     my $freq = key2freq( $key );
-    my $bandwidth = 2 * ( $freq - key2freq( $key - 0.5 ) );
+    my $bandwidth = 2 * ( key2freq( $key + 0.5 ) - $freq );
     my $N = POSIX::ceil( $sample_rate / $bandwidth );
     my $k = POSIX::ceil( $freq / $bandwidth );
 
@@ -32,6 +32,6 @@ for my $key ( 0 .. 87 ) {
         $N,
         $new_freq,
         $new_bandwidth,
-        100 * ( $freq - $new_freq ) / $bandwidth,
+        100 * ( $new_freq - $freq ) / $bandwidth,
     ;
 }

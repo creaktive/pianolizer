@@ -96,10 +96,11 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.updateInterval = 1 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = currentTime + this.updateInterval
 
+    this.pitchFork = 440 // A4 is 440 Hz
     this.bins = new Array(88)
     for (let key = 0; key < this.bins.length; key++) {
-      const freq = SlidingDFT.keyToFreq(key)
-      const bandwidth = 2 * (freq - SlidingDFT.keyToFreq(key - 0.5))
+      const freq = this.keyToFreq(key)
+      const bandwidth = 2 * (this.keyToFreq(key + 0.5) - freq)
       let N = Math.ceil(sampleRate / bandwidth)
       const k = Math.ceil(freq / bandwidth)
 
@@ -114,9 +115,9 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.levels = new Float64Array(this.bins.length)
   }
 
-  static keyToFreq (i) {
+  keyToFreq (key) {
     // https://en.wikipedia.org/wiki/Piano_key_frequencies
-    return 440 * Math.pow(2, (i - 48) / 12)
+    return this.pitchFork * Math.pow(2, (key - 48) / 12)
   }
 
   process (input, output, parameters) {
