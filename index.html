@@ -2,7 +2,7 @@
 <html lang="en-US">
     <head>
         <title>sdft</title>
-        <script src="piano.js"></script>
+        <script src="js/piano.js"></script>
         <style>
           body {
             background-color: #000;
@@ -31,7 +31,7 @@
                 .then(response => response.json())
                 .then(data => { palette = data })
 
-              await ac.audioWorklet.addModule('sdft.js')
+              await ac.audioWorklet.addModule('js/sdft.js')
               ac.resume()
               audioElement.play()
 
