@@ -34,31 +34,36 @@
             const audioElement = document.querySelector('#input')
             const source = ac.createMediaElementSource(audioElement)
 
+            let loaded = 0
             async function play () {
-              let palette
-              await fetch('palette.json')
-                .then(response => response.json())
-                .then(data => { palette = data })
+              if (loaded === 0) {
+                let palette
+                await fetch('palette.json')
+                  .then(response => response.json())
+                  .then(data => { palette = data })
 
-              await ac.audioWorklet.addModule('js/sdft.js')
-              ac.resume()
-              audioElement.play()
+                await ac.audioWorklet.addModule('js/sdft.js')
 
-              const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
-              sdft.port.onmessage = event => {
-                if (event.data.levels) {
-                  for (let i = 0; i < keyboard.keys.length; i++) {
-                    const level = event.data.levels[i]
-                    const color = palette[(i + 9) % 12].map(c =>
-                      Math.round(level * c)
-                        .toString(16)
-                        .padStart(2, '0')
-                    )
-                    keyboard.keys[i].style.fill = `#${color[0]}${color[1]}${color[2]}`
+                const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
+                sdft.port.onmessage = event => {
+                  if (event.data.levels) {
+                    for (let i = 0; i < keyboard.keys.length; i++) {
+                      const level = event.data.levels[i]
+                      const color = palette[(i + 9) % 12].map(c =>
+                        Math.round(level * c)
+                          .toString(16)
+                          .padStart(2, '0')
+                      )
+                      keyboard.keys[i].style.fill = `#${color[0]}${color[1]}${color[2]}`
+                    }
                   }
                 }
+                source.connect(sdft).connect(ac.destination)
+                loaded++
               }
-              source.connect(sdft).connect(ac.destination)
+
+              ac.resume()
+              audioElement.play()
             }
 
             document.querySelector('select').addEventListener('change', event => {
