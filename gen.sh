@@ -1,5 +1,5 @@
 #!/bin/sh
-sox -n saw.wav synth 2 saw 440
-sox -n sin.wav synth 2 sin 440
-sox -n squ.wav synth 2 squ 440
-sox -n noise.wav synth 2 whitenoi
+sox -r 44100 -n saw.wav synth 3 saw 440
+sox -r 44100 -n sin.wav synth 3 sin 440
+sox -r 44100 -n squ.wav synth 3 squ 440
+sox -r 44100 -n noise.wav synth 3 pink
