@@ -14,6 +14,14 @@
         </style>
     </head>
     <body>
+        <select>
+          <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
+          <option value="audio/sin.wav">Sine wave, 440 Hz</option>
+          <option value="audio/saw.wav">Sawtooth wave, 440 Hz</option>
+          <option value="audio/squ.wav">Square wave, 440 Hz</option>
+          <option value="audio/noise.wav">Pink noise</option>
+        </select>
+        <br>
         <audio id="input" src="audio/chromatic.mp3" controls></audio>
         <svg id="output" width="1280" height="150"></svg>
         <script>
@@ -52,6 +60,11 @@
               source.connect(sdft).connect(ac.destination)
             }
 
+            document.querySelector('select').addEventListener('change', event => {
+              ac.suspend()
+              audioElement.pause()
+              audioElement.src = event.target.value
+            })
             audioElement.addEventListener('play', () => {
               play()
             })
