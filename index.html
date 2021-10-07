@@ -27,47 +27,51 @@
         <svg id="output" width="1280" height="150"></svg>
         <script>
             // eslint-disable-next-line no-undef
-            const keyboard = new PianoKeyboard(document.querySelector('#output'))
-            keyboard.drawKeyboard()
+            const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
+            pianoKeyboard.drawKeyboard()
 
-            const ac = new AudioContext()
+            const audioContext = new AudioContext()
             const audioElement = document.querySelector('#input')
-            const source = ac.createMediaElementSource(audioElement)
 
-            let loaded = 0
+            let isLoaded = false
             async function play () {
-              if (loaded === 0) {
+              if (isLoaded === false) {
                 let palette
                 await fetch('palette.json')
                   .then(response => response.json())
                   .then(data => { palette = data })
 
-                await ac.audioWorklet.addModule('js/sdft.js')
-
-                const sdft = new AudioWorkletNode(ac, 'sliding-dft-node')
+                await audioContext.audioWorklet.addModule('js/sdft.js')
+                const sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
                 sdft.port.onmessage = event => {
                   if (event.data.levels) {
-                    for (let i = 0; i < keyboard.keys.length; i++) {
-                      const level = event.data.levels[i]
-                      const color = palette[(i + 9) % 12].map(c =>
-                        Math.round(level * c)
-                          .toString(16)
-                          .padStart(2, '0')
-                      )
-                      keyboard.keys[i].style.fill = `#${color[0]}${color[1]}${color[2]}`
+                    for (let key = 0; key < pianoKeyboard.keys.length; key++) {
+                      const level = event.data.levels[key]
+                      const rgbArray = palette[(key + 9) % 12]
+                        .map(value => Math.round(level * value) | 0)
+                      const rgbInteger =
+                        (rgbArray[0] << 16) +
+                        (rgbArray[1] << 8) +
+                        (rgbArray[2])
+                      const rgbString = rgbInteger
+                        .toString(16)
+                        .padStart(6, '0')
+                      pianoKeyboard.keys[key].style.fill = '#' + rgbString
                     }
                   }
                 }
-                source.connect(sdft).connect(ac.destination)
-                loaded++
+
+                const audioSource = audioContext.createMediaElementSource(audioElement)
+                audioSource.connect(sdft).connect(audioContext.destination)
+                isLoaded = true
               }
 
-              ac.resume()
+              audioContext.resume()
               audioElement.play()
             }
 
             document.querySelector('select').addEventListener('change', event => {
-              ac.suspend()
+              audioContext.suspend()
               audioElement.pause()
               audioElement.src = event.target.value
             })
@@ -75,7 +79,7 @@
               play()
             })
             audioElement.addEventListener('ended', () => {
-              ac.suspend()
+              audioContext.suspend()
             })
         </script>
     </body>
