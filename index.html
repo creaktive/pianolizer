@@ -32,8 +32,10 @@
 
             const audioContext = new AudioContext()
             const audioElement = document.querySelector('#input')
+            const audioSource = audioContext.createMediaElementSource(audioElement)
 
             let isLoaded = false
+            let sdft
             async function play () {
               if (isLoaded === false) {
                 let palette
@@ -42,7 +44,7 @@
                   .then(data => { palette = data })
 
                 await audioContext.audioWorklet.addModule('js/sdft.js')
-                const sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
+                sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
                 sdft.port.onmessage = event => {
                   if (event.data.levels) {
                     for (let key = 0; key < pianoKeyboard.keys.length; key++) {
@@ -60,12 +62,13 @@
                     }
                   }
                 }
-
-                const audioSource = audioContext.createMediaElementSource(audioElement)
-                audioSource.connect(sdft).connect(audioContext.destination)
                 isLoaded = true
+              } else {
+                audioSource.disconnect(sdft)
               }
 
+              audioSource.connect(sdft)
+              sdft.connect(audioContext.destination)
               audioContext.resume()
               audioElement.play()
             }
@@ -75,12 +78,9 @@
               audioElement.pause()
               audioElement.src = event.target.value
             })
-            audioElement.addEventListener('play', () => {
-              play()
-            })
-            audioElement.addEventListener('ended', () => {
-              audioContext.suspend()
-            })
+            audioElement.addEventListener('play', () => play())
+            audioElement.addEventListener('pause', () => audioContext.suspend())
+            audioElement.addEventListener('ended', () => audioContext.suspend())
         </script>
     </body>
 </html>
