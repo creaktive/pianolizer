@@ -30,11 +30,11 @@
             const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
             pianoKeyboard.drawKeyboard()
 
-            const audioContext = new AudioContext()
             const audioElement = document.querySelector('#input')
-            const audioSource = audioContext.createMediaElementSource(audioElement)
 
             let isLoaded = false
+            let audioContext
+            let audioSource
             let sdft
             async function play () {
               if (isLoaded === false) {
@@ -43,6 +43,8 @@
                   .then(response => response.json())
                   .then(data => { palette = data })
 
+                audioContext = new (window.AudioContext || window.webkitAudioContext)()
+                audioSource = audioContext.createMediaElementSource(audioElement)
                 await audioContext.audioWorklet.addModule('js/sdft.js')
                 sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
                 sdft.port.onmessage = event => {
