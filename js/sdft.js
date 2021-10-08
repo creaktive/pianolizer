@@ -121,6 +121,9 @@ class SlidingDFT extends AudioWorkletProcessor {
   }
 
   process (input, output, parameters) {
+    // if no inputs are connected then zero channels will be passed in
+    if (input[0].length === 0) { return true }
+
     // I hope all the channels have the same # of samples,
     // and that it stays constand during the lifetime of the worklet
     const windowSize = input[0][0].length
