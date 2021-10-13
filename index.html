@@ -15,7 +15,8 @@
     </head>
     <body>
         <select>
-          <option value="audio/mazurka.webm">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
+          <option value="*">🎙</option>
+          <option value="audio/mazurka.webm" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
           <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
           <option value="audio/sin.wav">Sine wave, 440 Hz</option>
           <option value="audio/saw.wav">Sawtooth wave, 440 Hz</option>
@@ -78,8 +79,16 @@
             document.querySelector('select').addEventListener('change', event => {
               audioContext.suspend()
               audioElement.pause()
-              audioElement.src = event.target.value
+
+              const selectedValue = event.target.value
+              if (selectedValue === '*') {
+                audioElement.style['pointer-events'] = 'none'
+              } else {
+                audioElement.style['pointer-events'] = 'auto'
+                audioElement.src = selectedValue
+              }
             })
+
             audioElement.addEventListener('play', () => play())
             audioElement.addEventListener('pause', () => audioContext.suspend())
             audioElement.addEventListener('ended', () => audioContext.suspend())
