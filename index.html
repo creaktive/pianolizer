@@ -35,15 +35,15 @@
 
             let audioContext
             let audioSource
+            let microphoneSource
             let sdft
-            async function setup () {
+            async function setupAudio () {
               if (audioContext === undefined) {
                 await fetch('palette.json')
                   .then(response => response.json())
                   .then(data => { pianoKeyboard.setPalette(data) })
 
                 audioContext = new (window.AudioContext || window.webkitAudioContext)()
-                audioSource = audioContext.createMediaElementSource(audioElement)
                 await audioContext.audioWorklet.addModule('js/sdft.js')
                 sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
                 sdft.port.onmessage = event => {
@@ -51,36 +51,49 @@
                     pianoKeyboard.update(event.data.levels)
                   }
                 }
-              } else {
-                audioSource.disconnect(sdft)
+                sdft.connect(audioContext.destination)
               }
 
-              audioSource.connect(sdft)
-              sdft.connect(audioContext.destination)
-              audioContext.resume()
+              if (audioSource === undefined) {
+                audioSource = audioContext.createMediaElementSource(audioElement)
+                audioSource.connect(sdft)
+              }
+            }
+            async function setupMicrophone () {
+              if (microphoneSource === undefined) {
+                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+                navigator.getUserMedia(
+                  { audio: true, video: false },
+                  stream => {
+                    microphoneSource = audioContext.createMediaStreamSource(stream)
+                    microphoneSource.connect(sdft)
+                  },
+                  () => window.alert('Microphone access denied')
+                )
+              } else {
+                microphoneSource.connect(sdft)
+              }
             }
 
             document.querySelector('select').addEventListener('change', event => {
-              if (audioContext !== undefined) {
-                audioContext.suspend()
-              }
               audioElement.pause()
 
               const selectedValue = event.target.value
               if (selectedValue === '*') {
                 audioElement.style['pointer-events'] = 'none'
+                setupAudio()
+                setupMicrophone()
               } else {
+                try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone not connected') }
                 audioElement.style['pointer-events'] = 'auto'
                 audioElement.src = selectedValue
               }
             })
 
             audioElement.addEventListener('play', () => {
-              setup()
+              setupAudio()
               audioElement.play()
             })
-            audioElement.addEventListener('pause', () => audioContext.suspend())
-            audioElement.addEventListener('ended', () => audioContext.suspend())
         </script>
     </body>
 </html>
