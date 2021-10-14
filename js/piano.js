@@ -15,6 +15,7 @@ class PianoKeyboard {
 
     this.ns = 'http://www.w3.org/2000/svg'
     this.keys = new Array(88)
+    this.palette = null
   }
 
   drawKey (index, offset, width, height, group) {
@@ -56,5 +57,22 @@ class PianoKeyboard {
 
     this.svg.appendChild(whiteKeyGroup)
     this.svg.appendChild(blackKeyGroup)
+  }
+
+  setPalette (palette) {
+    this.palette = palette
+  }
+
+  update (levels) {
+    for (let key = 0; key < this.keys.length; key++) {
+      const level = levels[key]
+      const rgbArray = this.palette[(key + 9) % 12]
+        .map(value => Math.round(level * value) | 0)
+      const rgbInteger = (rgbArray[0] << 16) + (rgbArray[1] << 8) + rgbArray[2]
+      const rgbString = rgbInteger
+        .toString(16)
+        .padStart(6, '0')
+      this.keys[key].style.fill = '#' + rgbString
+    }
   }
 }

@@ -33,16 +33,14 @@
 
             const audioElement = document.querySelector('#input')
 
-            let isLoaded = false
             let audioContext
             let audioSource
             let sdft
             async function setup () {
-              if (isLoaded === false) {
-                let palette
+              if (audioContext === undefined) {
                 await fetch('palette.json')
                   .then(response => response.json())
-                  .then(data => { palette = data })
+                  .then(data => { pianoKeyboard.setPalette(data) })
 
                 audioContext = new (window.AudioContext || window.webkitAudioContext)()
                 audioSource = audioContext.createMediaElementSource(audioElement)
@@ -50,22 +48,9 @@
                 sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
                 sdft.port.onmessage = event => {
                   if (event.data.levels) {
-                    for (let key = 0; key < pianoKeyboard.keys.length; key++) {
-                      const level = event.data.levels[key]
-                      const rgbArray = palette[(key + 9) % 12]
-                        .map(value => Math.round(level * value) | 0)
-                      const rgbInteger =
-                        (rgbArray[0] << 16) +
-                        (rgbArray[1] << 8) +
-                        (rgbArray[2])
-                      const rgbString = rgbInteger
-                        .toString(16)
-                        .padStart(6, '0')
-                      pianoKeyboard.keys[key].style.fill = '#' + rgbString
-                    }
+                    pianoKeyboard.update(event.data.levels)
                   }
                 }
-                isLoaded = true
               } else {
                 audioSource.disconnect(sdft)
               }
@@ -73,7 +58,6 @@
               audioSource.connect(sdft)
               sdft.connect(audioContext.destination)
               audioContext.resume()
-              audioElement.play()
             }
 
             document.querySelector('select').addEventListener('change', event => {
@@ -91,7 +75,10 @@
               }
             })
 
-            audioElement.addEventListener('play', () => setup())
+            audioElement.addEventListener('play', () => {
+              setup()
+              audioElement.play()
+            })
             audioElement.addEventListener('pause', () => audioContext.suspend())
             audioElement.addEventListener('ended', () => audioContext.suspend())
         </script>
