@@ -132,7 +132,6 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     // mix down the inputs into single array
-    let count = 0
     const inputPortCount = input.length
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
       const channelCount = input[portIndex].length
@@ -141,15 +140,13 @@ class SlidingDFT extends AudioWorkletProcessor {
           const sample = input[portIndex][channelIndex][sampleIndex]
           output[portIndex][channelIndex][sampleIndex] = sample
           this.samples[sampleIndex] += sample
-          count++
         }
       }
     }
 
-    // normalize & store in the ring buffer
-    const n = count / windowSize
+    // store in the ring buffer
     for (let i = 0; i < windowSize; i++) {
-      const currentSample = this.samples[i] / n
+      const currentSample = this.samples[i]
       this.samples[i] = 0
       this.ringBuffer.write(currentSample)
 
