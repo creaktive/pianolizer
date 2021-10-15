@@ -37,6 +37,7 @@
             let audioSource
             let microphoneSource
             let sdft
+
             async function setupAudio () {
               if (audioContext === undefined) {
                 await fetch('palette.json')
@@ -51,15 +52,18 @@
                     pianoKeyboard.update(event.data.levels)
                   }
                 }
-                sdft.connect(audioContext.destination)
-              }
 
-              if (audioSource === undefined) {
                 audioSource = audioContext.createMediaElementSource(audioElement)
                 audioSource.connect(sdft)
               }
+
+              sdft.connect(audioContext.destination)
             }
+
             async function setupMicrophone () {
+              await setupAudio()
+              sdft.disconnect(audioContext.destination)
+
               if (microphoneSource === undefined) {
                 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
                 navigator.getUserMedia(
@@ -80,11 +84,12 @@
 
               const selectedValue = event.target.value
               if (selectedValue === '*') {
+                // microphone source
                 audioElement.style['pointer-events'] = 'none'
-                setupAudio()
                 setupMicrophone()
               } else {
-                try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone not connected') }
+                // <audio> element source
+                try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone was not connected') }
                 audioElement.style['pointer-events'] = 'auto'
                 audioElement.src = selectedValue
               }
