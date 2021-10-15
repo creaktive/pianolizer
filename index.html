@@ -1,104 +1,108 @@
 <!DOCTYPE html>
 <html lang="en-US">
-    <head>
-        <title>sdft</title>
-        <script src="js/piano.js"></script>
-        <style>
-          body {
-            background-color: #000;
-          }
-          .piano-key {
-            stroke: #444;
-            fill: #000;
-          }
-        </style>
-    </head>
-    <body>
-        <select>
-          <option value="*">🎙</option>
-          <option value="audio/mazurka.webm" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
-          <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
-          <option value="audio/sin.wav">Sine wave, 440 Hz</option>
-          <option value="audio/saw.wav">Sawtooth wave, 440 Hz</option>
-          <option value="audio/squ.wav">Square wave, 440 Hz</option>
-          <option value="audio/noise.wav">Pink noise</option>
-        </select>
-        <br>
-        <audio id="input" src="audio/mazurka.webm" controls></audio>
-        <svg id="output" width="1280" height="150"></svg>
-        <script>
-            // eslint-disable-next-line no-undef
-            const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
-            pianoKeyboard.drawKeyboard()
+  <head>
+    <title>sdft</title>
+    <script src="js/piano.js"></script>
+    <style>
+      body {
+        background-color: #000;
+        color: #fff;
+      }
+      .piano-key {
+        stroke: #444;
+        fill: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <label>
+      Source:
+      <select>
+        <option value="*">🎙 Microphone</option>
+        <option value="audio/mazurka.webm" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
+        <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
+        <option value="audio/sin.wav">Sine wave, 440 Hz</option>
+        <option value="audio/saw.wav">Sawtooth wave, 440 Hz</option>
+        <option value="audio/squ.wav">Square wave, 440 Hz</option>
+        <option value="audio/noise.wav">Pink noise</option>
+      </select>
+    </label>
+    <br>
+    <audio id="input" src="audio/mazurka.webm" controls></audio>
+    <svg id="output" width="1280" height="150"></svg>
+    <script>
+      // eslint-disable-next-line no-undef
+      const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
+      pianoKeyboard.drawKeyboard()
 
-            const audioElement = document.querySelector('#input')
+      const audioElement = document.querySelector('#input')
 
-            let audioContext
-            let audioSource
-            let microphoneSource
-            let sdft
+      let audioContext
+      let audioSource
+      let microphoneSource
+      let sdft
 
-            async function setupAudio () {
-              if (audioContext === undefined) {
-                await fetch('palette.json')
-                  .then(response => response.json())
-                  .then(data => { pianoKeyboard.setPalette(data) })
+      async function setupAudio () {
+        if (audioContext === undefined) {
+          await fetch('palette.json')
+            .then(response => response.json())
+            .then(data => { pianoKeyboard.setPalette(data) })
 
-                audioContext = new (window.AudioContext || window.webkitAudioContext)()
-                await audioContext.audioWorklet.addModule('js/sdft.js')
-                sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
-                sdft.port.onmessage = event => {
-                  if (event.data.levels) {
-                    pianoKeyboard.update(event.data.levels)
-                  }
-                }
-
-                audioSource = audioContext.createMediaElementSource(audioElement)
-                audioSource.connect(sdft)
-              }
-
-              sdft.connect(audioContext.destination)
+          audioContext = new (window.AudioContext || window.webkitAudioContext)()
+          await audioContext.audioWorklet.addModule('js/sdft.js')
+          sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
+          sdft.port.onmessage = event => {
+            if (event.data.levels) {
+              pianoKeyboard.update(event.data.levels)
             }
+          }
 
-            async function setupMicrophone () {
-              await setupAudio()
-              sdft.disconnect(audioContext.destination)
+          audioSource = audioContext.createMediaElementSource(audioElement)
+          audioSource.connect(sdft)
+        }
 
-              if (microphoneSource === undefined) {
-                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
-                navigator.getUserMedia(
-                  { audio: true, video: false },
-                  stream => {
-                    microphoneSource = audioContext.createMediaStreamSource(stream)
-                    microphoneSource.connect(sdft)
-                  },
-                  () => window.alert('Microphone access denied')
-                )
-              } else {
-                microphoneSource.connect(sdft)
-              }
-            }
+        sdft.connect(audioContext.destination)
+      }
 
-            document.querySelector('select').addEventListener('change', event => {
-              audioElement.pause()
+      async function setupMicrophone () {
+        await setupAudio()
+        sdft.disconnect(audioContext.destination)
 
-              const selectedValue = event.target.value
-              if (selectedValue === '*') {
-                // microphone source
-                audioElement.style['pointer-events'] = 'none'
-                setupMicrophone()
-              } else {
-                // <audio> element source
-                try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone was not connected') }
-                audioElement.style['pointer-events'] = 'auto'
-                audioElement.src = selectedValue
-              }
-            })
+        if (microphoneSource === undefined) {
+          navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+          navigator.getUserMedia(
+            { audio: true, video: false },
+            stream => {
+              microphoneSource = audioContext.createMediaStreamSource(stream)
+              microphoneSource.connect(sdft)
+            },
+            () => window.alert('Microphone access denied')
+          )
+        } else {
+          microphoneSource.connect(sdft)
+        }
+      }
 
-            audioElement.addEventListener('play', () => {
-              setupAudio()
-              audioElement.play()
-            })
-        </script>
-    </body>
+      document.querySelector('select').addEventListener('change', event => {
+        audioElement.pause()
+
+        const selectedValue = event.target.value
+        if (selectedValue === '*') {
+          // microphone source
+          audioElement.style['pointer-events'] = 'none'
+          setupMicrophone()
+        } else {
+          // <audio> element source
+          try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone was not connected') }
+          audioElement.style['pointer-events'] = 'auto'
+          audioElement.src = selectedValue
+        }
+      })
+
+      audioElement.addEventListener('play', () => {
+        setupAudio()
+        audioElement.play()
+      })
+    </script>
+  </body>
 </html>
