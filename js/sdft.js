@@ -69,8 +69,8 @@ class DFTBin {
   }
 
   update (previousSample, currentSample) {
-    this.totalPower -= previousSample * previousSample
     this.totalPower += currentSample * currentSample
+    this.totalPower -= previousSample * previousSample
 
     const previousComplexSample = new Complex(previousSample, 0)
     const currentComplexSample = new Complex(currentSample, 0)
@@ -91,14 +91,18 @@ class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
 
-    this.ringBuffer = new RingBuffer()
+    const ringBufferBits = Math.ceil(Math.log2(sampleRate + 1)) | 0
+    this.ringBuffer = new RingBuffer(ringBufferBits)
 
-    this.updateInterval = 1.0 / 60 // to be rendered at 60fps
+    this.updateInterval = 1.0 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = 0
 
-    this.pitchFork = 440 // A4 is 440 Hz
-    this.bins = new Array(88)
-    for (let key = 0; key < this.bins.length; key++) {
+    this.pitchFork = 440.0 // A4 is 440 Hz
+    this.binsNum = 88
+    this.bins = new Array(this.binsNum)
+    this.levels = new Float64Array(this.binsNum)
+
+    for (let key = 0; key < this.binsNum; key++) {
       const freq = this.keyToFreq(key)
       const bandwidth = 2 * (this.keyToFreq(key + 0.5) - freq)
       let N = Math.ceil(sampleRate / bandwidth)
@@ -111,8 +115,6 @@ class SlidingDFT extends AudioWorkletProcessor {
 
       this.bins[key] = new DFTBin(k, N)
     }
-
-    this.levels = new Float64Array(this.bins.length)
   }
 
   keyToFreq (key) {
@@ -158,14 +160,14 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
-    // snapshot of the levels
-    for (let i = 0; i < this.bins.length; i++) {
-      this.levels[i] = this.bins[i].level
-    }
-
     // update and sync the levels property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
       this.nextUpdateFrame = currentTime + this.updateInterval
+
+      // snapshot of the levels
+      for (let key = 0; key < this.binsNum; key++) {
+        this.levels[key] = this.bins[key].level
+      }
       this.port.postMessage({ levels: this.levels })
     }
 
