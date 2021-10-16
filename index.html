@@ -17,7 +17,7 @@
   <body>
     <label>
       Source:
-      <select>
+      <select id="source">
         <option value="*">🎙 Microphone</option>
         <option value="audio/mazurka.webm" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
         <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
@@ -29,7 +29,7 @@
     </label>
     <br>
     <audio id="input" src="audio/mazurka.webm" controls></audio>
-    <svg id="output" width="1280" height="150"></svg>
+    <svg id="output" width="1218" height="150"></svg>
     <script>
       // eslint-disable-next-line no-undef
       const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
@@ -69,7 +69,10 @@
         sdft.disconnect(audioContext.destination)
 
         if (microphoneSource === undefined) {
-          navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+          navigator.getUserMedia =
+            navigator.getUserMedia ||
+            navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia
           navigator.getUserMedia(
             { audio: true, video: false },
             stream => {
@@ -83,7 +86,7 @@
         }
       }
 
-      document.querySelector('select').addEventListener('change', event => {
+      document.querySelector('#source').addEventListener('change', event => {
         audioElement.pause()
 
         const selectedValue = event.target.value
