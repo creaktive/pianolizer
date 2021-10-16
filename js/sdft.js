@@ -62,13 +62,19 @@ class RingBuffer {
 }
 
 class DFTBin {
-  constructor (k, N) {
+  constructor (k, N, averageWindow = 0) {
     this.k = k
     this.N = N
     this.bands = N / 2
     this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
     this.dft = new Complex()
     this.totalPower = 0
+
+    this.averageWindow = averageWindow
+    this.levelHistorySum = 0
+    if (averageWindow > 0) {
+      this.levelHistory = new RingBuffer(averageWindow)
+    }
   }
 
   update (previousSample, currentSample) {
@@ -82,10 +88,22 @@ class DFTBin {
       .sub(previousComplexSample)
       .add(currentComplexSample)
       .mul(this.coeff)
+
+    if (this.averageWindow) {
+      const level = this.level
+      this.levelHistory.write(level)
+      this.levelHistorySum += level
+      this.levelHistorySum -= this.levelHistory.read(this.averageWindow)
+    }
   }
 
   get level () {
-    return (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
+    const level = (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
+    return (level <= 1) ? level : 0
+  }
+
+  get smoothLevel () {
+    return this.levelHistorySum / this.averageWindow
   }
 }
 
@@ -96,6 +114,9 @@ class SlidingDFT extends AudioWorkletProcessor {
 
     this.updateInterval = 1.0 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = 0
+
+    // sliding average of 1000 frames (for the output)
+    this.averageWindow = 1000
 
     this.pitchFork = 440.0 // A4 is 440 Hz
     this.binsNum = 88
@@ -114,7 +135,7 @@ class SlidingDFT extends AudioWorkletProcessor {
         newFreq = sampleRate * (k / N++)
       } while (newFreq - freq > 0)
 
-      this.bins[key] = new DFTBin(k, N)
+      this.bins[key] = new DFTBin(k, N, this.averageWindow)
       if (maxN < N) {
         maxN = N
       }
@@ -172,7 +193,7 @@ class SlidingDFT extends AudioWorkletProcessor {
 
       // snapshot of the levels
       for (let key = 0; key < this.binsNum; key++) {
-        this.levels[key] = this.bins[key].level
+        this.levels[key] = this.bins[key].smoothLevel
       }
       this.port.postMessage({ levels: this.levels })
     }
