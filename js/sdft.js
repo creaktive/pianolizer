@@ -93,8 +93,8 @@ class SlidingDFT extends AudioWorkletProcessor {
 
     this.ringBuffer = new RingBuffer()
 
-    this.updateInterval = 1 / 60 // to be rendered at 60fps
-    this.nextUpdateFrame = currentTime + this.updateInterval
+    this.updateInterval = 1.0 / 60 // to be rendered at 60fps
+    this.nextUpdateFrame = 0
 
     this.pitchFork = 440 // A4 is 440 Hz
     this.bins = new Array(88)
@@ -122,7 +122,9 @@ class SlidingDFT extends AudioWorkletProcessor {
 
   process (input, output, parameters) {
     // if no inputs are connected then zero channels will be passed in
-    if (input[0].length === 0) { return true }
+    if (input[0].length === 0) {
+      return true
+    }
 
     // I hope all the channels have the same # of samples,
     // and that it stays constand during the lifetime of the worklet
@@ -156,13 +158,14 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
-    // update and sync the volume property with the main thread.
+    // snapshot of the levels
+    for (let i = 0; i < this.bins.length; i++) {
+      this.levels[i] = this.bins[i].level
+    }
+
+    // update and sync the levels property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
       this.nextUpdateFrame = currentTime + this.updateInterval
-
-      for (let i = 0; i < this.bins.length; i++) {
-        this.levels[i] = this.bins[i].level
-      }
       this.port.postMessage({ levels: this.levels })
     }
 
