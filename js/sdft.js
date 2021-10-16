@@ -42,10 +42,13 @@ class Complex {
 }
 
 class RingBuffer {
-  constructor (bits = 16) {
-    const size = 1 << bits
-    this.mask = size - 1
-    this.buffer = new Float64Array(size)
+  constructor (requestedSize) {
+    const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
+    // console.info(`Allocating RingBuffer for ${bits} address bits`)
+
+    this.size = 1 << bits
+    this.mask = this.size - 1
+    this.buffer = new Float64Array(this.size)
     this.index = 0
   }
 
@@ -91,9 +94,6 @@ class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
 
-    const ringBufferBits = Math.ceil(Math.log2(sampleRate + 1)) | 0
-    this.ringBuffer = new RingBuffer(ringBufferBits)
-
     this.updateInterval = 1.0 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = 0
 
@@ -102,6 +102,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.bins = new Array(this.binsNum)
     this.levels = new Float64Array(this.binsNum)
 
+    let maxN = 0
     for (let key = 0; key < this.binsNum; key++) {
       const freq = this.keyToFreq(key)
       const bandwidth = 2 * (this.keyToFreq(key + 0.5) - freq)
@@ -114,7 +115,12 @@ class SlidingDFT extends AudioWorkletProcessor {
       } while (newFreq - freq > 0)
 
       this.bins[key] = new DFTBin(k, N)
+      if (maxN < N) {
+        maxN = N
+      }
     }
+
+    this.ringBuffer = new RingBuffer(maxN)
   }
 
   keyToFreq (key) {
