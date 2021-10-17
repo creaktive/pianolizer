@@ -14,8 +14,11 @@ class PianoKeyboard {
     this.blackTone = [0, 2, 0, 4, 0, 0, 7, 0, 9, 0, 11, 0]
 
     this.ns = 'http://www.w3.org/2000/svg'
-    this.keys = new Array(88)
+    this.keysNum = 88
+    this.keys = new Array(this.keysNum)
     this.palette = null
+    this.keySlices = null
+    this.keyColors = new Uint32Array(this.keysNum)
   }
 
   drawKey (index, offset, width, height, group) {
@@ -39,10 +42,13 @@ class PianoKeyboard {
     let whiteOffset = 0
     let whiteIndex = 5 // A0
     const startFrom = 9
-    for (let i = startFrom; i < this.keys.length + startFrom; i++) {
+
+    const keySlices = []
+    for (let i = startFrom; i < this.keysNum + startFrom; i++) {
       // black
       const blackIndex = i % this.blackKeys.length
       const blackWidth = this.blackKeys[blackIndex]
+      keySlices.push(blackWidth)
       if (this.blackTone[blackIndex]) {
         this.drawKey(i - startFrom, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
       } else {
@@ -54,6 +60,7 @@ class PianoKeyboard {
       }
       blackOffset += blackWidth
     }
+    this.keySlices = new Uint8Array(keySlices)
 
     this.svg.appendChild(whiteKeyGroup)
     this.svg.appendChild(blackKeyGroup)
@@ -64,11 +71,12 @@ class PianoKeyboard {
   }
 
   update (levels) {
-    for (let key = 0; key < this.keys.length; key++) {
+    for (let key = 0; key < this.keysNum; key++) {
       const level = levels[key]
       const rgbArray = this.palette[(key + 9) % 12]
         .map(value => Math.round(level * value) | 0)
-      const rgbInteger = (rgbArray[0] << 16) + (rgbArray[1] << 8) + rgbArray[2]
+      const rgbInteger = (rgbArray[0] << 16) | (rgbArray[1] << 8) | rgbArray[2]
+      this.keyColors[key] = 0xff000000 | rgbInteger
       const rgbString = rgbInteger
         .toString(16)
         .padStart(6, '0')
