@@ -115,8 +115,9 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.updateInterval = 1.0 / 30 // to be rendered at 30fps
     this.nextUpdateFrame = 0
 
-    // sliding average of 1000 frames (for the output)
-    this.averageWindow = 1000
+    // sliding average of the output (effectively a low-pass to get the general envelope)
+    const averageWindowInSeconds = 0.1
+    this.averageWindow = Math.round(averageWindowInSeconds * sampleRate)
 
     this.pitchFork = 440.0 // A4 is 440 Hz
     this.binsNum = 88
