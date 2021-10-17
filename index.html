@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en-US">
   <head>
-    <title>sdft</title>
     <meta charset="UTF-8">
+    <title>🎹</title>
     <script src="js/piano.js"></script>
     <style>
       body {
@@ -16,21 +16,26 @@
     </style>
   </head>
   <body>
-    <label>
-      Source:
-      <select id="source">
-        <option value="*">🎙 Microphone</option>
-        <option value="audio/mazurka.webm" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
-        <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
-        <option value="audio/sin.wav">Sine wave, 440 Hz</option>
-        <option value="audio/saw.wav">Sawtooth wave, 440 Hz</option>
-        <option value="audio/squ.wav">Square wave, 440 Hz</option>
-        <option value="audio/noise.wav">Pink noise</option>
-      </select>
-    </label>
-    <br>
-    <audio id="input" src="audio/mazurka.webm" controls></audio>
-    <svg id="output" width="1218" height="150"></svg>
+    <div>
+      <label>
+        Source:
+        <select id="source">
+          <option value="*">🎙 Microphone</option>
+          <option value="audio/mazurka.webm" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
+          <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
+          <option value="audio/sin.wav">Sine wave, 440 Hz</option>
+          <option value="audio/saw.wav">Sawtooth wave, 440 Hz</option>
+          <option value="audio/squ.wav">Square wave, 440 Hz</option>
+          <option value="audio/noise.wav">Pink noise</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <audio id="input" src="audio/mazurka.webm" controls></audio>
+    </div>
+    <div>
+      <svg id="output" width="1218" height="150"></svg>
+    </div>
     <script>
       // eslint-disable-next-line no-undef
       const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
@@ -53,7 +58,8 @@
           await audioContext.audioWorklet.addModule('js/sdft.js')
           sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
           sdft.port.onmessage = event => {
-            if (event.data.levels) {
+            // TODO: use SharedArrayBuffer for syncing levels
+            if (event.data.levels !== undefined) {
               pianoKeyboard.update(event.data.levels)
             }
           }
