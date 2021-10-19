@@ -109,6 +109,7 @@ class Spectrogram {
 
     this.width = keySlices.reduce((a, b) => a + b)
     this.height = height
+    this.keysNum = 88
 
     canvasElement.width = this.width
     canvasElement.height = this.height
@@ -122,10 +123,23 @@ class Spectrogram {
   }
 
   update (keyColors) {
-    // for (let y = 0; y < this.height; y++) {
-    // TODO
-    // }
+    // shift the whole buffer upwards
+    const size = this.width * this.height
+    for (let i = this.width; i < size; i++) {
+      this.buf32[i - this.width] = this.buf32[i]
+    }
 
+    // fill in the bottom line
+    let x = this.width * (this.height - 1)
+    for (let key = 0; key < this.keysNum; key++) {
+      const color = 0xff000000 | keyColors[key]
+      const slice = this.keySlices[key]
+      for (let i = 0; i < slice; i++, x++) {
+        this.buf32[x] = color
+      }
+    }
+
+    // render
     this.imageData.data.set(this.buf8)
     this.context.putImageData(this.imageData, 0, 0)
   }
