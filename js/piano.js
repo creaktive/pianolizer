@@ -83,6 +83,9 @@ class PianoKeyboard {
 
     this.svg.appendChild(whiteKeyGroup)
     this.svg.appendChild(blackKeyGroup)
+
+    this.svg.style.width = whiteOffset
+    this.svg.style.height = this.whiteHeight
   }
 
   update (keyColors) {

@@ -33,14 +33,14 @@
     <div>
       <audio id="input" src="audio/mazurka.webm" controls></audio>
     </div>
-    <div>
-      <svg id="output" width="1218" height="150"></svg>
+    <div style="text-align: center">
+      <svg id="keyboard"></svg>
     </div>
     <script>
-      const audioElement = document.querySelector('#input')
+      const audioElement = document.getElementById('input')
 
       // eslint-disable-next-line no-undef
-      const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
+      const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
 
       let palette
       let audioContext
@@ -95,7 +95,7 @@
         }
       }
 
-      document.querySelector('#source').addEventListener('change', event => {
+      document.getElementById('source').addEventListener('change', event => {
         audioElement.pause()
 
         const selectedValue = event.target.value
