@@ -84,8 +84,8 @@ class PianoKeyboard {
     this.svgElement.appendChild(whiteKeyGroup)
     this.svgElement.appendChild(blackKeyGroup)
 
-    this.svgElement.style.width = whiteOffset
-    this.svgElement.style.height = this.whiteHeight
+    this.svgElement.setAttribute('width', whiteOffset)
+    this.svgElement.setAttribute('height', this.whiteHeight)
   }
 
   update (keyColors) {
@@ -103,7 +103,7 @@ class PianoKeyboard {
 
 // eslint-disable-next-line no-unused-vars
 class Spectrogram {
-  constructor (canvasElement, keySlices, height = 300) {
+  constructor (canvasElement, keySlices, height = 600) {
     this.canvasElement = canvasElement
     this.keySlices = keySlices
 
