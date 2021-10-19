@@ -116,7 +116,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     this.nextUpdateFrame = 0
 
     // sliding average of the output (effectively a low-pass to get the general envelope)
-    const averageWindowInSeconds = 0.1
+    const averageWindowInSeconds = 0.05
     this.averageWindow = Math.round(averageWindowInSeconds * sampleRate)
 
     this.pitchFork = 440.0 // A4 is 440 Hz
@@ -194,7 +194,9 @@ class SlidingDFT extends AudioWorkletProcessor {
 
       // snapshot of the levels
       for (let key = 0; key < this.binsNum; key++) {
-        this.levels[key] = this.bins[key].smoothLevel
+        this.levels[key] = this.averageWindow > 0
+          ? this.bins[key].smoothLevel
+          : this.bins[key].level
       }
       this.port.postMessage({ levels: this.levels })
     }
