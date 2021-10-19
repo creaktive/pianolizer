@@ -20,8 +20,8 @@ class Palette {
 // eslint-disable-next-line no-unused-vars
 class PianoKeyboard {
   // Shamelessly stolen from http://www.quadibloc.com/other/cnv05.htm
-  constructor (svg, scale = 1) {
-    this.svg = svg
+  constructor (svgElement, scale = 1) {
+    this.svgElement = svgElement
     this.scale = scale
 
     this.roundCorners = 2
@@ -81,11 +81,11 @@ class PianoKeyboard {
     }
     this.keySlices = new Uint8Array(keySlices)
 
-    this.svg.appendChild(whiteKeyGroup)
-    this.svg.appendChild(blackKeyGroup)
+    this.svgElement.appendChild(whiteKeyGroup)
+    this.svgElement.appendChild(blackKeyGroup)
 
-    this.svg.style.width = whiteOffset
-    this.svg.style.height = this.whiteHeight
+    this.svgElement.style.width = whiteOffset
+    this.svgElement.style.height = this.whiteHeight
   }
 
   update (keyColors) {
@@ -95,5 +95,35 @@ class PianoKeyboard {
         .padStart(6, '0')
       this.keys[key].style.fill = '#' + rgbString
     }
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+class Spectrogram {
+  constructor (canvasElement, keySlices, height = 300) {
+    this.canvasElement = canvasElement
+    this.keySlices = keySlices
+
+    this.width = keySlices.reduce((a, b) => a + b)
+    this.height = height
+
+    canvasElement.width = this.width
+    canvasElement.height = this.height
+
+    this.context = canvasElement.getContext('2d')
+    this.imageData = this.context.createImageData(this.width, this.height)
+
+    this.bufArray = new ArrayBuffer(this.width * this.height * 4)
+    this.buf8 = new Uint8Array(this.bufArray)
+    this.buf32 = new Uint32Array(this.bufArray)
+  }
+
+  update (keyColors) {
+    // for (let y = 0; y < this.height; y++) {
+    // TODO
+    // }
+
+    this.imageData.data.set(this.buf8)
+    this.context.putImageData(this.imageData, 0, 0)
   }
 }

@@ -34,6 +34,8 @@
       <audio id="input" src="audio/mazurka.webm" controls></audio>
     </div>
     <div style="text-align: center">
+      <canvas id="spectrogram"></canvas>
+      <br>
       <svg id="keyboard"></svg>
     </div>
     <script>
@@ -41,6 +43,11 @@
 
       // eslint-disable-next-line no-undef
       const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
+      // eslint-disable-next-line no-undef
+      const spectrogram = new Spectrogram(
+        document.getElementById('spectrogram'),
+        pianoKeyboard.keySlices
+      )
 
       let palette
       let audioContext
@@ -63,6 +70,7 @@
             if (event.data.levels !== undefined) {
               const keyColors = palette.getKeyColors(event.data.levels)
               pianoKeyboard.update(keyColors)
+              spectrogram.update(keyColors)
             }
           }
 
