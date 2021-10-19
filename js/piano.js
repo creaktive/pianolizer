@@ -11,7 +11,7 @@ class Palette {
       const level = levels[key]
       const rgbArray = this.palette[(key + 9) % 12] // start from A
         .map(value => Math.round(level * value) | 0)
-      this.keyColors[key] = (rgbArray[0] << 16) | (rgbArray[1] << 8) | rgbArray[2]
+      this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
     }
     return this.keyColors
   }
@@ -93,7 +93,10 @@ class PianoKeyboard {
       const rgbString = keyColors[key]
         .toString(16)
         .padStart(6, '0')
-      this.keys[key].style.fill = '#' + rgbString
+      this.keys[key].style.fill = '#' +
+        rgbString.substring(4, 5) +
+        rgbString.substring(2, 3) +
+        rgbString.substring(0, 1)
     }
   }
 }
