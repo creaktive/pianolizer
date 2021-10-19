@@ -37,12 +37,12 @@
       <svg id="output" width="1218" height="150"></svg>
     </div>
     <script>
-      // eslint-disable-next-line no-undef
-      const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
-      pianoKeyboard.drawKeyboard()
-
       const audioElement = document.querySelector('#input')
 
+      // eslint-disable-next-line no-undef
+      const pianoKeyboard = new PianoKeyboard(document.querySelector('#output'))
+
+      let palette
       let audioContext
       let audioSource
       let microphoneSource
@@ -52,7 +52,8 @@
         if (audioContext === undefined) {
           await fetch('palette.json')
             .then(response => response.json())
-            .then(data => { pianoKeyboard.setPalette(data) })
+            // eslint-disable-next-line no-undef
+            .then(data => { palette = new Palette(data) })
 
           audioContext = new (window.AudioContext || window.webkitAudioContext)()
           await audioContext.audioWorklet.addModule('js/sdft.js')
@@ -60,7 +61,8 @@
           sdft.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
             if (event.data.levels !== undefined) {
-              pianoKeyboard.update(event.data.levels)
+              const keyColors = palette.getKeyColors(event.data.levels)
+              pianoKeyboard.update(keyColors)
             }
           }
 

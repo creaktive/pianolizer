@@ -1,4 +1,23 @@
 // eslint-disable-next-line no-unused-vars
+class Palette {
+  constructor (palette) {
+    this.palette = palette
+    this.keysNum = 88
+    this.keyColors = new Uint32Array(this.keysNum)
+  }
+
+  getKeyColors (levels) {
+    for (let key = 0; key < this.keysNum; key++) {
+      const level = levels[key]
+      const rgbArray = this.palette[(key + 9) % 12] // start from A
+        .map(value => Math.round(level * value) | 0)
+      this.keyColors[key] = (rgbArray[0] << 16) | (rgbArray[1] << 8) | rgbArray[2]
+    }
+    return this.keyColors
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
 class PianoKeyboard {
   // Shamelessly stolen from http://www.quadibloc.com/other/cnv05.htm
   constructor (svg, scale = 1) {
@@ -16,9 +35,9 @@ class PianoKeyboard {
     this.ns = 'http://www.w3.org/2000/svg'
     this.keysNum = 88
     this.keys = new Array(this.keysNum)
-    this.palette = null
     this.keySlices = null
-    this.keyColors = new Uint32Array(this.keysNum)
+
+    this.drawKeyboard()
   }
 
   drawKey (index, offset, width, height, group) {
@@ -66,18 +85,9 @@ class PianoKeyboard {
     this.svg.appendChild(blackKeyGroup)
   }
 
-  setPalette (palette) {
-    this.palette = palette
-  }
-
-  update (levels) {
+  update (keyColors) {
     for (let key = 0; key < this.keysNum; key++) {
-      const level = levels[key]
-      const rgbArray = this.palette[(key + 9) % 12]
-        .map(value => Math.round(level * value) | 0)
-      const rgbInteger = (rgbArray[0] << 16) | (rgbArray[1] << 8) | rgbArray[2]
-      this.keyColors[key] = 0xff000000 | rgbInteger
-      const rgbString = rgbInteger
+      const rgbString = keyColors[key]
         .toString(16)
         .padStart(6, '0')
       this.keys[key].style.fill = '#' + rgbString
