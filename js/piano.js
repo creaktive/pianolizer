@@ -125,19 +125,18 @@ class Spectrogram {
   }
 
   update (keyColors) {
-    // shift the whole buffer upwards
-    const size = this.width * this.height
-    for (let i = this.width; i < size; i++) {
-      this.buf32[i - this.width] = this.buf32[i]
+    // shift the whole buffer 1 line upwards
+    const lastLine = this.width * (this.height - 1)
+    for (let i = 0; i < lastLine; i++) {
+      this.buf32[i] = this.buf32[i + this.width]
     }
 
     // fill in the bottom line
-    let x = this.width * (this.height - 1)
-    for (let key = 0; key < this.keysNum; key++) {
+    for (let key = 0, j = lastLine; key < this.keysNum; key++) {
       const color = 0xff000000 | keyColors[key]
       const slice = this.keySlices[key]
-      for (let i = 0; i < slice; i++, x++) {
-        this.buf32[x] = color
+      for (let i = 0; i < slice; i++) {
+        this.buf32[j++] = color
       }
     }
 
