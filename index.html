@@ -39,11 +39,10 @@
       <svg id="keyboard"></svg>
     </div>
     <script>
+      /* global PianoKeyboard, Spectrogram, Palette */
       const audioElement = document.getElementById('input')
 
-      // eslint-disable-next-line no-undef
       const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
-      // eslint-disable-next-line no-undef
       const spectrogram = new Spectrogram(
         document.getElementById('spectrogram'),
         pianoKeyboard.keySlices
@@ -59,7 +58,6 @@
         if (audioContext === undefined) {
           await fetch('palette.json')
             .then(response => response.json())
-            // eslint-disable-next-line no-undef
             .then(data => { palette = new Palette(data) })
 
           audioContext = new (window.AudioContext || window.webkitAudioContext)()
