@@ -90,13 +90,15 @@ class PianoKeyboard {
 
   update (keyColors) {
     for (let key = 0; key < this.keysNum; key++) {
-      const rgbString = keyColors[key]
+      const bgrInteger = keyColors[key] // #killme
+      const rgbInteger =
+        ((bgrInteger & 0x0000ff) << 16) |
+        ((bgrInteger & 0x00ff00)) |
+        ((bgrInteger & 0xff0000) >> 16)
+      const rgbString = rgbInteger
         .toString(16)
         .padStart(6, '0')
-      this.keys[key].style.fill = '#' +
-        rgbString.substring(4, 5) +
-        rgbString.substring(2, 3) +
-        rgbString.substring(0, 1)
+      this.keys[key].style.fill = '#' + rgbString
     }
   }
 }
