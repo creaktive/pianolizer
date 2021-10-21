@@ -8,6 +8,14 @@ class Palette {
     this.startOffset = 0
   }
 
+  get rotation () {
+    return this.startOffset
+  }
+
+  set rotation (n) {
+    this.startOffset = n | 0
+  }
+
   getKeyColors (levels) {
     for (let key = 0; key < keysNum; key++) {
       const level = levels[key]
