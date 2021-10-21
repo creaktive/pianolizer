@@ -1,13 +1,14 @@
+const keysNum = 88
+
 // eslint-disable-next-line no-unused-vars
 class Palette {
   constructor (palette) {
     this.palette = palette
-    this.keysNum = 88
-    this.keyColors = new Uint32Array(this.keysNum)
+    this.keyColors = new Uint32Array(keysNum)
   }
 
   getKeyColors (levels) {
-    for (let key = 0; key < this.keysNum; key++) {
+    for (let key = 0; key < keysNum; key++) {
       const level = levels[key]
       const rgbArray = this.palette[(key + 9) % 12] // start from A
         .map(value => Math.round(level * value) | 0)
@@ -33,8 +34,7 @@ class PianoKeyboard {
     this.blackTone = [0, 2, 0, 4, 0, 0, 7, 0, 9, 0, 11, 0]
 
     this.ns = 'http://www.w3.org/2000/svg'
-    this.keysNum = 88
-    this.keys = new Array(this.keysNum)
+    this.keys = new Array(keysNum)
     this.keySlices = null
 
     this.drawKeyboard()
@@ -63,7 +63,7 @@ class PianoKeyboard {
     const startFrom = 9
 
     const keySlices = []
-    for (let i = startFrom; i < this.keysNum + startFrom; i++) {
+    for (let i = startFrom; i < keysNum + startFrom; i++) {
       // black
       const blackIndex = i % this.blackKeys.length
       const blackWidth = this.blackKeys[blackIndex]
@@ -89,7 +89,7 @@ class PianoKeyboard {
   }
 
   update (keyColors) {
-    for (let key = 0; key < this.keysNum; key++) {
+    for (let key = 0; key < keysNum; key++) {
       const bgrInteger = keyColors[key] // #killme
       const rgbInteger =
         ((bgrInteger & 0x0000ff) << 16) |
@@ -111,7 +111,6 @@ class Spectrogram {
 
     this.width = keySlices.reduce((a, b) => a + b)
     this.height = height
-    this.keysNum = 88
 
     canvasElement.width = this.width
     canvasElement.height = this.height
@@ -132,7 +131,7 @@ class Spectrogram {
     }
 
     // fill in the bottom line
-    for (let key = 0, j = lastLine; key < this.keysNum; key++) {
+    for (let key = 0, j = lastLine; key < keysNum; key++) {
       const color = 0xff000000 | keyColors[key]
       const slice = this.keySlices[key]
       for (let i = 0; i < slice; i++) {
