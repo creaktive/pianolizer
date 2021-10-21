@@ -5,12 +5,13 @@ class Palette {
   constructor (palette) {
     this.palette = palette
     this.keyColors = new Uint32Array(keysNum)
+    this.startOffset = 0
   }
 
   getKeyColors (levels) {
     for (let key = 0; key < keysNum; key++) {
       const level = levels[key]
-      const rgbArray = this.palette[(key + 9) % 12] // start from A
+      const rgbArray = this.palette[(key + 9 + this.startOffset) % 12] // start from A
         .map(value => Math.round(level * value) | 0)
       this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
     }

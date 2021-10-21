@@ -8,6 +8,7 @@
       body {
         background-color: #000;
         color: #fff;
+        font-family: "Arial", Times, serif;
       }
       .piano-key {
         stroke: #444;
@@ -29,6 +30,8 @@
           <option value="audio/noise.wav">Pink noise</option>
         </select>
       </label>
+      Palette rotation:
+      <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
     </div>
     <div>
       <audio id="input" src="audio/mazurka.webm" controls></audio>
@@ -99,7 +102,7 @@
         }
       }
 
-      document.getElementById('source').addEventListener('change', event => {
+      document.getElementById('source').onchange = event => {
         audioElement.pause()
 
         const selectedValue = event.target.value
@@ -113,12 +116,18 @@
           audioElement.style['pointer-events'] = 'auto'
           audioElement.src = selectedValue
         }
-      })
+      }
 
-      audioElement.addEventListener('play', () => {
+      audioElement.onplay = () => {
         setupAudio()
         audioElement.play()
-      })
+      }
+
+      document.getElementById('rotation').oninput = event => {
+        if (palette !== undefined) {
+          palette.startOffset = event.target.value | 0
+        }
+      }
     </script>
   </body>
 </html>
