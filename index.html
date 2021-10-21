@@ -65,11 +65,9 @@
           sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
           sdft.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
-            if (event.data.levels !== undefined) {
-              const keyColors = palette.getKeyColors(event.data.levels)
-              pianoKeyboard.update(keyColors)
-              spectrogram.update(keyColors)
-            }
+            const keyColors = palette.getKeyColors(event.data)
+            pianoKeyboard.update(keyColors)
+            spectrogram.update(keyColors)
           }
 
           audioSource = audioContext.createMediaElementSource(audioElement)

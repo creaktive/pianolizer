@@ -156,8 +156,9 @@ class SlidingDFT extends AudioWorkletProcessor {
       return true
     }
 
-    // I hope all the channels have the same # of samples,
-    // and that it stays constand during the lifetime of the worklet
+    // I hope all the channels have the same # of samples; but 128 frames per block
+    // is subject to change:
+    // https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
     const windowSize = input[0][0].length
     if (this.samples === undefined) {
       this.samples = new Float64Array(windowSize)
@@ -198,7 +199,7 @@ class SlidingDFT extends AudioWorkletProcessor {
           ? this.bins[key].smoothLevel
           : this.bins[key].level
       }
-      this.port.postMessage({ levels: this.levels })
+      this.port.postMessage(this.levels)
     }
 
     return true
