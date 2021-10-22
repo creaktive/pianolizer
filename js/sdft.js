@@ -49,7 +49,7 @@ class RingBuffer {
     this.size = 1 << bits
     this.mask = this.size - 1
     this.buffer = new Float64Array(this.size)
-    this.index = 0
+    this.index = 0 // WARNING: overflows after ~6472 years of continuous operation!
   }
 
   write (value) {
