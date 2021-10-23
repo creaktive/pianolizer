@@ -51,12 +51,17 @@
         pianoKeyboard.keySlices
       )
 
-      let palette
-      let audioContext
-      let audioSource
-      let microphoneSource
-      let sdft
-      let levels
+      let audioContext, audioSource, microphoneSource, sdft
+      let levels, lastTimestamp, palette
+
+      function draw (currentTimestamp) {
+        if (levels !== undefined && currentTimestamp !== lastTimestamp) {
+          const keyColors = palette.getKeyColors(levels)
+          pianoKeyboard.update(keyColors)
+          spectrogram.update(keyColors)
+          lastTimestamp = currentTimestamp
+        }
+      }
 
       async function setupAudio () {
         if (audioContext === undefined) {
@@ -70,6 +75,7 @@
           sdft.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
             levels = event.data
+            window.requestAnimationFrame(draw)
           }
 
           audioSource = audioContext.createMediaElementSource(audioElement)
@@ -101,15 +107,6 @@
         }
       }
 
-      function draw () {
-        if (levels !== undefined) {
-          const keyColors = palette.getKeyColors(levels)
-          pianoKeyboard.update(keyColors)
-          spectrogram.update(keyColors)
-        }
-        window.requestAnimationFrame(draw)
-      }
-
       document.getElementById('source').onchange = event => {
         audioElement.pause()
 
@@ -136,8 +133,6 @@
           palette.rotation = event.target.value
         }
       }
-
-      draw()
     </script>
   </body>
 </html>
