@@ -62,19 +62,13 @@ class RingBuffer {
 }
 
 class DFTBin {
-  constructor (k, N, averageWindow = 0) {
+  constructor (k, N) {
     this.k = k
     this.N = N
     this.bands = N / 2
     this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
     this.dft = new Complex()
     this.totalPower = 0
-
-    this.averageWindow = averageWindow
-    this.levelHistorySum = 0
-    if (averageWindow > 0) {
-      this.levelHistory = new RingBuffer(averageWindow)
-    }
   }
 
   update (previousSample, currentSample) {
@@ -88,22 +82,34 @@ class DFTBin {
       .sub(previousComplexSample)
       .add(currentComplexSample)
       .mul(this.coeff)
-
-    if (this.averageWindow) {
-      const level = this.level
-      this.levelHistory.write(level)
-      this.levelHistorySum += level
-      this.levelHistorySum -= this.levelHistory.read(this.averageWindow)
-    }
   }
 
   get level () {
     const level = (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
-    return (level <= 1) ? level : 0
+    return level <= 1 ? level : 0
+  }
+}
+
+class MovingAverage {
+  constructor (channels, averageWindow) {
+    this.channels = channels
+    this.averageWindow = averageWindow
+
+    this.history = new Array(channels)
+    this.sum = new Float64Array(channels)
+    for (let n = 0; n < channels; n++) {
+      this.history[n] = new RingBuffer(averageWindow)
+    }
   }
 
-  get smoothLevel () {
-    return this.levelHistorySum / this.averageWindow
+  update (n, value) {
+    this.history[n].write(value)
+    this.sum[n] += value
+    this.sum[n] -= this.history[n].read(this.averageWindow)
+  }
+
+  read (n) {
+    return this.sum[n] / this.averageWindow
   }
 }
 
@@ -136,13 +142,12 @@ class SlidingDFT extends AudioWorkletProcessor {
         newFreq = sampleRate * (k / N++)
       } while (newFreq - freq > 0)
 
-      this.bins[key] = new DFTBin(k, N, this.averageWindow)
-      if (maxN < N) {
-        maxN = N
-      }
+      this.bins[key] = new DFTBin(k, N)
+      maxN = Math.max(maxN, N)
     }
 
     this.ringBuffer = new RingBuffer(maxN)
+    this.movingAverage = new MovingAverage(this.binsNum, this.averageWindow)
   }
 
   keyToFreq (key) {
@@ -183,9 +188,11 @@ class SlidingDFT extends AudioWorkletProcessor {
       this.samples[i] = 0
       this.ringBuffer.write(currentSample)
 
-      for (const bin of this.bins) {
+      for (let j = 0; j < this.binsNum; j++) {
+        const bin = this.bins[j]
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
+        this.movingAverage.update(j, bin.level)
       }
     }
 
@@ -195,9 +202,7 @@ class SlidingDFT extends AudioWorkletProcessor {
 
       // snapshot of the levels
       for (let key = 0; key < this.binsNum; key++) {
-        this.levels[key] = this.averageWindow > 0
-          ? this.bins[key].smoothLevel
-          : this.bins[key].level
+        this.levels[key] = this.movingAverage.read(key)
       }
       this.port.postMessage(this.levels)
     }
