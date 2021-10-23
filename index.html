@@ -56,6 +56,7 @@
       let audioSource
       let microphoneSource
       let sdft
+      let levels
 
       async function setupAudio () {
         if (audioContext === undefined) {
@@ -68,9 +69,7 @@
           sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
           sdft.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
-            const keyColors = palette.getKeyColors(event.data)
-            pianoKeyboard.update(keyColors)
-            spectrogram.update(keyColors)
+            levels = event.data
           }
 
           audioSource = audioContext.createMediaElementSource(audioElement)
@@ -102,6 +101,15 @@
         }
       }
 
+      function draw () {
+        if (levels !== undefined) {
+          const keyColors = palette.getKeyColors(levels)
+          pianoKeyboard.update(keyColors)
+          spectrogram.update(keyColors)
+        }
+        window.requestAnimationFrame(draw)
+      }
+
       document.getElementById('source').onchange = event => {
         audioElement.pause()
 
@@ -128,6 +136,8 @@
           palette.rotation = event.target.value
         }
       }
+
+      draw()
     </script>
   </body>
 </html>
