@@ -112,7 +112,7 @@ class SlidingDFT extends AudioWorkletProcessor {
   constructor () {
     super()
 
-    this.updateInterval = 1.0 / 30 // to be rendered at 30fps
+    this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
     // sliding average of the output (effectively a low-pass to get the general envelope)
