@@ -109,12 +109,19 @@ class MovingAverage {
 
   set windowLengthInSeconds (value) {
     this.averageWindow = Math.round(value * this.sampleRate)
+    if (this.lastAverageWindow === undefined) {
+      this.lastAverageWindow = this.averageWindow
+    }
   }
 
-  update (n, value) {
-    this.history[n].write(value)
-    this.sum[n] += value
-    this.sum[n] -= this.history[n].read(this.averageWindow)
+  update (levels) {
+    const keysNum = levels.length
+    for (let key = 0; key < keysNum; key++) {
+      const value = levels[key]
+      this.history[key].write(value)
+      this.sum[key] += value
+      this.sum[key] -= this.history[key].read(this.averageWindow)
+    }
   }
 
   read (n) {
@@ -205,12 +212,14 @@ class SlidingDFT extends AudioWorkletProcessor {
       this.samples[i] = 0
       this.ringBuffer.write(currentSample)
 
-      for (let j = 0; j < this.binsNum; j++) {
-        const bin = this.bins[j]
+      for (let key = 0; key < this.binsNum; key++) {
+        const bin = this.bins[key]
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
-        this.movingAverage.update(j, bin.level)
+        this.levels[key] = bin.level
       }
+
+      this.movingAverage.update(this.levels)
     }
 
     // update and sync the levels property with the main thread.
