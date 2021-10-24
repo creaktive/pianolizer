@@ -90,16 +90,25 @@ class DFTBin {
   }
 }
 
+// moving average of the output (effectively a low-pass to get the general envelope)
 class MovingAverage {
-  constructor (channels, averageWindow) {
+  constructor (channels, sampleRate) {
     this.channels = channels
-    this.averageWindow = averageWindow
+    this.sampleRate = sampleRate
 
     this.history = new Array(channels)
     this.sum = new Float64Array(channels)
     for (let n = 0; n < channels; n++) {
-      this.history[n] = new RingBuffer(averageWindow)
+      this.history[n] = new RingBuffer(sampleRate)
     }
+  }
+
+  get windowLengthInSeconds () {
+    return this.averageWindow / this.sampleRate
+  }
+
+  set windowLengthInSeconds (value) {
+    this.averageWindow = Math.round(value * this.sampleRate)
   }
 
   update (n, value) {
@@ -120,10 +129,6 @@ class SlidingDFT extends AudioWorkletProcessor {
 
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
-
-    // sliding average of the output (effectively a low-pass to get the general envelope)
-    const averageWindowInSeconds = 0.05
-    this.averageWindow = Math.round(averageWindowInSeconds * sampleRate)
 
     this.pitchFork = 440.0 // A4 is 440 Hz
     this.binsNum = 88
@@ -147,7 +152,17 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     this.ringBuffer = new RingBuffer(maxN)
-    this.movingAverage = new MovingAverage(this.binsNum, this.averageWindow)
+    this.movingAverage = new MovingAverage(this.binsNum, sampleRate)
+  }
+
+  static get parameterDescriptors () {
+    return [{
+      name: 'smooth',
+      defaultValue: 0.05,
+      minValue: 0,
+      maxValue: 1,
+      automationRate: 'k-rate'
+    }]
   }
 
   keyToFreq (key) {
@@ -181,6 +196,8 @@ class SlidingDFT extends AudioWorkletProcessor {
         }
       }
     }
+
+    this.movingAverage.windowLengthInSeconds = parameters.smooth[0]
 
     // store in the ring buffer
     for (let i = 0; i < windowSize; i++) {

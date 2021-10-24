@@ -32,6 +32,8 @@
       </label>
       Palette rotation:
       <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
+      Smoothing:
+      <input id="smoothing" type="range" min="0" max="1" step="0.01" value="0.05"/>
     </div>
     <div>
       <audio id="input" src="audio/mazurka.webm" controls></audio>
@@ -131,6 +133,12 @@
       document.getElementById('rotation').oninput = event => {
         if (palette !== undefined) {
           palette.rotation = event.target.value
+        }
+      }
+
+      document.getElementById('smoothing').oninput = event => {
+        if (sdft !== undefined) {
+          sdft.parameters.get('smooth').value = event.target.value
         }
       }
     </script>
