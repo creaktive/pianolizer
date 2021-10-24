@@ -34,6 +34,7 @@
       <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
       Smoothing:
       <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.05"/>
+      (<span id="smoothing-value">0.05</span>s)
     </div>
     <div>
       <audio id="input" src="audio/mazurka.webm" controls></audio>
@@ -85,6 +86,7 @@
         }
 
         sdft.connect(audioContext.destination)
+        sdft.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
       }
 
       async function setupMicrophone () {
@@ -137,8 +139,10 @@
       }
 
       document.getElementById('smoothing').oninput = event => {
+        const value = parseFloat(event.target.value)
+        document.getElementById('smoothing-value').innerText = value.toFixed(2)
         if (sdft !== undefined) {
-          sdft.parameters.get('smooth').value = event.target.value
+          sdft.parameters.get('smooth').value = value
         }
       }
     </script>
