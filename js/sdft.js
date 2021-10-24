@@ -115,17 +115,16 @@ class MovingAverage {
   }
 
   update (levels) {
-    const keysNum = levels.length
-    for (let key = 0; key < keysNum; key++) {
-      const value = levels[key]
-      this.history[key].write(value)
-      this.sum[key] += value
+    for (let n = 0; n < this.channels; n++) {
+      const value = levels[n]
+      this.history[n].write(value)
+      this.sum[n] += value
 
       if (this.targetAverageWindow === this.averageWindow) {
-        this.sum[key] -= this.history[key].read(this.averageWindow)
+        this.sum[n] -= this.history[n].read(this.averageWindow)
       } else if (this.targetAverageWindow < this.averageWindow) {
-        this.sum[key] -= this.history[key].read(this.averageWindow)
-        this.sum[key] -= this.history[key].read(this.averageWindow - 1)
+        this.sum[n] -= this.history[n].read(this.averageWindow)
+        this.sum[n] -= this.history[n].read(this.averageWindow - 1)
       }
     }
 
