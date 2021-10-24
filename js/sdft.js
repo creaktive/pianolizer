@@ -92,14 +92,14 @@ class DFTBin {
 
 // moving average of the output (effectively a low-pass to get the general envelope)
 class MovingAverage {
-  constructor (channels, sampleRate) {
+  constructor (channels, sampleRate, maxWindow = sampleRate) {
     this.channels = channels
     this.sampleRate = sampleRate
 
     this.history = new Array(channels)
     this.sum = new Float64Array(channels)
     for (let n = 0; n < channels; n++) {
-      this.history[n] = new RingBuffer(sampleRate)
+      this.history[n] = new RingBuffer(maxWindow)
     }
   }
 
@@ -108,9 +108,9 @@ class MovingAverage {
   }
 
   set windowLengthInSeconds (value) {
-    this.averageWindow = Math.round(value * this.sampleRate)
-    if (this.lastAverageWindow === undefined) {
-      this.lastAverageWindow = this.averageWindow
+    this.targetAverageWindow = Math.round(value * this.sampleRate)
+    if (this.averageWindow === undefined) {
+      this.averageWindow = this.targetAverageWindow
     }
   }
 
@@ -120,7 +120,19 @@ class MovingAverage {
       const value = levels[key]
       this.history[key].write(value)
       this.sum[key] += value
-      this.sum[key] -= this.history[key].read(this.averageWindow)
+
+      if (this.targetAverageWindow === this.averageWindow) {
+        this.sum[key] -= this.history[key].read(this.averageWindow)
+      } else if (this.targetAverageWindow < this.averageWindow) {
+        this.sum[key] -= this.history[key].read(this.averageWindow)
+        this.sum[key] -= this.history[key].read(this.averageWindow - 1)
+      }
+    }
+
+    if (this.targetAverageWindow > this.averageWindow) {
+      this.averageWindow++
+    } else if (this.targetAverageWindow < this.averageWindow) {
+      this.averageWindow--
     }
   }
 
@@ -159,7 +171,7 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     this.ringBuffer = new RingBuffer(maxN)
-    this.movingAverage = new MovingAverage(this.binsNum, sampleRate)
+    this.movingAverage = new MovingAverage(this.binsNum, sampleRate, sampleRate * 0.25)
   }
 
   static get parameterDescriptors () {
@@ -167,7 +179,7 @@ class SlidingDFT extends AudioWorkletProcessor {
       name: 'smooth',
       defaultValue: 0.05,
       minValue: 0,
-      maxValue: 1,
+      maxValue: 0.25,
       automationRate: 'k-rate'
     }]
   }
@@ -227,8 +239,10 @@ class SlidingDFT extends AudioWorkletProcessor {
       this.nextUpdateFrame = currentTime + this.updateInterval
 
       // snapshot of the levels
-      for (let key = 0; key < this.binsNum; key++) {
-        this.levels[key] = this.movingAverage.read(key)
+      if (this.movingAverage.averageWindow > 0) {
+        for (let key = 0; key < this.binsNum; key++) {
+          this.levels[key] = this.movingAverage.read(key)
+        }
       }
       this.port.postMessage(this.levels)
     }
