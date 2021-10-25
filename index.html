@@ -123,7 +123,7 @@
           // <audio> element source
           try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone was not connected') }
           audioElement.style['pointer-events'] = 'auto'
-          audioElement.src = selectedValue
+          audioElement.src = `${selectedValue}?_=${Date.now()}` // never cache
         }
       }
 
