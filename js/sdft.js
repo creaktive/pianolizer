@@ -217,7 +217,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
-    this.sdft = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
+    this.slidingDFT = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
   }
 
   static get parameterDescriptors () {
@@ -258,7 +258,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     }
 
     // DO IT!!!
-    const levels = this.sdft.process(this.samples, parameters.smooth[0])
+    const levels = this.slidingDFT.process(this.samples, parameters.smooth[0])
 
     // update and sync the levels property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
