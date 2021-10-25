@@ -141,7 +141,7 @@ class MovingAverage {
 }
 
 class SlidingDFT {
-  constructor (sampleRate, maxAverageWindowInSeconds = 0.25, pitchFork = 440.0) {
+  constructor (sampleRate, maxAverageWindowInSeconds = 0, pitchFork = 440.0) {
     this.pitchFork = pitchFork // A4 is 440 Hz
     this.binsNum = 88
     this.bins = new Array(this.binsNum)
@@ -211,7 +211,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
-    this.sdft = new SlidingDFT(sampleRate)
+    this.sdft = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
   }
 
   static get parameterDescriptors () {
