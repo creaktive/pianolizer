@@ -48,7 +48,7 @@ class RingBuffer {
 
     this.size = 1 << bits
     this.mask = this.size - 1
-    this.buffer = new Float64Array(this.size)
+    this.buffer = new Float32Array(this.size)
     this.index = 0 // WARNING: overflows after ~6472 years of continuous operation!
   }
 
@@ -97,7 +97,7 @@ class MovingAverage {
     this.sampleRate = sampleRate
 
     this.history = new Array(channels)
-    this.sum = new Float64Array(channels)
+    this.sum = new Float32Array(channels)
     for (let n = 0; n < channels; n++) {
       this.history[n] = new RingBuffer(maxWindow)
     }
@@ -145,7 +145,7 @@ class SlidingDFT {
     this.pitchFork = pitchFork // A4 is 440 Hz
     this.binsNum = 88
     this.bins = new Array(this.binsNum)
-    this.levels = new Float64Array(this.binsNum)
+    this.levels = new Float32Array(this.binsNum)
 
     let maxN = 0
     for (let key = 0; key < this.binsNum; key++) {
@@ -235,7 +235,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     // https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
     const windowSize = input[0][0].length
     if (this.samples === undefined || this.samples.length !== windowSize) {
-      this.samples = new Float64Array(windowSize)
+      this.samples = new Float32Array(windowSize)
     }
 
     // mix down the inputs into single array
