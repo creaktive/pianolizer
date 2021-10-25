@@ -34,7 +34,7 @@
       <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
       Smoothing:
       <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.05"/>
-      (<span id="smoothing-value">0.05</span>s)
+      (<span id="smoothing-value">0.050</span>s)
     </div>
     <div>
       <audio id="input" src="audio/mazurka.webm" controls></audio>
@@ -140,7 +140,7 @@
 
       document.getElementById('smoothing').oninput = event => {
         const value = parseFloat(event.target.value)
-        document.getElementById('smoothing-value').innerText = value.toFixed(2)
+        document.getElementById('smoothing-value').innerText = value.toFixed(3)
         if (sdft !== undefined) {
           sdft.parameters.get('smooth').value = value
         }
