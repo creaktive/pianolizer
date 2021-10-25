@@ -164,7 +164,9 @@ class SlidingDFT {
     }
 
     this.ringBuffer = new RingBuffer(maxN)
-    this.movingAverage = new MovingAverage(this.binsNum, sampleRate, sampleRate * maxAverageWindowInSeconds)
+    this.movingAverage = maxAverageWindowInSeconds > 0
+      ? new MovingAverage(this.binsNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
+      : null
   }
 
   keyToFreq (key) {
@@ -173,7 +175,9 @@ class SlidingDFT {
   }
 
   process (samples, averageWindowInSeconds = 0) {
-    this.movingAverage.averageWindowInSeconds = averageWindowInSeconds
+    if (this.movingAverage !== null) {
+      this.movingAverage.averageWindowInSeconds = averageWindowInSeconds
+    }
     const windowSize = samples.length
 
     // store in the ring buffer & process
@@ -189,11 +193,13 @@ class SlidingDFT {
         this.levels[key] = bin.level
       }
 
-      this.movingAverage.update(this.levels)
+      if (this.movingAverage !== null) {
+        this.movingAverage.update(this.levels)
+      }
     }
 
     // snapshot of the levels, after smoothing
-    if (this.movingAverage.averageWindow > 0) {
+    if (this.movingAverage !== null && this.movingAverage.averageWindow > 0) {
       for (let key = 0; key < this.binsNum; key++) {
         this.levels[key] = this.movingAverage.read(key)
       }
