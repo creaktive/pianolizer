@@ -103,11 +103,11 @@ class MovingAverage {
     }
   }
 
-  get windowLengthInSeconds () {
+  get averageWindowInSeconds () {
     return this.averageWindow / this.sampleRate
   }
 
-  set windowLengthInSeconds (value) {
+  set averageWindowInSeconds (value) {
     this.targetAverageWindow = Math.round(value * this.sampleRate)
     if (this.averageWindow === undefined) {
       this.averageWindow = this.targetAverageWindow
@@ -140,15 +140,9 @@ class MovingAverage {
   }
 }
 
-class SlidingDFT extends AudioWorkletProcessor {
-  /* global currentTime, sampleRate */
-  constructor () {
-    super()
-
-    this.updateInterval = 1.0 / 60 // to be rendered at 60fps
-    this.nextUpdateFrame = 0
-
-    this.pitchFork = 440.0 // A4 is 440 Hz
+class SlidingDFT {
+  constructor (sampleRate, maxAverageWindowInSeconds = 0.25, pitchFork = 440.0) {
+    this.pitchFork = pitchFork // A4 is 440 Hz
     this.binsNum = 88
     this.bins = new Array(this.binsNum)
     this.levels = new Float64Array(this.binsNum)
@@ -170,7 +164,54 @@ class SlidingDFT extends AudioWorkletProcessor {
     }
 
     this.ringBuffer = new RingBuffer(maxN)
-    this.movingAverage = new MovingAverage(this.binsNum, sampleRate, sampleRate * 0.25)
+    this.movingAverage = new MovingAverage(this.binsNum, sampleRate, sampleRate * maxAverageWindowInSeconds)
+  }
+
+  keyToFreq (key) {
+    // https://en.wikipedia.org/wiki/Piano_key_frequencies
+    return this.pitchFork * Math.pow(2, (key - 48) / 12)
+  }
+
+  process (samples, averageWindowInSeconds = 0) {
+    this.movingAverage.averageWindowInSeconds = averageWindowInSeconds
+    const windowSize = samples.length
+
+    // store in the ring buffer & process
+    for (let i = 0; i < windowSize; i++) {
+      const currentSample = samples[i]
+      samples[i] = 0
+      this.ringBuffer.write(currentSample)
+
+      for (let key = 0; key < this.binsNum; key++) {
+        const bin = this.bins[key]
+        const previousSample = this.ringBuffer.read(bin.N)
+        bin.update(previousSample, currentSample)
+        this.levels[key] = bin.level
+      }
+
+      this.movingAverage.update(this.levels)
+    }
+
+    // snapshot of the levels, after smoothing
+    if (this.movingAverage.averageWindow > 0) {
+      for (let key = 0; key < this.binsNum; key++) {
+        this.levels[key] = this.movingAverage.read(key)
+      }
+    }
+
+    return this.levels
+  }
+}
+
+class SlidingDFTNode extends AudioWorkletProcessor {
+  /* global currentTime, sampleRate */
+  constructor () {
+    super()
+
+    this.updateInterval = 1.0 / 60 // to be rendered at 60fps
+    this.nextUpdateFrame = 0
+
+    this.sdft = new SlidingDFT(sampleRate)
   }
 
   static get parameterDescriptors () {
@@ -181,11 +222,6 @@ class SlidingDFT extends AudioWorkletProcessor {
       maxValue: 0.25,
       automationRate: 'k-rate'
     }]
-  }
-
-  keyToFreq (key) {
-    // https://en.wikipedia.org/wiki/Piano_key_frequencies
-    return this.pitchFork * Math.pow(2, (key - 48) / 12)
   }
 
   process (input, output, parameters) {
@@ -215,39 +251,17 @@ class SlidingDFT extends AudioWorkletProcessor {
       }
     }
 
-    this.movingAverage.windowLengthInSeconds = parameters.smooth[0]
-
-    // store in the ring buffer & process
-    for (let i = 0; i < windowSize; i++) {
-      const currentSample = this.samples[i]
-      this.samples[i] = 0
-      this.ringBuffer.write(currentSample)
-
-      for (let key = 0; key < this.binsNum; key++) {
-        const bin = this.bins[key]
-        const previousSample = this.ringBuffer.read(bin.N)
-        bin.update(previousSample, currentSample)
-        this.levels[key] = bin.level
-      }
-
-      this.movingAverage.update(this.levels)
-    }
+    // DO IT!!!
+    const levels = this.sdft.process(this.samples, parameters.smooth[0])
 
     // update and sync the levels property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
       this.nextUpdateFrame = currentTime + this.updateInterval
-
-      // snapshot of the levels
-      if (this.movingAverage.averageWindow > 0) {
-        for (let key = 0; key < this.binsNum; key++) {
-          this.levels[key] = this.movingAverage.read(key)
-        }
-      }
-      this.port.postMessage(this.levels)
+      this.port.postMessage(levels)
     }
 
     return true
   }
 }
 
-registerProcessor('sliding-dft-node', SlidingDFT)
+registerProcessor('sliding-dft-node', SlidingDFTNode)
