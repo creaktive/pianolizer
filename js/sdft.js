@@ -209,8 +209,19 @@ class SlidingDFT {
   }
 }
 
+/**
+ * SlidingDFT wrapper for the audio worklet API.
+ *
+ * @class SlidingDFTNode
+ * @extends {AudioWorkletProcessor}
+ */
 class SlidingDFTNode extends AudioWorkletProcessor {
   /* global currentTime, sampleRate */
+
+  /**
+   * Creates an instance of SlidingDFTNode.
+   * @memberof SlidingDFTNode
+   */
   constructor () {
     super()
 
@@ -220,6 +231,14 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.slidingDFT = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
   }
 
+  /**
+  * Definition of the 'smooth' parameter.
+  *
+  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/parameterDescriptors}
+  * @readonly
+  * @static
+  * @memberof SlidingDFTNode
+  */
   static get parameterDescriptors () {
     return [{
       name: 'smooth',
@@ -230,6 +249,16 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     }]
   }
 
+  /**
+  * SDFT processing algorithm for the audio processor worklet.
+  *
+  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process}
+  * @param {Array} input An array of inputs connected to the node, each item of which is, in turn, an array of channels. Each channel is a Float32Array containing N samples.
+  * @param {Array} output Filled with a copy of the input.
+  * @param {Object} parameters We only need the value under the key 'smooth'.
+  * @return {Boolean} Always returns true, so as to to keep the node alive.
+  * @memberof SlidingDFTNode
+  */
   process (input, output, parameters) {
     // if no inputs are connected then zero channels will be passed in
     if (input[0].length === 0) {
@@ -237,8 +266,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     }
 
     // I hope all the channels have the same # of samples; but 128 frames per block is
-    // subject to change, even *during* the lifetime of an AudioWorkletProcessor instance:
-    // https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
+    // subject to change, even *during* the lifetime of an AudioWorkletProcessor instance!
     const windowSize = input[0][0].length
     if (this.samples === undefined || this.samples.length !== windowSize) {
       this.samples = new Float32Array(windowSize)
