@@ -90,8 +90,19 @@ class DFTBin {
   }
 }
 
-// moving average of the output (effectively a low-pass to get the general envelope)
+/**
+ * Moving average of the output (effectively a low-pass to get the general envelope)
+ *
+ * @class MovingAverage
+ */
 class MovingAverage {
+  /**
+  * Creates an instance of MovingAverage.
+  * @param {Number} channels Number of channels to process.
+  * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
+  * @param {Number} maxWindow Preallocate buffers of this size, per channel (defaults to sampleRate).
+  * @memberof MovingAverage
+  */
   constructor (channels, sampleRate, maxWindow = sampleRate) {
     this.channels = channels
     this.sampleRate = sampleRate
@@ -103,10 +114,20 @@ class MovingAverage {
     }
   }
 
+  /**
+  * Get the current window size (in seconds).
+  *
+  * @memberof MovingAverage
+  */
   get averageWindowInSeconds () {
     return this.averageWindow / this.sampleRate
   }
 
+  /**
+  * Set the current window size (in seconds).
+  *
+  * @memberof MovingAverage
+  */
   set averageWindowInSeconds (value) {
     this.targetAverageWindow = Math.round(value * this.sampleRate)
     if (this.averageWindow === undefined) {
@@ -114,6 +135,12 @@ class MovingAverage {
     }
   }
 
+  /**
+  * Update the internal state with from the input.
+  *
+  * @param {Float32Array} levels Array of level values, one per channel.
+  * @memberof MovingAverage
+  */
   update (levels) {
     for (let n = 0; n < this.channels; n++) {
       const value = levels[n]
@@ -135,6 +162,13 @@ class MovingAverage {
     }
   }
 
+  /**
+   * Retrieve the current moving average value for a given channel.
+   *
+   * @param {Number} n Number of channel to retrieve the moving average for.
+   * @return {Number} Current moving average value for the specified channel.
+   * @memberof MovingAverage
+   */
   read (n) {
     return this.sum[n] / this.averageWindow
   }
