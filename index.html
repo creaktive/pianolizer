@@ -46,6 +46,13 @@
     </div>
     <script>
       /* global PianoKeyboard, Spectrogram, Palette */
+      let audioContext, audioSource, microphoneSource, sdft
+      let levels, lastTimestamp, palette
+
+      fetch('palette.json')
+        .then(response => response.json())
+        .then(data => { palette = new Palette(data) })
+
       const audioElement = document.getElementById('input')
 
       const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
@@ -54,11 +61,12 @@
         pianoKeyboard.keySlices
       )
 
-      let audioContext, audioSource, microphoneSource, sdft
-      let levels, lastTimestamp, palette
-
       function draw (currentTimestamp) {
-        if (levels !== undefined && currentTimestamp !== lastTimestamp) {
+        if (
+          levels !== undefined &&
+          palette !== undefined &&
+          currentTimestamp !== lastTimestamp
+        ) {
           const keyColors = palette.getKeyColors(levels)
           pianoKeyboard.update(keyColors)
           spectrogram.update(keyColors)
@@ -68,10 +76,6 @@
 
       async function setupAudio () {
         if (audioContext === undefined) {
-          await fetch('palette.json')
-            .then(response => response.json())
-            .then(data => { palette = new Palette(data) })
-
           audioContext = new (window.AudioContext || window.webkitAudioContext)()
           await audioContext.audioWorklet.addModule('js/sdft.js')
           sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
