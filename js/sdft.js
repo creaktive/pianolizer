@@ -97,11 +97,11 @@ class DFTBin {
  */
 class FastMovingAverage {
   /**
-  * Creates an instance of MovingAverage.
-  * @param {Number} channels Number of channels to process.
-  * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
-  * @memberof FastMovingAverage
-  */
+   * Creates an instance of MovingAverage.
+   * @param {Number} channels Number of channels to process.
+   * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
+   * @memberof FastMovingAverage
+   */
   constructor (channels, sampleRate) {
     this.channels = channels
     this.sampleRate = sampleRate
@@ -109,19 +109,19 @@ class FastMovingAverage {
   }
 
   /**
-  * Get the current window size (in seconds).
-  *
-  * @memberof FastMovingAverage
-  */
+   * Get the current window size (in seconds).
+   *
+   * @memberof FastMovingAverage
+   */
   get averageWindowInSeconds () {
     return this.averageWindow / this.sampleRate
   }
 
   /**
-  * Set the current window size (in seconds).
-  *
-  * @memberof FastMovingAverage
-  */
+   * Set the current window size (in seconds).
+   *
+   * @memberof FastMovingAverage
+   */
   set averageWindowInSeconds (value) {
     this.targetAverageWindow = Math.round(value * this.sampleRate)
     if (this.averageWindow === undefined) {
@@ -138,11 +138,11 @@ class FastMovingAverage {
   }
 
   /**
-  * Update the internal state with from the input.
-  *
-  * @param {Float32Array} levels Array of level values, one per channel.
-  * @memberof FastMovingAverage
-  */
+   * Update the internal state with from the input.
+   *
+   * @param {Float32Array} levels Array of level values, one per channel.
+   * @memberof FastMovingAverage
+   */
   update (levels) {
     for (let n = 0; n < this.channels; n++) {
       const currentSum = this.sum[n]
@@ -172,12 +172,12 @@ class FastMovingAverage {
  */
 class MovingAverage extends FastMovingAverage {
   /**
-  * Creates an instance of MovingAverage.
-  * @param {Number} channels Number of channels to process.
-  * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
-  * @param {Number} maxWindow Preallocate buffers of this size, per channel (defaults to sampleRate).
-  * @memberof MovingAverage
-  */
+   * Creates an instance of MovingAverage.
+   * @param {Number} channels Number of channels to process.
+   * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
+   * @param {Number} maxWindow Preallocate buffers of this size, per channel (defaults to sampleRate).
+   * @memberof MovingAverage
+   */
   constructor (channels, sampleRate, maxWindow = sampleRate) {
     super(channels, sampleRate)
     this.history = new Array(channels)
@@ -187,11 +187,11 @@ class MovingAverage extends FastMovingAverage {
   }
 
   /**
-  * Update the internal state with from the input.
-  *
-  * @param {Float32Array} levels Array of level values, one per channel.
-  * @memberof MovingAverage
-  */
+   * Update the internal state with from the input.
+   *
+   * @param {Float32Array} levels Array of level values, one per channel.
+   * @memberof MovingAverage
+   */
   update (levels) {
     for (let n = 0; n < this.channels; n++) {
       const value = levels[n]
@@ -307,13 +307,13 @@ class SlidingDFTNode extends AudioWorkletProcessor {
   }
 
   /**
-  * Definition of the 'smooth' parameter.
-  *
-  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/parameterDescriptors}
-  * @readonly
-  * @static
-  * @memberof SlidingDFTNode
-  */
+   * Definition of the 'smooth' parameter.
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/parameterDescriptors}
+   * @readonly
+   * @static
+   * @memberof SlidingDFTNode
+   */
   static get parameterDescriptors () {
     return [{
       name: 'smooth',
@@ -325,15 +325,15 @@ class SlidingDFTNode extends AudioWorkletProcessor {
   }
 
   /**
-  * SDFT processing algorithm for the audio processor worklet.
-  *
-  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process}
-  * @param {Array} input An array of inputs connected to the node, each item of which is, in turn, an array of channels. Each channel is a Float32Array containing N samples.
-  * @param {Array} output Filled with a copy of the input.
-  * @param {Object} parameters We only need the value under the key 'smooth'.
-  * @return {Boolean} Always returns true, so as to to keep the node alive.
-  * @memberof SlidingDFTNode
-  */
+   * SDFT processing algorithm for the audio processor worklet.
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process}
+   * @param {Array} input An array of inputs connected to the node, each item of which is, in turn, an array of channels. Each channel is a Float32Array containing N samples.
+   * @param {Array} output Filled with a copy of the input.
+   * @param {Object} parameters We only need the value under the key 'smooth'.
+   * @return {Boolean} Always returns true, so as to to keep the node alive.
+   * @memberof SlidingDFTNode
+   */
   process (input, output, parameters) {
     // if no inputs are connected then zero channels will be passed in
     if (input[0].length === 0) {
