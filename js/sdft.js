@@ -93,6 +93,76 @@ class DFTBin {
 /**
  * Moving average of the output (effectively a low-pass to get the general envelope)
  *
+ * @class FastMovingAverage
+ */
+class FastMovingAverage {
+  /**
+  * Creates an instance of MovingAverage.
+  * @param {Number} channels Number of channels to process.
+  * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
+  * @memberof FastMovingAverage
+  */
+  constructor (channels, sampleRate) {
+    this.channels = channels
+    this.sampleRate = sampleRate
+    this.sum = new Float32Array(channels)
+  }
+
+  /**
+  * Get the current window size (in seconds).
+  *
+  * @memberof FastMovingAverage
+  */
+  get averageWindowInSeconds () {
+    return this.averageWindow / this.sampleRate
+  }
+
+  /**
+  * Set the current window size (in seconds).
+  *
+  * @memberof FastMovingAverage
+  */
+  set averageWindowInSeconds (value) {
+    this.targetAverageWindow = Math.round(value * this.sampleRate)
+    if (this.averageWindow === undefined) {
+      this.averageWindow = this.targetAverageWindow
+    }
+  }
+
+  /**
+  * Update the internal state with from the input.
+  *
+  * @param {Float32Array} levels Array of level values, one per channel.
+  * @memberof FastMovingAverage
+  */
+  update (levels) {
+    for (let n = 0; n < this.channels; n++) {
+      const currentSum = this.sum[n]
+      this.sum[n] = currentSum + levels[n] - currentSum / this.averageWindow
+    }
+
+    if (this.targetAverageWindow > this.averageWindow) {
+      this.averageWindow++
+    } else if (this.targetAverageWindow < this.averageWindow) {
+      this.averageWindow--
+    }
+  }
+
+  /**
+   * Retrieve the current moving average value for a given channel.
+   *
+   * @param {Number} n Number of channel to retrieve the moving average for.
+   * @return {Number} Current moving average value for the specified channel.
+   * @memberof FastMovingAverage
+   */
+  read (n) {
+    return this.sum[n] / this.averageWindow
+  }
+}
+
+/**
+ * Moving average of the output (effectively a low-pass to get the general envelope)
+ *
  * @class MovingAverage
  */
 class MovingAverage {
@@ -198,9 +268,14 @@ class SlidingDFT {
     }
 
     this.ringBuffer = new RingBuffer(maxN)
-    this.movingAverage = maxAverageWindowInSeconds > 0
-      ? new MovingAverage(this.binsNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
-      : null
+
+    if (maxAverageWindowInSeconds > 0) {
+      this.movingAverage = new MovingAverage(this.binsNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
+    } else if (maxAverageWindowInSeconds < 0) {
+      this.movingAverage = new FastMovingAverage(this.binsNum, sampleRate)
+    } else {
+      this.movingAverage = null
+    }
   }
 
   keyToFreq (key) {
@@ -262,7 +337,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
-    this.slidingDFT = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
+    this.slidingDFT = new SlidingDFT(sampleRate, -1) // SlidingDFTNode.parameterDescriptors[0].maxValue)
   }
 
   /**
