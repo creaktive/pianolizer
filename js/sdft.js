@@ -129,6 +129,14 @@ class FastMovingAverage {
     }
   }
 
+  updateAverageWindow () {
+    if (this.targetAverageWindow > this.averageWindow) {
+      this.averageWindow++
+    } else if (this.targetAverageWindow < this.averageWindow) {
+      this.averageWindow--
+    }
+  }
+
   /**
   * Update the internal state with from the input.
   *
@@ -140,12 +148,7 @@ class FastMovingAverage {
       const currentSum = this.sum[n]
       this.sum[n] = currentSum + levels[n] - currentSum / this.averageWindow
     }
-
-    if (this.targetAverageWindow > this.averageWindow) {
-      this.averageWindow++
-    } else if (this.targetAverageWindow < this.averageWindow) {
-      this.averageWindow--
-    }
+    this.updateAverageWindow()
   }
 
   /**
@@ -165,7 +168,7 @@ class FastMovingAverage {
  *
  * @class MovingAverage
  */
-class MovingAverage {
+class MovingAverage extends FastMovingAverage {
   /**
   * Creates an instance of MovingAverage.
   * @param {Number} channels Number of channels to process.
@@ -174,34 +177,10 @@ class MovingAverage {
   * @memberof MovingAverage
   */
   constructor (channels, sampleRate, maxWindow = sampleRate) {
-    this.channels = channels
-    this.sampleRate = sampleRate
-
+    super(channels, sampleRate)
     this.history = new Array(channels)
-    this.sum = new Float32Array(channels)
     for (let n = 0; n < channels; n++) {
       this.history[n] = new RingBuffer(maxWindow)
-    }
-  }
-
-  /**
-  * Get the current window size (in seconds).
-  *
-  * @memberof MovingAverage
-  */
-  get averageWindowInSeconds () {
-    return this.averageWindow / this.sampleRate
-  }
-
-  /**
-  * Set the current window size (in seconds).
-  *
-  * @memberof MovingAverage
-  */
-  set averageWindowInSeconds (value) {
-    this.targetAverageWindow = Math.round(value * this.sampleRate)
-    if (this.averageWindow === undefined) {
-      this.averageWindow = this.targetAverageWindow
     }
   }
 
@@ -224,23 +203,7 @@ class MovingAverage {
         this.sum[n] -= this.history[n].read(this.averageWindow - 1)
       }
     }
-
-    if (this.targetAverageWindow > this.averageWindow) {
-      this.averageWindow++
-    } else if (this.targetAverageWindow < this.averageWindow) {
-      this.averageWindow--
-    }
-  }
-
-  /**
-   * Retrieve the current moving average value for a given channel.
-   *
-   * @param {Number} n Number of channel to retrieve the moving average for.
-   * @return {Number} Current moving average value for the specified channel.
-   * @memberof MovingAverage
-   */
-  read (n) {
-    return this.sum[n] / this.averageWindow
+    this.updateAverageWindow()
   }
 }
 
@@ -337,7 +300,8 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
-    this.slidingDFT = new SlidingDFT(sampleRate, -1) // SlidingDFTNode.parameterDescriptors[0].maxValue)
+    // this.slidingDFT = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
+    this.slidingDFT = new SlidingDFT(sampleRate, -1)
   }
 
   /**
