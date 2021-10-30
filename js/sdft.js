@@ -44,7 +44,7 @@ class Complex {
 class RingBuffer {
   constructor (requestedSize) {
     const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
-    // console.info(`Allocating RingBuffer for ${bits} address bits`)
+    console.info(`Allocating RingBuffer for ${bits} address bits`)
 
     this.size = 1 << bits
     this.mask = this.size - 1
@@ -146,7 +146,9 @@ class FastMovingAverage {
   update (levels) {
     for (let n = 0; n < this.channels; n++) {
       const currentSum = this.sum[n]
-      this.sum[n] = currentSum + levels[n] - currentSum / this.averageWindow
+      this.sum[n] = this.averageWindow
+        ? currentSum + levels[n] - currentSum / this.averageWindow
+        : levels[n]
     }
     this.updateAverageWindow()
   }
