@@ -185,6 +185,7 @@ class DFTBin {
 /**
  * Moving average of the output (effectively a low-pass to get the general envelope).
  * Fast approximation of the MovingAverage; requires significantly less memory.
+ * @see {@link https://www.daycounter.com/LabBook/Moving-Average.phtml}
  *
  * @class FastMovingAverage
  */
@@ -309,9 +310,22 @@ class MovingAverage extends FastMovingAverage {
   }
 }
 
+/**
+ * Sliding Discrete Fourier Transform implementation for (westerns) musical frequencies.
+ *
+ * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
+ * @class SlidingDFT
+ */
 class SlidingDFT {
+  /**
+   * Creates an instance of SlidingDFT.
+   * @param {Number} sampleRate Self-explanatory.
+   * @param {Number} [maxAverageWindowInSeconds=0] Positive values are passed to MovingAverage implementation; negative values trigger FastMovingAverage implementation. Zero disables averaging.
+   * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
+   * @memberof SlidingDFT
+   */
   constructor (sampleRate, maxAverageWindowInSeconds = 0, pitchFork = 440.0) {
-    this.pitchFork = pitchFork // A4 is 440 Hz
+    this.pitchFork = pitchFork
     this.binsNum = 88
     this.bins = new Array(this.binsNum)
     this.levels = new Float32Array(this.binsNum)
@@ -343,11 +357,26 @@ class SlidingDFT {
     }
   }
 
+  /**
+   * Converts the piano key number to it's fundamental frequency.
+   *
+   * @see {@link https://en.wikipedia.org/wiki/Piano_key_frequencies}
+   * @param {Number} key
+   * @return {Number}
+   * @memberof SlidingDFT
+   */
   keyToFreq (key) {
-    // https://en.wikipedia.org/wiki/Piano_key_frequencies
     return this.pitchFork * Math.pow(2, (key - 48) / 12)
   }
 
+  /**
+   * Process a batch of samples.
+   *
+   * @param {Float32Array} samples Array with the batch of samples to process.
+   * @param {Number} [averageWindowInSeconds=0] Adjust the moving average window size.
+   * @return {Float32Array} Snapshot of the levels after processing all the samples.
+   * @memberof SlidingDFT
+   */
   process (samples, averageWindowInSeconds = 0) {
     if (this.movingAverage !== null) {
       this.movingAverage.averageWindowInSeconds = averageWindowInSeconds
