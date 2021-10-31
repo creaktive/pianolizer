@@ -41,7 +41,18 @@ class Complex {
   }
 }
 
+/**
+ * Reasonably fast Ring Buffer implementation.
+ * Caveat: the size of the allocated memory is always a power of two!
+ *
+ * @class RingBuffer
+ */
 class RingBuffer {
+  /**
+   * Creates an instance of RingBuffer.
+   * @param {Number} requestedSize How long the RingBuffer is expected to be.
+   * @memberof RingBuffer
+   */
   constructor (requestedSize) {
     const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
     console.info(`Allocating RingBuffer for ${bits} address bits`)
@@ -52,10 +63,23 @@ class RingBuffer {
     this.index = 0 // WARNING: overflows after ~6472 years of continuous operation!
   }
 
+  /**
+   * Shifts the RingBuffer and stores the value in the latest position.
+   *
+   * @param {Number} value Value to be stored in an Float32Array.
+   * @memberof RingBuffer
+   */
   write (value) {
     this.buffer[(this.index++) & this.mask] = value
   }
 
+  /**
+   * Retrieves the value stored at the position.
+   *
+   * @param {Number} index Position within the RingBuffer.
+   * @return {Number} The value at the position.
+   * @memberof RingBuffer
+   */
   read (index) {
     return this.buffer[(this.index + (~index)) & this.mask]
   }
