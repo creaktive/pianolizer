@@ -61,7 +61,18 @@ class RingBuffer {
   }
 }
 
+/**
+ * Discrete Fourier Transform computation for one single bin.
+ *
+ * @class DFTBin
+ */
 class DFTBin {
+  /**
+   * Creates an instance of DFTBin.
+   * @param {Number} k Frequency divided by the bandwidth (must be an integer!).
+   * @param {Number} N Sample rate divided by the bandwidth (must be an integer!).
+   * @memberof DFTBin
+   */
   constructor (k, N) {
     this.k = k
     this.N = N
@@ -71,6 +82,13 @@ class DFTBin {
     this.totalPower = 0
   }
 
+  /**
+   * Do the Sliding DFT computation.
+   *
+   * @param {Number} previousSample Sample from N frames ago.
+   * @param {Number} currentSample The latest sample.
+   * @memberof DFTBin
+   */
   update (previousSample, currentSample) {
     this.totalPower += currentSample * currentSample
     this.totalPower -= previousSample * previousSample
@@ -84,6 +102,12 @@ class DFTBin {
       .mul(this.coeff)
   }
 
+  /**
+   * Returns the DFT value magnitude divided by RMS.
+   *
+   * @readonly
+   * @memberof DFTBin
+   */
   get level () {
     const level = (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
     return level <= 1 ? level : 0
@@ -91,7 +115,8 @@ class DFTBin {
 }
 
 /**
- * Moving average of the output (effectively a low-pass to get the general envelope)
+ * Moving average of the output (effectively a low-pass to get the general envelope).
+ * Fast approximation of the MovingAverage; requires significantly less memory.
  *
  * @class FastMovingAverage
  */
@@ -171,9 +196,11 @@ class FastMovingAverage {
 }
 
 /**
- * Moving average of the output (effectively a low-pass to get the general envelope)
+ * Moving average of the output (effectively a low-pass to get the general envelope).
+ * This is the "proper" implementation; it does require lots of memory allocated for the RingBuffers!
  *
  * @class MovingAverage
+ * @extends {FastMovingAverage}
  */
 class MovingAverage extends FastMovingAverage {
   /**
