@@ -129,6 +129,11 @@ class FastMovingAverage {
     }
   }
 
+  /**
+   * Adjust averageWindow in steps.
+   *
+   * @memberof FastMovingAverage
+   */
   updateAverageWindow () {
     if (this.targetAverageWindow > this.averageWindow) {
       this.averageWindow++
@@ -144,13 +149,13 @@ class FastMovingAverage {
    * @memberof FastMovingAverage
    */
   update (levels) {
+    this.updateAverageWindow()
     for (let n = 0; n < this.channels; n++) {
       const currentSum = this.sum[n]
       this.sum[n] = this.averageWindow
         ? currentSum + levels[n] - currentSum / this.averageWindow
         : levels[n]
     }
-    this.updateAverageWindow()
   }
 
   /**
