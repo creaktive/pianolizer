@@ -1,9 +1,27 @@
+/**
+ * Minimal implementation of Complex numbers required for the Discrete Fourier Transform computations.
+ *
+ * @class Complex
+ */
 class Complex {
+  /**
+   * Creates an instance of Complex.
+   * @param {number} [re=0] Real part.
+   * @param {number} [im=0] Imaginary part.
+   * @memberof Complex
+   */
   constructor (re = 0, im = 0) {
     this.re = re
     this.im = im
   }
 
+  /**
+   * Addition.
+   *
+   * @param {Complex} z Complex number to add.
+   * @return {Complex} Sum of the instance and z.
+   * @memberof Complex
+   */
   add (z) {
     return new Complex(
       this.re + z.re,
@@ -11,6 +29,13 @@ class Complex {
     )
   }
 
+  /**
+   * Subtraction.
+   *
+   * @param {Complex} z Complex number to subtract.
+   * @return {Complex} Sum of the instance and z.
+   * @memberof Complex
+   */
   sub (z) {
     return new Complex(
       this.re - z.re,
@@ -18,6 +43,13 @@ class Complex {
     )
   }
 
+  /**
+   * Multiplication.
+   *
+   * @param {Complex} z Complex number to multiply.
+   * @return {Complex} Product of the instance and z.
+   * @memberof Complex
+   */
   mul (z) {
     return new Complex(
       this.re * z.re - this.im * z.im,
@@ -25,6 +57,12 @@ class Complex {
     )
   }
 
+  /**
+   * Exponential.
+   *
+   * @return {Complex} Exponential of the instance.
+   * @memberof Complex
+   */
   exp () {
     const tmp = Math.exp(this.re)
     return new Complex(
@@ -33,6 +71,12 @@ class Complex {
     )
   }
 
+  /**
+   * Magnitude.
+   *
+   * @readonly
+   * @memberof Complex
+   */
   get magnitude () {
     return Math.sqrt(
       this.re * this.re +
@@ -231,7 +275,7 @@ class MovingAverage extends FastMovingAverage {
    * Creates an instance of MovingAverage.
    * @param {Number} channels Number of channels to process.
    * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
-   * @param {Number} maxWindow Preallocate buffers of this size, per channel (defaults to sampleRate).
+   * @param {Number} [maxWindow=sampleRate] Preallocate buffers of this size, per channel.
    * @memberof MovingAverage
    */
   constructor (channels, sampleRate, maxWindow = sampleRate) {
