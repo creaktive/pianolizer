@@ -334,13 +334,21 @@ class SlidingDFT {
     for (let key = 0; key < this.binsNum; key++) {
       const freq = this.keyToFreq(key)
       const bandwidth = 2 * (this.keyToFreq(key + 0.5) - freq)
-      let N = Math.ceil(sampleRate / bandwidth)
-      const k = Math.ceil(freq / bandwidth)
+      let N = Math.floor(sampleRate / bandwidth)
+      const k = Math.floor(freq / bandwidth)
 
-      let newFreq
-      do {
-        newFreq = sampleRate * (k / N++)
-      } while (newFreq - freq > 0)
+      // find such N that (sampleRate * (k / N)) is the closest to freq
+      // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
+      let delta = Math.abs(sampleRate * (k / N) - freq)
+      for (let i = N - 1; ; i--) {
+        const tmpDelta = Math.abs(sampleRate * (k / i) - freq)
+        if (tmpDelta < delta) {
+          delta = tmpDelta
+          N = i
+        } else {
+          break
+        }
+      }
 
       this.bins[key] = new DFTBin(k, N)
       maxN = Math.max(maxN, N)
