@@ -16,10 +16,10 @@ for my $key ( 0 .. 87 ) {
     my $old_freq = key2freq( $key );
     my $bandwidth = 2 * ( key2freq( $key + 0.5 ) - $old_freq );
     my $N = POSIX::floor( $sample_rate / $bandwidth );
-    my $k = POSIX::ceil( $old_freq / $bandwidth );
+    my $k = POSIX::floor( $old_freq / $bandwidth );
 
     my $delta = abs( $sample_rate * ( $k / $N ) - $old_freq );
-    for ( my $i = $N + 1;; $i++) {
+    for ( my $i = $N - 1;; $i--) {
         my $tmp_delta = abs( $sample_rate * ( $k / $i ) - $old_freq );
         if ( $tmp_delta < $delta ) {
             $delta = $tmp_delta;
