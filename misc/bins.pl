@@ -10,28 +10,34 @@ sub key2freq ( $n ) {
     return 440 * ( 2 ** ( ( $n - 48 ) / 12 ) );
 }
 
-my $sample_rate = 44100;
+my $sample_rate = $ARGV[0] || 44100;
 
 for my $key ( 0 .. 87 ) {
-    my $freq = key2freq( $key );
-    my $bandwidth = 2 * ( key2freq( $key + 0.5 ) - $freq );
-    my $N = POSIX::ceil( $sample_rate / $bandwidth );
-    my $k = POSIX::ceil( $freq / $bandwidth );
+    my $old_freq = key2freq( $key );
+    my $bandwidth = 2 * ( key2freq( $key + 0.5 ) - $old_freq );
+    my $N = POSIX::floor( $sample_rate / $bandwidth );
+    my $k = POSIX::ceil( $old_freq / $bandwidth );
 
-    my $new_freq;
-    do {
-        $N++;
-        $new_freq = $sample_rate * ( $k / $N );
-    } until ( $new_freq - $freq <= 0 );
+    my $delta = abs( $sample_rate * ( $k / $N ) - $old_freq );
+    for ( my $i = $N + 1;; $i++) {
+        my $tmp_delta = abs( $sample_rate * ( $k / $i ) - $old_freq );
+        if ( $tmp_delta < $delta ) {
+            $delta = $tmp_delta;
+            $N = $i;
+        } else {
+            last;
+        }
+    }
+    my $new_freq = $sample_rate * ( $k / $N );
     my $new_bandwidth = $sample_rate / $N;
 
     printf "%d\t%f\t%f\t%d\t%f\t%f\t%f\n",
         $key,
-        $freq,
+        $old_freq,
         $bandwidth,
         $N,
         $new_freq,
         $new_bandwidth,
-        100 * ( $new_freq - $freq ) / $bandwidth,
+        100 * ( $new_freq - $old_freq ) / $bandwidth,
     ;
 }
