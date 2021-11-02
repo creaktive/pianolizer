@@ -311,37 +311,58 @@ class MovingAverage extends FastMovingAverage {
 }
 
 /**
- * Sliding Discrete Fourier Transform implementation for (westerns) musical frequencies.
+ * Essentially, creates an instance that provides the 'mapping',
+ * which is an array of objects providing the values for key, k & N.
  *
- * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
- * @class SlidingDFT
+ * @class PianoTuning
  */
-class SlidingDFT {
+class PianoTuning {
   /**
-   * Creates an instance of SlidingDFT.
+   * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
-   * @param {Number} [maxAverageWindowInSeconds=0] Positive values are passed to MovingAverage implementation; negative values trigger FastMovingAverage implementation. Zero disables averaging.
    * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
-   * @memberof SlidingDFT
+   * @param {Number} [keysNum=88] Most pianos will have 88 keys.
+   * @param {Number} [referenceKey=48] Key index for the pitchFork reference (A4 is the default).
+   * @memberof PianoTuning
    */
-  constructor (sampleRate, maxAverageWindowInSeconds = 0, pitchFork = 440.0) {
+  constructor (sampleRate, pitchFork = 440.0, keysNum = 88, referenceKey = 48) {
+    this.sampleRate = sampleRate
     this.pitchFork = pitchFork
-    this.binsNum = 88
-    this.bins = new Array(this.binsNum)
-    this.levels = new Float32Array(this.binsNum)
+    this.keysNum = keysNum
+    this.referenceKey = referenceKey
+  }
 
-    let maxN = 0
-    for (let key = 0; key < this.binsNum; key++) {
-      const freq = this.keyToFreq(key)
-      const bandwidth = 2 * (this.keyToFreq(key + 0.5) - freq)
-      let N = Math.floor(sampleRate / bandwidth)
-      const k = Math.floor(freq / bandwidth)
+  /**
+   * Converts the piano key number to it's fundamental frequency.
+   *
+   * @see {@link https://en.wikipedia.org/wiki/Piano_key_frequencies}
+   * @param {Number} key
+   * @return {Number}
+   * @memberof PianoTuning
+   */
+  keyToFreq (key) {
+    return this.pitchFork * Math.pow(2, (key - this.referenceKey) / 12)
+  }
+
+  /**
+   * Computes the array of objects that specify the frequencies to analyze.
+   *
+   * @readonly
+   * @memberof PianoTuning
+   */
+  get mapping () {
+    const output = new Array(this.keysNum)
+    for (let key = 0; key < this.keysNum; key++) {
+      const frequency = this.keyToFreq(key)
+      const bandwidth = 2 * (this.keyToFreq(key + 0.5) - frequency)
+      let N = Math.floor(this.sampleRate / bandwidth)
+      const k = Math.floor(frequency / bandwidth)
 
       // find such N that (sampleRate * (k / N)) is the closest to freq
       // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
-      let delta = Math.abs(sampleRate * (k / N) - freq)
+      let delta = Math.abs(sampleRate * (k / N) - frequency)
       for (let i = N - 1; ; i--) {
-        const tmpDelta = Math.abs(sampleRate * (k / i) - freq)
+        const tmpDelta = Math.abs(sampleRate * (k / i) - frequency)
         if (tmpDelta < delta) {
           delta = tmpDelta
           N = i
@@ -350,16 +371,41 @@ class SlidingDFT {
         }
       }
 
-      this.bins[key] = new DFTBin(k, N)
-      maxN = Math.max(maxN, N)
+      output[key] = { key, frequency, bandwidth, k, N }
     }
+    return output
+  }
+}
+
+/**
+ * Sliding Discrete Fourier Transform implementation for (westerns) musical frequencies.
+ *
+ * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
+ * @class SlidingDFT
+ */
+class SlidingDFT {
+  /**
+   * Creates an instance of SlidingDFT.
+   * @param {PianoTuning} tuning PianoTuning instance.
+   * @param {Number} [maxAverageWindowInSeconds=0] Positive values are passed to MovingAverage implementation; negative values trigger FastMovingAverage implementation. Zero disables averaging.
+   * @memberof SlidingDFT
+   */
+  constructor (tuning, maxAverageWindowInSeconds = 0) {
+    this.bins = new Array(tuning.keysNum)
+    this.levels = new Float32Array(tuning.keysNum)
+
+    let maxN = 0
+    tuning.mapping.forEach((band) => {
+      this.bins[band.key] = new DFTBin(band.k, band.N)
+      maxN = Math.max(maxN, band.N)
+    })
 
     this.ringBuffer = new RingBuffer(maxN)
 
     if (maxAverageWindowInSeconds > 0) {
-      this.movingAverage = new MovingAverage(this.binsNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
+      this.movingAverage = new MovingAverage(tuning.keysNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
     } else if (maxAverageWindowInSeconds < 0) {
-      this.movingAverage = new FastMovingAverage(this.binsNum, sampleRate)
+      this.movingAverage = new FastMovingAverage(tuning.keysNum, sampleRate)
     } else {
       this.movingAverage = null
     }
@@ -390,6 +436,7 @@ class SlidingDFT {
       this.movingAverage.averageWindowInSeconds = averageWindowInSeconds
     }
     const windowSize = samples.length
+    const binsNum = this.bins.length
 
     // store in the ring buffer & process
     for (let i = 0; i < windowSize; i++) {
@@ -397,7 +444,7 @@ class SlidingDFT {
       samples[i] = 0
       this.ringBuffer.write(currentSample)
 
-      for (let key = 0; key < this.binsNum; key++) {
+      for (let key = 0; key < binsNum; key++) {
         const bin = this.bins[key]
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
@@ -411,7 +458,7 @@ class SlidingDFT {
 
     // snapshot of the levels, after smoothing
     if (this.movingAverage !== null && this.movingAverage.averageWindow > 0) {
-      for (let key = 0; key < this.binsNum; key++) {
+      for (let key = 0; key < binsNum; key++) {
         this.levels[key] = this.movingAverage.read(key)
       }
     }
@@ -439,8 +486,9 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
-    // this.slidingDFT = new SlidingDFT(sampleRate, SlidingDFTNode.parameterDescriptors[0].maxValue)
-    this.slidingDFT = new SlidingDFT(sampleRate, -1)
+    const tuning = new PianoTuning(sampleRate)
+    // this.slidingDFT = new SlidingDFT(tuning, SlidingDFTNode.parameterDescriptors[0].maxValue)
+    this.slidingDFT = new SlidingDFT(tuning, -1)
   }
 
   /**
