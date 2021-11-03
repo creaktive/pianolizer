@@ -101,9 +101,9 @@ class RingBuffer {
     const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
     console.info(`Allocating RingBuffer for ${bits} address bits`)
 
-    this.size = 1 << bits
-    this.mask = this.size - 1
-    this.buffer = new Float32Array(this.size)
+    const size = 1 << bits
+    this.mask = size - 1
+    this.buffer = new Float32Array(size)
     this.index = 0 // WARNING: overflows after ~6472 years of continuous operation!
   }
 
@@ -409,18 +409,6 @@ class SlidingDFT {
     } else {
       this.movingAverage = null
     }
-  }
-
-  /**
-   * Converts the piano key number to it's fundamental frequency.
-   *
-   * @see {@link https://en.wikipedia.org/wiki/Piano_key_frequencies}
-   * @param {Number} key
-   * @return {Number}
-   * @memberof SlidingDFT
-   */
-  keyToFreq (key) {
-    return this.pitchFork * Math.pow(2, (key - 48) / 12)
   }
 
   /**
