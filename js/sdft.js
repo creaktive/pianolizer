@@ -319,12 +319,28 @@ class HeavyMovingAverage extends MovingAverage {
 }
 
 /**
+ * Base class for PianoTuning. Must implement the mapping() getter.
+ *
+ * @class MovingAverage
+ */
+class Tuning {
+  /**
+   * Creates an instance of PianoTuning.
+   * @param {Number} sampleRate Self-explanatory.
+   */
+  constructor (sampleRate) {
+    this.sampleRate = sampleRate
+  }
+}
+
+/**
  * Essentially, creates an instance that provides the 'mapping',
  * which is an array of objects providing the values for key, k & N.
  *
  * @class PianoTuning
+ * @extends {Tuning}
  */
-class PianoTuning {
+class PianoTuning extends Tuning {
   /**
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
@@ -334,7 +350,7 @@ class PianoTuning {
    * @memberof PianoTuning
    */
   constructor (sampleRate, pitchFork = 440.0, keysNum = 88, referenceKey = 48) {
-    this.sampleRate = sampleRate
+    super(sampleRate)
     this.pitchFork = pitchFork
     this.keysNum = keysNum
     this.referenceKey = referenceKey
