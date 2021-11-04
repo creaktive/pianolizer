@@ -183,18 +183,16 @@ class DFTBin {
 }
 
 /**
- * Moving average of the output (effectively a low-pass to get the general envelope).
- * Fast approximation of the MovingAverage; requires significantly less memory.
- * @see {@link https://www.daycounter.com/LabBook/Moving-Average.phtml}
+ * Base class for FastMovingAverage & HeavyMovingAverage. Must implement the update(levels) method.
  *
- * @class FastMovingAverage
+ * @class MovingAverage
  */
-class FastMovingAverage {
+class MovingAverage {
   /**
    * Creates an instance of MovingAverage.
    * @param {Number} channels Number of channels to process.
    * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
-   * @memberof FastMovingAverage
+   * @memberof MovingAverage
    */
   constructor (channels, sampleRate) {
     this.channels = channels
@@ -205,7 +203,7 @@ class FastMovingAverage {
   /**
    * Get the current window size (in seconds).
    *
-   * @memberof FastMovingAverage
+   * @memberof MovingAverage
    */
   get averageWindowInSeconds () {
     return this.averageWindow / this.sampleRate
@@ -214,7 +212,7 @@ class FastMovingAverage {
   /**
    * Set the current window size (in seconds).
    *
-   * @memberof FastMovingAverage
+   * @memberof MovingAverage
    */
   set averageWindowInSeconds (value) {
     this.targetAverageWindow = Math.round(value * this.sampleRate)
@@ -226,7 +224,7 @@ class FastMovingAverage {
   /**
    * Adjust averageWindow in steps.
    *
-   * @memberof FastMovingAverage
+   * @memberof MovingAverage
    */
   updateAverageWindow () {
     if (this.targetAverageWindow > this.averageWindow) {
@@ -236,6 +234,27 @@ class FastMovingAverage {
     }
   }
 
+  /**
+   * Retrieve the current moving average value for a given channel.
+   *
+   * @param {Number} n Number of channel to retrieve the moving average for.
+   * @return {Number} Current moving average value for the specified channel.
+   * @memberof MovingAverage
+   */
+  read (n) {
+    return this.sum[n] / this.averageWindow
+  }
+}
+
+/**
+ * Moving average of the output (effectively a low-pass to get the general envelope).
+ * Fast approximation of the MovingAverage; requires significantly less memory.
+ * @see {@link https://www.daycounter.com/LabBook/Moving-Average.phtml}
+ *
+ * @class FastMovingAverage
+ * @extends {MovingAverage}
+ */
+class FastMovingAverage extends MovingAverage {
   /**
    * Update the internal state with from the input.
    *
@@ -251,33 +270,22 @@ class FastMovingAverage {
         : levels[n]
     }
   }
-
-  /**
-   * Retrieve the current moving average value for a given channel.
-   *
-   * @param {Number} n Number of channel to retrieve the moving average for.
-   * @return {Number} Current moving average value for the specified channel.
-   * @memberof FastMovingAverage
-   */
-  read (n) {
-    return this.sum[n] / this.averageWindow
-  }
 }
 
 /**
  * Moving average of the output (effectively a low-pass to get the general envelope).
  * This is the "proper" implementation; it does require lots of memory allocated for the RingBuffers!
  *
- * @class MovingAverage
- * @extends {FastMovingAverage}
+ * @class HeavyMovingAverage
+ * @extends {MovingAverage}
  */
-class MovingAverage extends FastMovingAverage {
+class HeavyMovingAverage extends MovingAverage {
   /**
-   * Creates an instance of MovingAverage.
+   * Creates an instance of HeavyMovingAverage.
    * @param {Number} channels Number of channels to process.
    * @param {Number} sampleRate Sample rate, used to convert between time and amount of samples.
    * @param {Number} [maxWindow=sampleRate] Preallocate buffers of this size, per channel.
-   * @memberof MovingAverage
+   * @memberof HeavyMovingAverage
    */
   constructor (channels, sampleRate, maxWindow = sampleRate) {
     super(channels, sampleRate)
@@ -291,7 +299,7 @@ class MovingAverage extends FastMovingAverage {
    * Update the internal state with from the input.
    *
    * @param {Float32Array} levels Array of level values, one per channel.
-   * @memberof MovingAverage
+   * @memberof HeavyMovingAverage
    */
   update (levels) {
     for (let n = 0; n < this.channels; n++) {
@@ -403,7 +411,7 @@ class SlidingDFT {
     this.ringBuffer = new RingBuffer(maxN)
 
     if (maxAverageWindowInSeconds > 0) {
-      this.movingAverage = new MovingAverage(tuning.keysNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
+      this.movingAverage = new HeavyMovingAverage(tuning.keysNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
     } else if (maxAverageWindowInSeconds < 0) {
       this.movingAverage = new FastMovingAverage(tuning.keysNum, sampleRate)
     } else {
