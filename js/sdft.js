@@ -325,7 +325,7 @@ class HeavyMovingAverage extends MovingAverage {
  */
 class Tuning {
   /**
-   * Creates an instance of PianoTuning.
+   * Creates an instance of Tuning.
    * @param {Number} sampleRate Self-explanatory.
    */
   constructor (sampleRate) {
