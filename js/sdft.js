@@ -332,6 +332,32 @@ class Tuning {
     this.sampleRate = sampleRate
     this.bands = bands
   }
+
+  /**
+   * Approximate k & N values for DFTBin.
+   *
+   * @param {Number} frequency In Hz.
+   * @param {Number} bandwidth In Hz.
+   * @return {Object} Object containing k & N that best approximate for the given frequency & bandwidth.
+   * @memberof Tuning
+   */
+  frequencyAndBandwidthToKAndN (frequency, bandwidth) {
+    let N = Math.floor(this.sampleRate / bandwidth)
+    const k = Math.floor(frequency / bandwidth)
+
+    // find such N that (sampleRate * (k / N)) is the closest to freq
+    // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
+    let delta = Math.abs(sampleRate * (k / N) - frequency)
+    for (let i = N - 1; ; i--) {
+      const tmpDelta = Math.abs(sampleRate * (k / i) - frequency)
+      if (tmpDelta < delta) {
+        delta = tmpDelta
+        N = i
+      } else {
+        return { k, N }
+      }
+    }
+  }
 }
 
 /*
@@ -393,23 +419,7 @@ class PianoTuning extends Tuning {
     for (let key = 0; key < this.bands; key++) {
       const frequency = this.keyToFreq(key)
       const bandwidth = 2 * (this.keyToFreq(key + 0.5) - frequency)
-      let N = Math.floor(this.sampleRate / bandwidth)
-      const k = Math.floor(frequency / bandwidth)
-
-      // find such N that (sampleRate * (k / N)) is the closest to freq
-      // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
-      let delta = Math.abs(sampleRate * (k / N) - frequency)
-      for (let i = N - 1; ; i--) {
-        const tmpDelta = Math.abs(sampleRate * (k / i) - frequency)
-        if (tmpDelta < delta) {
-          delta = tmpDelta
-          N = i
-        } else {
-          break
-        }
-      }
-
-      output.push({ frequency, bandwidth, k, N })
+      output.push(this.frequencyAndBandwidthToKAndN(frequency, bandwidth))
     }
     return output
   }
