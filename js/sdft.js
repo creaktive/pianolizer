@@ -289,9 +289,9 @@ class HeavyMovingAverage extends MovingAverage {
    */
   constructor (channels, sampleRate, maxWindow = sampleRate) {
     super(channels, sampleRate)
-    this.history = new Array(channels)
+    this.history = []
     for (let n = 0; n < channels; n++) {
-      this.history[n] = new RingBuffer(maxWindow)
+      this.history.push(new RingBuffer(maxWindow))
     }
   }
 
@@ -340,9 +340,9 @@ class RegularTuning extends Tuning {
   constructor (sampleRate, bands) {
     super(sampleRate, bands)
     this.bands = bands
-    this.mapping = new Array(bands)
+    this.mapping = []
     for (let band = 0; band < this.mapping.length; band++) {
-      this.mapping[band] = { i: band, k: band, N: bands * 2 }
+      this.mapping.push({ k: band, N: bands * 2 })
     }
   }
 }
@@ -389,7 +389,7 @@ class PianoTuning extends Tuning {
    * @memberof PianoTuning
    */
   get mapping () {
-    const output = new Array(this.bands)
+    const output = []
     for (let key = 0; key < this.bands; key++) {
       const frequency = this.keyToFreq(key)
       const bandwidth = 2 * (this.keyToFreq(key + 0.5) - frequency)
@@ -409,7 +409,7 @@ class PianoTuning extends Tuning {
         }
       }
 
-      output[key] = { i: key, frequency, bandwidth, k, N }
+      output.push({ frequency, bandwidth, k, N })
     }
     return output
   }
@@ -429,12 +429,12 @@ class SlidingDFT {
    * @memberof SlidingDFT
    */
   constructor (tuning, maxAverageWindowInSeconds = 0) {
-    this.bins = new Array(tuning.bands)
+    this.bins = []
     this.levels = new Float32Array(tuning.bands)
 
     let maxN = 0
     tuning.mapping.forEach((band) => {
-      this.bins[band.i] = new DFTBin(band.k, band.N)
+      this.bins.push(new DFTBin(band.k, band.N))
       maxN = Math.max(maxN, band.N)
     })
 
