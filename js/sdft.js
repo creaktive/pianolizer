@@ -334,6 +334,20 @@ class Tuning {
   }
 }
 
+/*
+// Proof of concept; there's no advantage in using Sliding DFT if we need to cover the full spectrum
+class RegularTuning extends Tuning {
+  constructor (sampleRate, bands) {
+    super(sampleRate, bands)
+    this.bands = bands
+    this.mapping = new Array(bands)
+    for (let band = 0; band < this.mapping.length; band++) {
+      this.mapping[band] = { i: band, k: band, N: bands * 2 }
+    }
+  }
+}
+*/
+
 /**
  * Essentially, creates an instance that provides the 'mapping',
  * which is an array of objects providing the values for i, k & N.
@@ -499,6 +513,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.nextUpdateFrame = 0
 
     const tuning = new PianoTuning(sampleRate)
+    // const tuning = new RegularTuning(sampleRate, 88)
     // this.slidingDFT = new SlidingDFT(tuning, SlidingDFTNode.parameterDescriptors[0].maxValue)
     this.slidingDFT = new SlidingDFT(tuning, -1)
   }
