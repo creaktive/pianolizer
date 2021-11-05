@@ -319,7 +319,7 @@ class HeavyMovingAverage extends MovingAverage {
 }
 
 /**
- * Base class for PianoTuning. Must implement the mapping() getter.
+ * Base class for PianoTuning. Must implement this.mapping array.
  *
  * @class MovingAverage
  */
@@ -328,14 +328,15 @@ class Tuning {
    * Creates an instance of Tuning.
    * @param {Number} sampleRate Self-explanatory.
    */
-  constructor (sampleRate) {
+  constructor (sampleRate, bands) {
     this.sampleRate = sampleRate
+    this.bands = bands
   }
 }
 
 /**
  * Essentially, creates an instance that provides the 'mapping',
- * which is an array of objects providing the values for key, k & N.
+ * which is an array of objects providing the values for i, k & N.
  *
  * @class PianoTuning
  * @extends {Tuning}
@@ -349,10 +350,9 @@ class PianoTuning extends Tuning {
    * @param {Number} [referenceKey=48] Key index for the pitchFork reference (A4 is the default).
    * @memberof PianoTuning
    */
-  constructor (sampleRate, pitchFork = 440.0, keysNum = 88, referenceKey = 48) {
-    super(sampleRate)
+  constructor (sampleRate, keysNum = 88, pitchFork = 440.0, referenceKey = 48) {
+    super(sampleRate, keysNum)
     this.pitchFork = pitchFork
-    this.keysNum = keysNum
     this.referenceKey = referenceKey
   }
 
@@ -375,8 +375,8 @@ class PianoTuning extends Tuning {
    * @memberof PianoTuning
    */
   get mapping () {
-    const output = new Array(this.keysNum)
-    for (let key = 0; key < this.keysNum; key++) {
+    const output = new Array(this.bands)
+    for (let key = 0; key < this.bands; key++) {
       const frequency = this.keyToFreq(key)
       const bandwidth = 2 * (this.keyToFreq(key + 0.5) - frequency)
       let N = Math.floor(this.sampleRate / bandwidth)
@@ -395,7 +395,7 @@ class PianoTuning extends Tuning {
         }
       }
 
-      output[key] = { key, frequency, bandwidth, k, N }
+      output[key] = { i: key, frequency, bandwidth, k, N }
     }
     return output
   }
@@ -415,21 +415,21 @@ class SlidingDFT {
    * @memberof SlidingDFT
    */
   constructor (tuning, maxAverageWindowInSeconds = 0) {
-    this.bins = new Array(tuning.keysNum)
-    this.levels = new Float32Array(tuning.keysNum)
+    this.bins = new Array(tuning.bands)
+    this.levels = new Float32Array(tuning.bands)
 
     let maxN = 0
     tuning.mapping.forEach((band) => {
-      this.bins[band.key] = new DFTBin(band.k, band.N)
+      this.bins[band.i] = new DFTBin(band.k, band.N)
       maxN = Math.max(maxN, band.N)
     })
 
     this.ringBuffer = new RingBuffer(maxN)
 
     if (maxAverageWindowInSeconds > 0) {
-      this.movingAverage = new HeavyMovingAverage(tuning.keysNum, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
+      this.movingAverage = new HeavyMovingAverage(tuning.bands, sampleRate, Math.round(sampleRate * maxAverageWindowInSeconds))
     } else if (maxAverageWindowInSeconds < 0) {
-      this.movingAverage = new FastMovingAverage(tuning.keysNum, sampleRate)
+      this.movingAverage = new FastMovingAverage(tuning.bands, sampleRate)
     } else {
       this.movingAverage = null
     }
@@ -456,11 +456,11 @@ class SlidingDFT {
       samples[i] = 0
       this.ringBuffer.write(currentSample)
 
-      for (let key = 0; key < binsNum; key++) {
-        const bin = this.bins[key]
+      for (let band = 0; band < binsNum; band++) {
+        const bin = this.bins[band]
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
-        this.levels[key] = bin.level
+        this.levels[band] = bin.level
       }
 
       if (this.movingAverage !== null) {
@@ -470,8 +470,8 @@ class SlidingDFT {
 
     // snapshot of the levels, after smoothing
     if (this.movingAverage !== null && this.movingAverage.averageWindow > 0) {
-      for (let key = 0; key < binsNum; key++) {
-        this.levels[key] = this.movingAverage.read(key)
+      for (let band = 0; band < binsNum; band++) {
+        this.levels[band] = this.movingAverage.read(band)
       }
     }
 
