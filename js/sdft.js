@@ -327,6 +327,7 @@ class Tuning {
   /**
    * Creates an instance of Tuning.
    * @param {Number} sampleRate Self-explanatory.
+   * @param {Number} bands How many filters.
    */
   constructor (sampleRate, bands) {
     this.sampleRate = sampleRate
@@ -365,7 +366,6 @@ class Tuning {
 class RegularTuning extends Tuning {
   constructor (sampleRate, bands) {
     super(sampleRate, bands)
-    this.bands = bands
     this.mapping = []
     for (let band = 0; band < this.mapping.length; band++) {
       this.mapping.push({ k: band, N: bands * 2 })
