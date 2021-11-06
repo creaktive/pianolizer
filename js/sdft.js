@@ -144,7 +144,7 @@ class DFTBin {
   constructor (k, N) {
     this.k = k
     this.N = N
-    this.bands = N / 2
+    this.halfN = N / 2
     this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
     this.dft = new Complex()
     this.totalPower = 0
@@ -171,13 +171,13 @@ class DFTBin {
   }
 
   /**
-   * Root mean square.
+   * Root Mean Square.
    *
    * @readonly
    * @memberof DFTBin
    */
   get rms () {
-    return Math.sqrt(this.totalPower / this.bands)
+    return Math.sqrt(this.totalPower / this.halfN)
   }
 
   /**
@@ -188,7 +188,7 @@ class DFTBin {
    */
   get level () {
     return this.totalPower > 0
-      ? (this.dft.magnitude / this.bands) / this.rms
+      ? (this.dft.magnitude / this.halfN) / this.rms
       : 0
   }
 }
