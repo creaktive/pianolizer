@@ -187,9 +187,8 @@ class DFTBin {
    * @memberof DFTBin
    */
   get level () {
-    const rms = this.rms
-    return rms !== 0
-      ? (this.dft.magnitude / this.bands) / rms
+    return this.totalPower > 0
+      ? (this.dft.magnitude / this.bands) / this.rms
       : 0
   }
 }
