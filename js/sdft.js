@@ -171,14 +171,26 @@ class DFTBin {
   }
 
   /**
+   * Root mean square.
+   *
+   * @readonly
+   * @memberof DFTBin
+   */
+  get rms () {
+    return Math.sqrt(this.totalPower / this.bands)
+  }
+
+  /**
    * Returns the DFT value magnitude divided by RMS.
    *
    * @readonly
    * @memberof DFTBin
    */
   get level () {
-    const level = (this.dft.magnitude / this.bands) / Math.sqrt(this.totalPower / this.bands)
-    return level <= 1 ? level : 0
+    const rms = this.rms
+    return rms !== 0
+      ? (this.dft.magnitude / this.bands) / rms
+      : 0
   }
 }
 
