@@ -142,9 +142,12 @@ class DFTBin {
    * @memberof DFTBin
    */
   constructor (k, N) {
+    if (k === 0) {
+      throw new RangeError('k=0 (DC) not implemented')
+    }
+
     this.k = k
     this.N = N
-    this.halfN = N / 2
     this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
     this.dft = new Complex()
     this.totalPower = 0
@@ -177,18 +180,19 @@ class DFTBin {
    * @memberof DFTBin
    */
   get rms () {
-    return Math.sqrt(this.totalPower / this.halfN)
+    return Math.sqrt(this.totalPower / this.N)
   }
 
   /**
    * Returns the DFT value magnitude divided by RMS.
    *
+   * @see {@link https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf}
    * @readonly
    * @memberof DFTBin
    */
   get relativePower () {
     return this.totalPower > 0
-      ? (this.dft.magnitude / this.halfN) / this.rms
+      ? (Math.SQRT2 * (this.dft.magnitude / this.N)) / this.rms
       : 0
   }
 }
@@ -260,8 +264,8 @@ class MovingAverage {
 /**
  * Moving average of the output (effectively a low-pass to get the general envelope).
  * Fast approximation of the MovingAverage; requires significantly less memory.
- * @see {@link https://www.daycounter.com/LabBook/Moving-Average.phtml}
  *
+ * @see {@link https://www.daycounter.com/LabBook/Moving-Average.phtml}
  * @class FastMovingAverage
  * @extends {MovingAverage}
  */
