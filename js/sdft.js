@@ -186,7 +186,7 @@ class DFTBin {
    * @readonly
    * @memberof DFTBin
    */
-  get level () {
+  get relativePower () {
     return this.totalPower > 0
       ? (this.dft.magnitude / this.halfN) / this.rms
       : 0
@@ -495,7 +495,7 @@ class SlidingDFT {
         const bin = this.bins[band]
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
-        this.levels[band] = bin.level
+        this.levels[band] = bin.relativePower
       }
 
       if (this.movingAverage !== null) {
@@ -581,6 +581,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     }
 
     // mix down the inputs into single array
+    let count = 0
     const inputPortCount = input.length
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
       const channelCount = input[portIndex].length
@@ -589,8 +590,15 @@ class SlidingDFTNode extends AudioWorkletProcessor {
           const sample = input[portIndex][channelIndex][sampleIndex]
           output[portIndex][channelIndex][sampleIndex] = sample
           this.samples[sampleIndex] += sample
+          count++
         }
       }
+    }
+
+    // normalize so that each sample is within the range [0.0, 1.0]
+    const n = count / windowSize
+    for (let i = 0; i < windowSize; i++) {
+      this.samples[i] /= n
     }
 
     // DO IT!!!
