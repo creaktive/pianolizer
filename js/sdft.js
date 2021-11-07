@@ -144,6 +144,12 @@ class DFTBin {
   constructor (k, N) {
     if (k === 0) {
       throw new RangeError('k=0 (DC) not implemented')
+    } else if (N === 0) {
+      throw new RangeError('N=0 is soooo not supported (Y THO?)')
+    } else if (k !== Math.round(k)) {
+      throw new RangeError('k must be an integer')
+    } else if (N !== Math.round(N)) {
+      throw new RangeError('N must be an integer')
     }
 
     this.k = k
