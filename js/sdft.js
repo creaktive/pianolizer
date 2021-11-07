@@ -190,15 +190,25 @@ class DFTBin {
   }
 
   /**
-   * Returns the DFT value magnitude divided by RMS.
+   * Amplitude spectrum in volts RMS.
    *
    * @see {@link https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf}
    * @readonly
    * @memberof DFTBin
    */
+  get amplitudeSpectrum () {
+    return Math.SQRT2 * (this.dft.magnitude / this.N)
+  }
+
+  /**
+   * Returns the DFT value magnitude divided by RMS.
+   *
+   * @readonly
+   * @memberof DFTBin
+   */
   get relativePower () {
     return this.totalPower > 0
-      ? (Math.SQRT2 * (this.dft.magnitude / this.N)) / this.rms
+      ? this.amplitudeSpectrum / this.rms
       : 0
   }
 }
