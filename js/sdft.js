@@ -201,12 +201,12 @@ class DFTBin {
   }
 
   /**
-   * Returns the DFT value magnitude divided by RMS.
+   * Normalized amplitude (always returns a value between 0.0 and 1.0).
    *
    * @readonly
    * @memberof DFTBin
    */
-  get relativePower () {
+  get normalizedAmplitudeSpectrum () {
     return this.totalPower > 0
       ? this.amplitudeSpectrum / this.rms
       : 0
@@ -515,7 +515,7 @@ class SlidingDFT {
         const bin = this.bins[band]
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
-        this.levels[band] = bin.relativePower
+        this.levels[band] = bin.normalizedAmplitudeSpectrum
       }
 
       if (this.movingAverage !== null) {
