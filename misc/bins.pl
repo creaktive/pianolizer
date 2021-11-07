@@ -31,13 +31,14 @@ for my $key ( 0 .. 87 ) {
     my $new_freq = $sample_rate * ( $k / $N );
     my $new_bandwidth = $sample_rate / $N;
 
-    printf "%d\t%f\t%f\t%d\t%f\t%f\t%f\n",
+    printf "%d\t%f\t%f\t%f\t%f\t%f\t%d/%d\n",
         $key,
         $old_freq,
-        $bandwidth,
-        $N,
         $new_freq,
+        $bandwidth,
         $new_bandwidth,
         100 * ( $new_freq - $old_freq ) / $bandwidth,
+        $k,
+        $N,
     ;
 }
