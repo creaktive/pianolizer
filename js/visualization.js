@@ -17,9 +17,11 @@ class Palette {
   }
 
   getKeyColors (levels) {
+    const paletteLength = this.palette.length
     for (let key = 0; key < keysNum; key++) {
       const level = levels[key]
-      const rgbArray = this.palette[(key + 9 + this.startOffset) % 12] // start from A
+      const index = this.startOffset + key + 9 // start from A
+      const rgbArray = this.palette[index % paletteLength]
         .map(value => Math.round(level * value) | 0)
       this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
     }
