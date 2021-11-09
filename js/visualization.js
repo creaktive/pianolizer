@@ -1,21 +1,48 @@
 const keysNum = 88
 
+/**
+ * Color management helper class.
+ *
+ * @class Palette
+ */
 // eslint-disable-next-line no-unused-vars
 class Palette {
+  /**
+   * Creates an instance of Palette.
+   * @param {Array} palette RGB tuples; one per semitone.
+   * @memberof Palette
+   */
   constructor (palette) {
     this.palette = palette
     this.keyColors = new Uint32Array(keysNum)
     this.startOffset = 0
   }
 
+  /**
+   * Shift the colors around the octave.
+   *
+   * @memberof Palette
+   */
   get rotation () {
     return this.startOffset
   }
 
+  /**
+   * Shift the colors around the octave.
+   *
+   * @memberof Palette
+   */
   set rotation (n) {
     this.startOffset = n | 0
   }
 
+  /**
+   * Applies the intensity levels to the palette.
+   *
+   * @param {Float32Array} levels Array with the intensity levels.
+   * @return {Uint32Array} Palette with the levels applied, in a format compatible with canvas pixels.
+   * @memberof Palette
+   */
   getKeyColors (levels) {
     const paletteLength = this.palette.length
     for (let key = 0; key < keysNum; key++) {
