@@ -202,6 +202,7 @@ class DFTBin {
 
   /**
    * Normalized amplitude (always returns a value between 0.0 and 1.0).
+   * This is well suited to detect pure tones, and can be used to decode DTMF or FSK modulation.
    *
    * @readonly
    * @memberof DFTBin
