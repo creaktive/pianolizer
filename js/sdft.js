@@ -156,7 +156,8 @@ class DFTBin {
     this.N = N
     this.coeff = (new Complex(0, 2 * Math.PI * (k / N))).exp()
     this.dft = new Complex()
-    this.totalPower = 0
+    this.totalPower = 0.0
+    this.referenceAmplitude = 1.0 // 0 dB level
   }
 
   /**
@@ -211,6 +212,17 @@ class DFTBin {
     return this.totalPower > 0
       ? this.amplitudeSpectrum / this.rms
       : 0
+  }
+
+  /**
+   * Using this unit of measure, it is easy to view wide dynamic ranges; that is,
+   * it is easy to see small signal components in the presence of large ones.
+   *
+   * @readonly
+   * @memberof DFTBin
+   */
+  get logarithmicUnitDecibels () {
+    return 20 * Math.log10(this.amplitudeSpectrum / this.referenceAmplitude)
   }
 }
 
