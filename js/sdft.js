@@ -595,7 +595,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
    *
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process}
    * @param {Array} input An array of inputs connected to the node, each item of which is, in turn, an array of channels. Each channel is a Float32Array containing N samples.
-   * @param {Array} output Filled with a copy of the input.
+   * @param {Array} output Unused.
    * @param {Object} parameters We only need the value under the key 'smooth'.
    * @return {Boolean} Always returns true, so as to to keep the node alive.
    * @memberof SlidingDFTNode
@@ -621,7 +621,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
       for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
         for (let sampleIndex = 0; sampleIndex < windowSize; sampleIndex++) {
           const sample = input[portIndex][channelIndex][sampleIndex]
-          output[portIndex][channelIndex][sampleIndex] = sample
+          // output[portIndex][channelIndex][sampleIndex] = sample
           this.samples[sampleIndex] += sample
           count++
         }

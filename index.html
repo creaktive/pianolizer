@@ -89,13 +89,13 @@
           audioSource.connect(sdft)
         }
 
-        sdft.connect(audioContext.destination)
+        audioSource.connect(audioContext.destination)
         sdft.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
       }
 
       async function setupMicrophone () {
         await setupAudio()
-        sdft.disconnect(audioContext.destination)
+        audioSource.disconnect(audioContext.destination)
 
         if (microphoneSource === undefined) {
           navigator.getUserMedia =
