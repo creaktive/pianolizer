@@ -529,6 +529,7 @@ class SlidingDFT {
         const previousSample = this.ringBuffer.read(bin.N)
         bin.update(previousSample, currentSample)
         this.levels[band] = bin.normalizedAmplitudeSpectrum
+        // this.levels[band] = bin.logarithmicUnitDecibels
       }
 
       if (this.movingAverage !== null) {
