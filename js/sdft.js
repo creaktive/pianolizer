@@ -430,11 +430,11 @@ class PianoTuning extends Tuning {
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
    * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
-   * @param {Number} [keysNum=88] Most pianos will have 88 keys.
-   * @param {Number} [referenceKey=48] Key index for the pitchFork reference (A4 is the default).
+   * @param {Number} [keysNum=61] Most pianos will have 61 keys.
+   * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
    * @memberof PianoTuning
    */
-  constructor (sampleRate, keysNum = 88, pitchFork = 440.0, referenceKey = 48) {
+  constructor (sampleRate, keysNum = 61, pitchFork = 440.0, referenceKey = 33) {
     super(sampleRate, keysNum)
     this.pitchFork = pitchFork
     this.referenceKey = referenceKey
@@ -568,7 +568,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     this.nextUpdateFrame = 0
 
     const tuning = new PianoTuning(sampleRate)
-    // const tuning = new RegularTuning(sampleRate, 88)
+    // const tuning = new RegularTuning(sampleRate, 61)
     // this.slidingDFT = new SlidingDFT(tuning, SlidingDFTNode.parameterDescriptors[0].maxValue)
     this.slidingDFT = new SlidingDFT(tuning, -1)
   }

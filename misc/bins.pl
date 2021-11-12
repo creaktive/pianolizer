@@ -7,12 +7,12 @@ no warnings qw( experimental::signatures );
 use POSIX ();
 
 sub key2freq ( $n ) {
-    return 440 * ( 2 ** ( ( $n - 48 ) / 12 ) );
+    return 440 * ( 2 ** ( ( $n - 33 ) / 12 ) );
 }
 
 my $sample_rate = $ARGV[0] || 44100;
 
-for my $key ( 0 .. 87 ) {
+for my $key ( 0 .. 60 ) {
     my $old_freq = key2freq( $key );
     my $bandwidth = 2 * ( key2freq( $key + 0.5 ) - $old_freq );
     my $N = POSIX::floor( $sample_rate / $bandwidth );

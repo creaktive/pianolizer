@@ -1,4 +1,4 @@
-const keysNum = 88
+const keysNum = 61
 
 /**
  * Color management helper class.
@@ -47,7 +47,7 @@ class Palette {
     const paletteLength = this.palette.length
     for (let key = 0; key < keysNum; key++) {
       const level = levels[key]
-      const index = this.startOffset + key + 9 // start from A
+      const index = this.startOffset + key // start from C
       const rgbArray = this.palette[index % paletteLength]
         .map(value => Math.round(level * value) | 0)
       this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
