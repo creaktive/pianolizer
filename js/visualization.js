@@ -185,7 +185,8 @@ class Spectrogram {
     }
 
     // fill in the bottom line
-    for (let key = 0, j = lastLine; key < keysNum; key++) {
+    const keyColorsNum = keyColors.length
+    for (let key = 0, j = lastLine; key < keyColorsNum; key++) {
       const color = 0xff000000 | keyColors[key]
       const slice = this.keySlices[key]
       for (let i = 0; i < slice; i++) {
