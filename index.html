@@ -79,7 +79,7 @@
         if (audioContext === undefined) {
           audioContext = new (window.AudioContext || window.webkitAudioContext)()
           await audioContext.audioWorklet.addModule('js/sdft.js')
-          sdft = new AudioWorkletNode(audioContext, 'sliding-dft-node')
+          sdft = new AudioWorkletNode(audioContext, 'pianolizer-node')
           sdft.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
             levels = event.data

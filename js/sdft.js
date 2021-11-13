@@ -552,15 +552,15 @@ class SlidingDFT {
 /**
  * SlidingDFT wrapper for the audio worklet API.
  *
- * @class SlidingDFTNode
+ * @class PianolizerNode
  * @extends {AudioWorkletProcessor}
  */
-class SlidingDFTNode extends AudioWorkletProcessor {
+class PianolizerNode extends AudioWorkletProcessor {
   /* global currentTime, sampleRate */
 
   /**
-   * Creates an instance of SlidingDFTNode.
-   * @memberof SlidingDFTNode
+   * Creates an instance of PianolizerNode.
+   * @memberof PianolizerNode
    */
   constructor () {
     super()
@@ -572,7 +572,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
 
     const tuning = new PianoTuning(sampleRate)
     // const tuning = new RegularTuning(sampleRate, 61)
-    // this.slidingDFT = new SlidingDFT(tuning, SlidingDFTNode.parameterDescriptors[0].maxValue)
+    // this.slidingDFT = new SlidingDFT(tuning, PianolizerNode.parameterDescriptors[0].maxValue)
     this.slidingDFT = new SlidingDFT(tuning, -1)
   }
 
@@ -582,7 +582,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/parameterDescriptors}
    * @readonly
    * @static
-   * @memberof SlidingDFTNode
+   * @memberof PianolizerNode
    */
   static get parameterDescriptors () {
     return [{
@@ -602,7 +602,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
    * @param {Array} output Unused.
    * @param {Object} parameters We only need the value under the key 'smooth'.
    * @return {Boolean} Always returns true, so as to to keep the node alive.
-   * @memberof SlidingDFTNode
+   * @memberof PianolizerNode
    */
   process (input, output, parameters) {
     // if no inputs are connected then zero channels will be passed in
@@ -651,4 +651,4 @@ class SlidingDFTNode extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('sliding-dft-node', SlidingDFTNode)
+registerProcessor('pianolizer-node', PianolizerNode)
