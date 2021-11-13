@@ -1,5 +1,3 @@
-const keysNum = 61
-
 /**
  * Color management helper class.
  *
@@ -78,10 +76,14 @@ class PianoKeyboard {
     this.blackTone = [0, 2, 0, 4, 0, 0, 7, 0, 9, 0, 11, 0]
 
     this.ns = 'http://www.w3.org/2000/svg'
-    this.keys = new Array(keysNum)
     this.keySlices = null
 
-    this.drawKeyboard()
+    this.keysNum = 61
+    this.keys = new Array(this.keysNum)
+    this.blackOffset = 0
+    this.whiteOffset = 0
+    this.whiteIndex = 0 // C2
+    this.startFrom = 0
   }
 
   drawKey (index, offset, width, height, group) {
@@ -101,39 +103,34 @@ class PianoKeyboard {
     const whiteKeyGroup = document.createElementNS(this.ns, 'g')
     const blackKeyGroup = document.createElementNS(this.ns, 'g')
 
-    /*
-    let blackOffset = 7 * this.scale
-    let whiteOffset = 0
-    let whiteIndex = 5 // A0
-    const startFrom = 9
-    */
-
-    let blackOffset = 0
-    let whiteOffset = 0
-    let whiteIndex = 0 // C2
-    const startFrom = 0
+    let blackOffset = this.blackOffset
+    let whiteOffset = this.whiteOffset
+    let whiteIndex = this.whiteIndex
 
     const keySlices = []
     let blackSum = 0
-    for (let i = startFrom; i < keysNum + startFrom; i++) {
+    for (let i = this.startFrom; i < this.keysNum + this.startFrom; i++) {
       // black
       const blackIndex = i % this.blackKeys.length
       const blackWidth = this.blackKeys[blackIndex]
       keySlices.push(blackWidth)
       blackSum += blackWidth
       if (this.blackTone[blackIndex]) {
-        this.drawKey(i - startFrom, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
+        this.drawKey(i - this.startFrom, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
       } else {
         // white
         const whiteWidth = this.whiteKeys[whiteIndex % this.whiteKeys.length]
-        this.drawKey(i - startFrom, whiteOffset, whiteWidth, this.whiteHeight, whiteKeyGroup)
+        this.drawKey(i - this.startFrom, whiteOffset, whiteWidth, this.whiteHeight, whiteKeyGroup)
         whiteIndex++
         whiteOffset += whiteWidth
       }
       blackOffset += blackWidth
     }
+
+    // adjust padding of the key roots
     this.keySlices = new Uint8Array(keySlices)
-    this.keySlices[this.keySlices.length - 1] += whiteOffset - blackSum
+    this.keySlices[0] += this.blackOffset
+    this.keySlices[this.keySlices.length - 1] += whiteOffset - blackSum - this.blackOffset
 
     this.svgElement.appendChild(whiteKeyGroup)
     this.svgElement.appendChild(blackKeyGroup)
@@ -143,7 +140,7 @@ class PianoKeyboard {
   }
 
   update (keyColors) {
-    for (let key = 0; key < keysNum; key++) {
+    for (let key = 0; key < this.keysNum; key++) {
       const bgrInteger = keyColors[key] // #killme
       const rgbInteger =
         ((bgrInteger & 0x0000ff) << 16) |
@@ -156,6 +153,21 @@ class PianoKeyboard {
     }
   }
 }
+
+/*
+class PianoKeyboardFull extends PianoKeyboard {
+  constructor (svgElement, scale = 1) {
+    super(svgElement, scale)
+
+    this.keysNum = 88
+    this.keys = new Array(this.keysNum)
+    this.blackOffset = 7 * scale
+    this.whiteOffset = 0
+    this.whiteIndex = 5 // A0
+    this.startFrom = 9
+  }
+}
+*/
 
 // eslint-disable-next-line no-unused-vars
 class Spectrogram {
