@@ -111,18 +111,12 @@
         audioSource.disconnect(audioContext.destination)
 
         if (microphoneSource === undefined) {
-          navigator.getUserMedia =
-            navigator.getUserMedia ||
-            navigator.webkitGetUserMedia ||
-            navigator.mozGetUserMedia
-          navigator.getUserMedia(
-            { audio: true, video: false },
-            stream => {
-              microphoneSource = audioContext.createMediaStreamSource(stream)
-              microphoneSource.connect(sdft)
-            },
-            () => window.alert('Microphone access denied')
-          )
+          navigator.mediaDevices.getUserMedia(
+            { audio: true, video: false }
+          ).then(stream => {
+            microphoneSource = audioContext.createMediaStreamSource(stream)
+            microphoneSource.connect(sdft)
+          }).catch(() => window.alert('Microphone access denied'))
         } else {
           microphoneSource.connect(sdft)
         }
