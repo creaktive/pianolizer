@@ -426,8 +426,7 @@ class RegularTuning extends Tuning {
  * @class PianoTuning
  * @extends {Tuning}
  */
-// eslint-disable-next-line no-unused-vars
-class PianoTuning extends Tuning {
+export class PianoTuning extends Tuning {
   /**
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
@@ -477,8 +476,7 @@ class PianoTuning extends Tuning {
  * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
  * @class SlidingDFT
  */
-// eslint-disable-next-line no-unused-vars
-class SlidingDFT {
+export class SlidingDFT {
   /**
    * Creates an instance of SlidingDFT.
    * @param {PianoTuning} tuning PianoTuning instance.

@@ -4,7 +4,7 @@
  * @class Palette
  */
 // eslint-disable-next-line no-unused-vars
-class Palette {
+export class Palette {
   /**
    * Creates an instance of Palette.
    * @param {Array} palette RGB tuples; one per semitone.
@@ -61,7 +61,7 @@ class Palette {
 }
 
 // eslint-disable-next-line no-unused-vars
-class PianoKeyboard {
+export class PianoKeyboard {
   // Shamelessly stolen from http://www.quadibloc.com/other/cnv05.htm
   constructor (svgElement, scale = 1) {
     this.svgElement = svgElement
@@ -170,7 +170,7 @@ class PianoKeyboardFull extends PianoKeyboard {
 */
 
 // eslint-disable-next-line no-unused-vars
-class Spectrogram {
+export class Spectrogram {
   constructor (canvasElement, keySlices, height = 600) {
     this.canvasElement = canvasElement
     this.keySlices = keySlices

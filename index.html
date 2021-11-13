@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8">
     <title>🎹</title>
-    <script src="js/visualization.js"></script>
     <style>
       body {
         background-color: #000;
@@ -44,8 +43,9 @@
       <br>
       <svg id="keyboard"></svg>
     </div>
-    <script>
-      /* global PianoKeyboard, Spectrogram, Palette */
+    <script type="module">
+      import { PianoKeyboard, Spectrogram, Palette } from './js/visualization.js'
+
       let audioContext, audioSource, microphoneSource, sdft
       let levels, lastTimestamp, palette
 
