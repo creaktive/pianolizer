@@ -431,11 +431,11 @@ class PianoTuning extends Tuning {
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
    * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
-   * @param {Number} [keysNum=61] Most pianos will have 61 keys.
    * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
+   * @param {Number} [keysNum=61] Most pianos will have 61 keys.
    * @memberof PianoTuning
    */
-  constructor (sampleRate, keysNum = 61, pitchFork = 440.0, referenceKey = 33) {
+  constructor (sampleRate, keysNum = 61, referenceKey = 33, pitchFork = 440.0) {
     super(sampleRate, keysNum)
     this.pitchFork = pitchFork
     this.referenceKey = referenceKey
