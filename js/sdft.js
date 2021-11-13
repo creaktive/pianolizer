@@ -242,6 +242,7 @@ class MovingAverage {
     this.channels = channels
     this.sampleRate = sampleRate
     this.sum = new Float32Array(channels)
+    this.averageWindow = null
   }
 
   /**
@@ -260,7 +261,7 @@ class MovingAverage {
    */
   set averageWindowInSeconds (value) {
     this.targetAverageWindow = Math.round(value * this.sampleRate)
-    if (this.averageWindow === undefined) {
+    if (this.averageWindow === null) {
       this.averageWindow = this.targetAverageWindow
     }
   }
@@ -564,6 +565,8 @@ class SlidingDFTNode extends AudioWorkletProcessor {
   constructor () {
     super()
 
+    this.samples = null // allocated according to the input length
+
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
 
@@ -610,7 +613,7 @@ class SlidingDFTNode extends AudioWorkletProcessor {
     // I hope all the channels have the same # of samples; but 128 frames per block is
     // subject to change, even *during* the lifetime of an AudioWorkletProcessor instance!
     const windowSize = input[0][0].length
-    if (this.samples === undefined || this.samples.length !== windowSize) {
+    if (this.samples === null || this.samples.length !== windowSize) {
       this.samples = new Float32Array(windowSize)
     }
 
