@@ -14,7 +14,7 @@ class Palette {
    */
   constructor (palette) {
     this.palette = palette
-    this.keyColors = new Uint32Array(keysNum)
+    this.keyColors = null
     this.startOffset = 0
   }
 
@@ -44,14 +44,20 @@ class Palette {
    * @memberof Palette
    */
   getKeyColors (levels) {
+    const levelsNum = levels.length
+    if (this.keyColors === null || this.keyColors.length !== levelsNum) {
+      this.keyColors = new Uint32Array(levelsNum)
+    }
+
     const paletteLength = this.palette.length
-    for (let key = 0; key < keysNum; key++) {
+    for (let key = 0; key < levelsNum; key++) {
       const level = levels[key]
       const index = this.startOffset + key // start from C
       const rgbArray = this.palette[index % paletteLength]
         .map(value => Math.round(level * value) | 0)
       this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
     }
+
     return this.keyColors
   }
 }
