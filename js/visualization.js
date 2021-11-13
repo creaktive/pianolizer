@@ -95,17 +95,26 @@ class PianoKeyboard {
     const whiteKeyGroup = document.createElementNS(this.ns, 'g')
     const blackKeyGroup = document.createElementNS(this.ns, 'g')
 
+    /*
     let blackOffset = 7 * this.scale
     let whiteOffset = 0
     let whiteIndex = 5 // A0
     const startFrom = 9
+    */
+
+    let blackOffset = 0
+    let whiteOffset = 0
+    let whiteIndex = 0 // C2
+    const startFrom = 0
 
     const keySlices = []
+    let blackSum = 0
     for (let i = startFrom; i < keysNum + startFrom; i++) {
       // black
       const blackIndex = i % this.blackKeys.length
       const blackWidth = this.blackKeys[blackIndex]
       keySlices.push(blackWidth)
+      blackSum += blackWidth
       if (this.blackTone[blackIndex]) {
         this.drawKey(i - startFrom, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
       } else {
@@ -118,6 +127,7 @@ class PianoKeyboard {
       blackOffset += blackWidth
     }
     this.keySlices = new Uint8Array(keySlices)
+    this.keySlices[this.keySlices.length - 1] += whiteOffset - blackSum
 
     this.svgElement.appendChild(whiteKeyGroup)
     this.svgElement.appendChild(blackKeyGroup)
