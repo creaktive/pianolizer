@@ -78,7 +78,19 @@
       async function setupAudio () {
         if (audioContext === undefined) {
           audioContext = new (window.AudioContext || window.webkitAudioContext)()
-          await audioContext.audioWorklet.addModule('js/sdft.js')
+
+          // Thanks for nothing, Firefox!
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1572644
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1636121
+          // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
+          const fetchText = url => fetch(url).then(response => response.text())
+          const modules = await Promise.all([
+            fetchText('js/sdft.js'),
+            fetchText('js/pianolizer.js')
+          ])
+          const blob = new Blob(modules, { type: 'application/javascript' })
+          await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
+
           sdft = new AudioWorkletNode(audioContext, 'pianolizer-node')
           sdft.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
