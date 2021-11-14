@@ -5,8 +5,7 @@
  * @extends {AudioWorkletProcessor}
  */
 class PianolizerNode extends AudioWorkletProcessor {
-  /* global currentTime, sampleRate */
-  /* global PianoTuning, SlidingDFT */
+  /* global currentTime, sampleRate, Pianolizer */
 
   /**
    * Creates an instance of PianolizerNode.
@@ -16,14 +15,10 @@ class PianolizerNode extends AudioWorkletProcessor {
     super()
 
     this.samples = null // allocated according to the input length
+    this.pianolizer = new Pianolizer(sampleRate)
 
     this.updateInterval = 1.0 / 60 // to be rendered at 60fps
     this.nextUpdateFrame = 0
-
-    const tuning = new PianoTuning(sampleRate)
-    // const tuning = new RegularTuning(sampleRate, 61)
-    // this.slidingDFT = new SlidingDFT(tuning, PianolizerNode.parameterDescriptors[0].maxValue)
-    this.slidingDFT = new SlidingDFT(tuning, -1)
   }
 
   /**
@@ -89,7 +84,7 @@ class PianolizerNode extends AudioWorkletProcessor {
     }
 
     // DO IT!!!
-    const levels = this.slidingDFT.process(this.samples, parameters.smooth[0])
+    const levels = this.pianolizer.process(this.samples, parameters.smooth[0])
 
     // update and sync the levels property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {

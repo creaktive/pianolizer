@@ -1,4 +1,36 @@
 /**
+ * Convenience wrapper that ties together the rest of this library, with sane defaults.
+ *
+ * @export
+ * @class Pianolizer
+ */
+export class Pianolizer {
+  /**
+   * Creates an instance of Pianolizer.
+   * @param {Number} sampleRate in Hz
+   * @memberof Pianolizer
+   */
+  constructor (sampleRate) {
+    this.slidingDFT = new SlidingDFT(
+      new PianoTuning(sampleRate),
+      -1
+    )
+  }
+
+  /**
+   * Process a batch of samples.
+   *
+   * @param {Float32Array} samples Array with the batch of samples to process.
+   * @param {Number} [averageWindowInSeconds=0] Adjust the moving average window size.
+   * @return {Float32Array} Snapshot of the levels after processing all the samples.
+   * @memberof Pianolizer
+   */
+  process (samples, averageWindowInSeconds = 0) {
+    return this.slidingDFT.process(samples, averageWindowInSeconds)
+  }
+}
+
+/**
  * Minimal implementation of Complex numbers required for the Discrete Fourier Transform computations.
  *
  * @class Complex
@@ -6,8 +38,8 @@
 class Complex {
   /**
    * Creates an instance of Complex.
-   * @param {number} [re=0] Real part.
-   * @param {number} [im=0] Imaginary part.
+   * @param {Number} [re=0] Real part.
+   * @param {Number} [im=0] Imaginary part.
    * @memberof Complex
    */
   constructor (re = 0, im = 0) {
@@ -426,7 +458,7 @@ class RegularTuning extends Tuning {
  * @class PianoTuning
  * @extends {Tuning}
  */
-export class PianoTuning extends Tuning {
+class PianoTuning extends Tuning {
   /**
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
@@ -476,7 +508,7 @@ export class PianoTuning extends Tuning {
  * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
  * @class SlidingDFT
  */
-export class SlidingDFT {
+class SlidingDFT {
   /**
    * Creates an instance of SlidingDFT.
    * @param {PianoTuning} tuning PianoTuning instance.
