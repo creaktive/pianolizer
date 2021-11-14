@@ -85,8 +85,8 @@
           // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
           const fetchText = url => fetch(url).then(response => response.text())
           const modules = await Promise.all([
-            fetchText('js/sdft.js'),
-            fetchText('js/pianolizer.js')
+            fetchText('js/pianolizer.js'),
+            fetchText('js/pianolizer-node.js')
           ])
           const blob = new Blob(modules, { type: 'application/javascript' })
           await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
