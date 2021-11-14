@@ -59,7 +59,8 @@
       pianoKeyboard.drawKeyboard()
       const spectrogram = new Spectrogram(
         document.getElementById('spectrogram'),
-        pianoKeyboard.keySlices
+        pianoKeyboard.keySlices,
+        600
       )
 
       function draw (currentTimestamp) {

@@ -155,7 +155,7 @@ export class PianoKeyboard {
 }
 
 /*
-class PianoKeyboardFull extends PianoKeyboard {
+export class PianoKeyboardFull extends PianoKeyboard {
   constructor (svgElement, scale = 1) {
     super(svgElement, scale)
 
@@ -171,7 +171,7 @@ class PianoKeyboardFull extends PianoKeyboard {
 
 // eslint-disable-next-line no-unused-vars
 export class Spectrogram {
-  constructor (canvasElement, keySlices, height = 600) {
+  constructor (canvasElement, keySlices, height) {
     this.canvasElement = canvasElement
     this.keySlices = keySlices
 
