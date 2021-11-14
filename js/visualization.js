@@ -3,7 +3,6 @@
  *
  * @class Palette
  */
-// eslint-disable-next-line no-unused-vars
 export class Palette {
   /**
    * Creates an instance of Palette.
@@ -60,7 +59,6 @@ export class Palette {
   }
 }
 
-// eslint-disable-next-line no-unused-vars
 export class PianoKeyboard {
   // Shamelessly stolen from http://www.quadibloc.com/other/cnv05.htm
   constructor (svgElement, scale = 1) {
@@ -169,7 +167,6 @@ export class PianoKeyboardFull extends PianoKeyboard {
 }
 */
 
-// eslint-disable-next-line no-unused-vars
 export class Spectrogram {
   constructor (canvasElement, keySlices, height) {
     this.canvasElement = canvasElement
