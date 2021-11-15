@@ -136,7 +136,7 @@ class RingBuffer {
     const size = 1 << bits
     this.mask = size - 1
     this.buffer = new Float32Array(size)
-    this.index = 0 // WARNING: overflows after ~6472 years of continuous operation!
+    this.index = 0
   }
 
   /**
@@ -146,7 +146,8 @@ class RingBuffer {
    * @memberof RingBuffer
    */
   write (value) {
-    this.buffer[(this.index++) & this.mask] = value
+    this.index &= this.mask
+    this.buffer[this.index++] = value
   }
 
   /**
