@@ -10,15 +10,24 @@
         font-family: "Arial", Times, serif;
         font-size: 12px;
       }
+      label {
+        font-weight: bold;
+      }
+      #controls {
+        text-align: center;
+      }
+      #source {
+        width: 300px;
+      }
       #pianolizer {
         position: relative;
         text-align: center;
       }
       #help {
         position: absolute;
-        top: 0;
+        top: 50%;
+        transform: translateY(-50%);
         left: 0;
-        bottom: 0;
         right: 0;
         z-index: -1;
         overflow: hidden;
@@ -30,7 +39,7 @@
     </style>
   </head>
   <body>
-    <div>
+    <div id="controls">
       <label>
         Source:
         <select id="source">
@@ -44,14 +53,16 @@
           <option value="audio/noise.flac">Pink noise</option>
         </select>
       </label>
-      Palette rotation:
-      <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
-      Smoothing:
-      <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.05"/>
-      (<span id="smoothing-value">0.050</span>s)
-    </div>
-    <div>
       <audio id="input" src="audio/mazurka.mp3" controls></audio>
+      <label>
+        Palette rotation:
+        <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
+      </label>
+      <label>
+        Smoothing:
+        <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.05"/>
+        (<span id="smoothing-value">0.050</span>s)
+      </label>
     </div>
     <div id="pianolizer">
       <div id="help">
