@@ -21,6 +21,7 @@
         Source:
         <select id="source">
           <option value="*">🎙 Microphone</option>
+          <option value="/">Load local audio file</option>
           <option value="audio/mazurka.mp3" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
           <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
           <option value="audio/sin.flac">Sine wave, 440 Hz</option>
@@ -123,6 +124,23 @@
         }
       }
 
+      async function loadLocalFile () {
+        const fileHandles = await window.showOpenFilePicker({
+          types: [
+            {
+              description: 'Audio',
+              accept: {
+                'audio/*': ['.mp3', '.flac', '.ogg', '.webm']
+              }
+            }
+          ],
+          excludeAcceptAllOption: true,
+          multiple: false
+        })
+        const fileData = await fileHandles[0].getFile()
+        audioElement.src = URL.createObjectURL(fileData)
+      }
+
       document.getElementById('source').onchange = event => {
         audioElement.pause()
 
@@ -135,7 +153,12 @@
           // <audio> element source
           try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone was not connected') }
           audioElement.style['pointer-events'] = 'auto'
-          audioElement.src = `${selectedValue}?_=${Date.now()}` // never cache
+          if (selectedValue === '/') {
+            // only Chrome & Opera can do this at the time of writing
+            loadLocalFile()
+          } else {
+            audioElement.src = `${selectedValue}?_=${Date.now()}` // never cache
+          }
         }
       }
 
