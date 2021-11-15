@@ -8,6 +8,20 @@
         background-color: #000;
         color: #fff;
         font-family: "Arial", Times, serif;
+        font-size: 12px;
+      }
+      #pianolizer {
+        position: relative;
+        text-align: center;
+      }
+      #help {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: -1;
+        overflow: hidden;
       }
       .piano-key {
         stroke: #444;
@@ -39,7 +53,12 @@
     <div>
       <audio id="input" src="audio/mazurka.mp3" controls></audio>
     </div>
-    <div style="text-align: center">
+    <div id="pianolizer">
+      <div id="help">
+        <h1>Select the source from the dropdown menu and click on "play".</h1>
+        <h2>Safari supports only the microphone source.</h2>
+        <h2>Firefox does not support the local file source.</h2>
+      </div>
       <canvas id="spectrogram"></canvas>
       <br>
       <svg id="keyboard"></svg>
