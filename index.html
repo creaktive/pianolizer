@@ -117,8 +117,11 @@
           // https://bugzilla.mozilla.org/show_bug.cgi?id=1636121
           // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
           const fetchText = url => fetch(url).then(response => response.text())
+          const pianolizerImplementation = window.location.hash.toLowerCase() === '#wasm'
+            ? '/js/pianolizer-wasm.js'
+            : '/js/pianolizer.js'
           const modules = await Promise.all([
-            fetchText('js/pianolizer.js'),
+            fetchText(pianolizerImplementation),
             fetchText('js/pianolizer-node.js')
           ])
           const blob = new Blob(modules, { type: 'application/javascript' })
