@@ -9,11 +9,11 @@ class Pianolizer {
     Pianolizer(unsigned sampleRate) {
     }
 
-    val process(uintptr_t samplesInput, unsigned samplesLength, int averageWindowInSeconds = 0) {
-      float* samples = reinterpret_cast<float*>(samplesInput);
+    val process(uintptr_t samplesPtr, unsigned samplesLength, float averageWindowInSeconds = 0) {
+      float* samples = reinterpret_cast<float*>(samplesPtr);
 
       for (unsigned i = 0; i < samplesLength; i++) {
-        levels[0] += samples[i];
+        levels[0] += abs(samples[i]);
       }
       levels[0] /= samplesLength;
 
