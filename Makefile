@@ -1,9 +1,18 @@
-all: cpp/pianolizer.cpp
-	@emcc -O2 -Wall -Werror --bind \
-		-s WASM=1 \
+WASM_TARGET=js/pianolizer-wasm.js
+CFLAGS=-O3 -Wall -Werror
+
+all: $(WASM_TARGET)
+
+clean:
+	@rm -f $(WASM_TARGET)
+
+$(WASM_TARGET): cpp/pianolizer.cpp js/pianolizer-wrapper.js
+	@emcc $(CFLAGS) \
+		--bind \
+		--post-js js/pianolizer-wrapper.js \
+		-s ALLOW_MEMORY_GROWTH=1 \
 		-s BINARYEN_ASYNC_COMPILATION=0 \
 		-s SINGLE_FILE=1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		--post-js js/pianolizer-wrapper.js \
-		cpp/pianolizer.cpp \
-		-o js/pianolizer-wasm.js
+		-s WASM=1 \
+		-o $(WASM_TARGET) \
+		cpp/pianolizer.cpp
