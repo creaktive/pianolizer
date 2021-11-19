@@ -35,13 +35,14 @@ class DFTBin {
   private:
     const double PI = acos(-1.);
     const double SQRT2 = sqrt(2.);
-    unsigned k, N;
+    float k, N;
     float totalPower = 0.;
-    float referenceAmplitude = 1.; // 0 dB level
     complex<float> coeff;
-    complex<float> dft = 0.;
+    complex<float> dft = complex<float>(0., 0.);
 
   public:
+    float referenceAmplitude = 1.; // 0 dB level
+
     DFTBin(unsigned k_, unsigned N_) {
       if (k_ == 0) {
         throw invalid_argument("k=0 (DC) not implemented");
