@@ -1,15 +1,15 @@
 /**
  * SlidingDFT wrapper for the audio worklet API.
  *
- * @class PianolizerNode
+ * @class PianolizerWorklet
  * @extends {AudioWorkletProcessor}
  */
-class PianolizerNode extends AudioWorkletProcessor {
+class PianolizerWorklet extends AudioWorkletProcessor {
   /* global currentTime, sampleRate, Pianolizer */
 
   /**
-   * Creates an instance of PianolizerNode.
-   * @memberof PianolizerNode
+   * Creates an instance of PianolizerWorklet.
+   * @memberof PianolizerWorklet
    */
   constructor () {
     super()
@@ -27,7 +27,7 @@ class PianolizerNode extends AudioWorkletProcessor {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/parameterDescriptors}
    * @readonly
    * @static
-   * @memberof PianolizerNode
+   * @memberof PianolizerWorklet
    */
   static get parameterDescriptors () {
     return [{
@@ -47,7 +47,7 @@ class PianolizerNode extends AudioWorkletProcessor {
    * @param {Array} output Unused.
    * @param {Object} parameters We only need the value under the key 'smooth'.
    * @return {Boolean} Always returns true, so as to to keep the node alive.
-   * @memberof PianolizerNode
+   * @memberof PianolizerWorklet
    */
   process (input, output, parameters) {
     // if no inputs are connected then zero channels will be passed in
@@ -96,4 +96,4 @@ class PianolizerNode extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('pianolizer-node', PianolizerNode)
+registerProcessor('pianolizer-worklet', PianolizerWorklet)

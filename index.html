@@ -78,7 +78,7 @@
     <script type="module">
       import { PianoKeyboard, Spectrogram, Palette } from './js/visualization.js'
 
-      let audioContext, audioSource, microphoneSource, sdft
+      let audioContext, audioSource, microphoneSource, pianolizer
       let levels, lastTimestamp, palette
 
       fetch('palette.json')
@@ -127,19 +127,19 @@
           const blob = new Blob(modules, { type: 'application/javascript' })
           await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
 
-          sdft = new AudioWorkletNode(audioContext, 'pianolizer-node')
-          sdft.port.onmessage = event => {
+          pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet')
+          pianolizer.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
             levels = event.data
             window.requestAnimationFrame(draw)
           }
 
           audioSource = audioContext.createMediaElementSource(audioElement)
-          audioSource.connect(sdft)
+          audioSource.connect(pianolizer)
         }
 
         audioSource.connect(audioContext.destination)
-        sdft.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
+        pianolizer.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
       }
 
       async function setupMicrophone () {
@@ -151,10 +151,10 @@
             { audio: true, video: false }
           ).then(stream => {
             microphoneSource = audioContext.createMediaStreamSource(stream)
-            microphoneSource.connect(sdft)
+            microphoneSource.connect(pianolizer)
           }).catch(() => window.alert('Microphone access denied'))
         } else {
-          microphoneSource.connect(sdft)
+          microphoneSource.connect(pianolizer)
         }
       }
 
@@ -185,7 +185,7 @@
           setupMicrophone()
         } else {
           // <audio> element source
-          try { microphoneSource.disconnect(sdft) } catch { console.warn('Microphone was not connected') }
+          try { microphoneSource.disconnect(pianolizer) } catch { console.warn('Microphone was not connected') }
           audioElement.style['pointer-events'] = 'auto'
           if (selectedValue === '/') {
             // only Chrome & Opera can do this at the time of writing
@@ -210,8 +210,8 @@
       document.getElementById('smoothing').oninput = event => {
         const value = parseFloat(event.target.value)
         document.getElementById('smoothing-value').innerText = value.toFixed(3)
-        if (sdft !== undefined) {
-          sdft.parameters.get('smooth').value = value
+        if (pianolizer !== undefined) {
+          pianolizer.parameters.get('smooth').value = value
         }
       }
     </script>
