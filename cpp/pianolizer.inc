@@ -1,5 +1,6 @@
 #include <cmath>
 #include <complex>
+#include <vector>
 
 using namespace std;
 
@@ -124,7 +125,7 @@ class MovingAverage {
 
 class FastMovingAverage : public MovingAverage {
   public:
-    void update (float levels[]) {
+    void update(float levels[]) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
         const float currentSum = sum[n];
@@ -132,5 +133,36 @@ class FastMovingAverage : public MovingAverage {
           ? currentSum + levels[n] - currentSum / averageWindow
           : levels[n];
       }
+    }
+};
+
+class HeavyMovingAverage : public MovingAverage {
+  private:
+    vector<RingBuffer> history;
+
+  private:
+    HeavyMovingAverage(unsigned channels_, unsigned sampleRate_, unsigned maxWindow = 0)
+      : MovingAverage{ channels_, sampleRate_ }
+    {
+      for (unsigned n = 0; n < channels; n++) {
+        const RingBuffer *ringBuffer = new RingBuffer(maxWindow ? maxWindow : sampleRate);
+        history.push_back(*ringBuffer);
+      }
+    }
+
+    void update(float levels[]) {
+      for (unsigned n = 0; n < channels; n++) {
+        const float value = levels[n];
+        history[n].write(value);
+        sum[n] += value;
+
+        if (targetAverageWindow == averageWindow) {
+          sum[n] -= history[n].read(averageWindow);
+        } else if (targetAverageWindow < averageWindow) {
+          sum[n] -= history[n].read(averageWindow);
+          sum[n] -= history[n].read(averageWindow - 1);
+        }
+      }
+      updateAverageWindow();
     }
 };
