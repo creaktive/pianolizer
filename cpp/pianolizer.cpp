@@ -1,4 +1,5 @@
 #include "emscripten/bind.h"
+#include "pianolizer.inc"
 
 using namespace emscripten;
 
