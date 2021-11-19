@@ -82,13 +82,12 @@ class DFTBin {
 };
 
 class MovingAverage {
-  private:
+  public:
     unsigned channels, sampleRate;
     int averageWindow = -1;
     unsigned targetAverageWindow;
     float *sum;
 
-  public:
     MovingAverage(unsigned channels_, unsigned sampleRate_) {
       channels = channels_;
       sampleRate = sampleRate_;
@@ -120,5 +119,18 @@ class MovingAverage {
 
     float read(unsigned n) {
       return sum[n] / averageWindow;
+    }
+};
+
+class FastMovingAverage : public MovingAverage {
+  public:
+    void update (float levels[]) {
+      updateAverageWindow();
+      for (unsigned n = 0; n < channels; n++) {
+        const float currentSum = sum[n];
+        sum[n] = averageWindow
+          ? currentSum + levels[n] - currentSum / averageWindow
+          : levels[n];
+      }
     }
 };
