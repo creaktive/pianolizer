@@ -122,7 +122,7 @@
             : '/js/pianolizer.js'
           const modules = await Promise.all([
             fetchText(pianolizerImplementation),
-            fetchText('js/pianolizer-node.js')
+            fetchText('js/pianolizer-worklet.js')
           ])
           const blob = new Blob(modules, { type: 'application/javascript' })
           await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
