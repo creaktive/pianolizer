@@ -80,3 +80,45 @@ class DFTBin {
       return 20. * log10(amplitudeSpectrum() / referenceAmplitude);
     }
 };
+
+class MovingAverage {
+  private:
+    unsigned channels, sampleRate;
+    int averageWindow = -1;
+    unsigned targetAverageWindow;
+    float *sum;
+
+  public:
+    MovingAverage(unsigned channels_, unsigned sampleRate_) {
+      channels = channels_;
+      sampleRate = sampleRate_;
+      sum = new float[channels];
+    }
+
+    ~MovingAverage() {
+      free(sum);
+    }
+
+    float averageWindowInSeconds() {
+      return averageWindow / sampleRate;
+    }
+
+    void averageWindowInSeconds(float value) {
+      targetAverageWindow = round(value * sampleRate);
+      if (averageWindow == -1) {
+        averageWindow = targetAverageWindow;
+      }
+    }
+
+    void updateAverageWindow() {
+      if (targetAverageWindow > averageWindow) {
+        averageWindow++;
+      } else if (targetAverageWindow < averageWindow) {
+        averageWindow--;
+      }
+    }
+
+    float read(unsigned n) {
+      return sum[n] / averageWindow;
+    }
+};
