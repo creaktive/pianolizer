@@ -153,12 +153,12 @@ class RingBuffer {
   /**
    * Retrieves the value stored at the position.
    *
-   * @param {Number} index Position within the RingBuffer.
+   * @param {Number} position Position within the RingBuffer.
    * @return {Number} The value at the position.
    * @memberof RingBuffer
    */
-  read (index) {
-    return this.buffer[(this.index + (~index)) & this.mask]
+  read (position) {
+    return this.buffer[(this.index + (~position)) & this.mask]
   }
 }
 
