@@ -6,7 +6,7 @@ all: $(WASM_TARGET)
 clean:
 	@rm -f $(WASM_TARGET)
 
-$(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.inc js/pianolizer-wrapper.js
+$(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 	@emcc $(CFLAGS) \
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
