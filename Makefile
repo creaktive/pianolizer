@@ -1,5 +1,5 @@
 WASM_TARGET=js/pianolizer-wasm.js
-CFLAGS=-O3 -Wall -Werror
+CFLAGS=-O3 -std=c++11 -Wall -Werror
 
 all: $(WASM_TARGET)
 
