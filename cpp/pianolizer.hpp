@@ -19,7 +19,7 @@ class RingBuffer {
     }
 
     ~RingBuffer() {
-      free(buffer);
+      delete [] buffer;
     }
 
     void write(float value) {
@@ -96,7 +96,7 @@ class MovingAverage {
     }
 
     ~MovingAverage() {
-      free(sum);
+      delete [] sum;
     }
 
     float averageWindowInSeconds() {
@@ -148,6 +148,11 @@ class HeavyMovingAverage : public MovingAverage {
         const RingBuffer *ringBuffer = new RingBuffer(maxWindow ? maxWindow : sampleRate);
         history.push_back(*ringBuffer);
       }
+    }
+
+    ~HeavyMovingAverage() {
+      history.clear();
+      history.~vector();
     }
 
     void update(float levels[]) {
