@@ -16,6 +16,8 @@ class RingBuffer {
       const unsigned size = 1 << bits;
       mask = size - 1;
       buffer = new float[size];
+      for (unsigned i = 0; i < size; i++)
+        buffer[i] = 0.;
     }
 
     ~RingBuffer() {
