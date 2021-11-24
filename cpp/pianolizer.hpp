@@ -2,8 +2,6 @@
 #include <complex>
 #include <vector>
 
-using namespace std;
-
 class RingBuffer {
   private:
     unsigned mask;
@@ -40,29 +38,29 @@ class DFTBin {
     const double SQRT2 = sqrt(2.);
     float k, N;
     float totalPower = 0.;
-    complex<float> coeff;
-    complex<float> dft = complex<float>(0., 0.);
+    std::complex<float> coeff;
+    std::complex<float> dft = std::complex<float>(0., 0.);
 
   public:
     float referenceAmplitude = 1.; // 0 dB level
 
     DFTBin(unsigned k_, unsigned N_) {
       if (k_ == 0) {
-        throw invalid_argument("k=0 (DC) not implemented");
+        throw std::invalid_argument("k=0 (DC) not implemented");
       } else if (N_ == 0) {
-        throw invalid_argument("N=0 is soooo not supported (Y THO?)");
+        throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
       }
 
       k = k_;
       N = N_;
-      coeff = exp(complex<float>(0., 2. * PI * (k / N)));
+      coeff = exp(std::complex<float>(0., 2. * PI * (k / N)));
     }
 
     void update(float previousSample, float currentSample) {
       totalPower += currentSample * currentSample;
       totalPower -= previousSample * previousSample;
 
-      dft = coeff * ((dft - complex<float>(previousSample, 0.)) + complex<float>(currentSample, 0.));
+      dft = coeff * ((dft - std::complex<float>(previousSample, 0.)) + std::complex<float>(currentSample, 0.));
     }
 
     float rms() {
@@ -140,7 +138,7 @@ class FastMovingAverage : public MovingAverage {
 
 class HeavyMovingAverage : public MovingAverage {
   private:
-    vector<RingBuffer> history;
+    std::vector<RingBuffer> history;
 
   private:
     HeavyMovingAverage(unsigned channels_, unsigned sampleRate_, unsigned maxWindow = 0)

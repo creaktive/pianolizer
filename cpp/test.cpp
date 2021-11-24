@@ -1,6 +1,8 @@
 #include <iostream>
 #include "pianolizer.hpp"
 
+using namespace std;
+
 void testRingBuffer() {
   RingBuffer *rb = new RingBuffer(15);
   assert(rb != NULL);
