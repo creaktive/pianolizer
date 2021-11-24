@@ -18,7 +18,7 @@ void testRingBuffer() {
   RingBuffer *rb = new RingBuffer(15);
   TEST_OK(rb != NULL, "object is not null");
 
-  TEST_OK(rb->read(0) == 1, "initalized to zeroes"); 
+  TEST_OK(rb->read(0) == 0, "initalized to zeroes");
 
   // write one single element
   rb->write(1);
