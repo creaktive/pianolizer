@@ -35,7 +35,7 @@ export class Pianolizer {
  *
  * @class Complex
  */
-class Complex {
+export class Complex {
   /**
    * Creates an instance of Complex.
    * @param {Number} [re=0] Real part.
@@ -123,7 +123,7 @@ class Complex {
  *
  * @class RingBuffer
  */
-class RingBuffer {
+export class RingBuffer {
   /**
    * Creates an instance of RingBuffer.
    * @param {Number} requestedSize How long the RingBuffer is expected to be.
@@ -131,7 +131,7 @@ class RingBuffer {
    */
   constructor (requestedSize) {
     const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
-    console.info(`Allocating RingBuffer for ${bits} address bits`)
+    // console.info(`Allocating RingBuffer for ${bits} address bits`)
 
     const size = 1 << bits
     this.mask = size - 1
@@ -167,7 +167,7 @@ class RingBuffer {
  *
  * @class DFTBin
  */
-class DFTBin {
+export class DFTBin {
   /**
    * Creates an instance of DFTBin.
    * @param {Number} k Frequency divided by the bandwidth (must be an integer!).
@@ -264,7 +264,7 @@ class DFTBin {
  *
  * @class MovingAverage
  */
-class MovingAverage {
+export class MovingAverage {
   /**
    * Creates an instance of MovingAverage.
    * @param {Number} channels Number of channels to process.
@@ -332,7 +332,7 @@ class MovingAverage {
  * @class FastMovingAverage
  * @extends {MovingAverage}
  */
-class FastMovingAverage extends MovingAverage {
+export class FastMovingAverage extends MovingAverage {
   /**
    * Update the internal state with from the input.
    *
@@ -357,7 +357,7 @@ class FastMovingAverage extends MovingAverage {
  * @class HeavyMovingAverage
  * @extends {MovingAverage}
  */
-class HeavyMovingAverage extends MovingAverage {
+export class HeavyMovingAverage extends MovingAverage {
   /**
    * Creates an instance of HeavyMovingAverage.
    * @param {Number} channels Number of channels to process.
@@ -401,7 +401,7 @@ class HeavyMovingAverage extends MovingAverage {
  *
  * @class MovingAverage
  */
-class Tuning {
+export class Tuning {
   /**
    * Creates an instance of Tuning.
    * @param {Number} sampleRate Self-explanatory.
@@ -441,7 +441,7 @@ class Tuning {
 
 /*
 // Proof of concept; there's no advantage in using Sliding DFT if we need to cover the full spectrum
-class RegularTuning extends Tuning {
+export class RegularTuning extends Tuning {
   constructor (sampleRate, bands) {
     super(sampleRate, bands)
     this.mapping = []
@@ -459,7 +459,7 @@ class RegularTuning extends Tuning {
  * @class PianoTuning
  * @extends {Tuning}
  */
-class PianoTuning extends Tuning {
+export class PianoTuning extends Tuning {
   /**
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
@@ -509,7 +509,7 @@ class PianoTuning extends Tuning {
  * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
  * @class SlidingDFT
  */
-class SlidingDFT {
+export class SlidingDFT {
   /**
    * Creates an instance of SlidingDFT.
    * @param {PianoTuning} tuning PianoTuning instance.
