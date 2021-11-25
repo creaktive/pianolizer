@@ -23,4 +23,4 @@ test: cpp/test.cpp cpp/pianolizer.hpp
 		-stdlib=libc++ \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp
-	$(TEST_BINARY)
+	@$(TEST_BINARY)

@@ -86,6 +86,26 @@ void testDFT(unsigned type, float expNAS, float expRMS, float expLog) {
   TEST_OK(FLOAT_EQ(expLog, bin.logarithmicUnitDecibels()), prefix + "log dB");
 }
 
+void testMovingAverage() {
+  FastMovingAverage fma = FastMovingAverage(2, 44100);
+  fma.averageWindowInSeconds(0.01);
+
+  HeavyMovingAverage hma = HeavyMovingAverage(2, 44100, 500);
+  hma.averageWindowInSeconds(0.01);
+
+  for (unsigned i = 0; i < 500; i++) {
+    float sample[2] = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
+    fma.update(sample);
+    hma.update(sample);
+  }
+
+  TEST_OK(FLOAT_EQ(fma.read(0), -.024506002326671227), "sine fast average");
+  TEST_OK(FLOAT_EQ(fma.read(1), .01886483060529713), "sawtooth fast average");
+
+  TEST_OK(FLOAT_EQ(hma.read(0), -.06714661267338967), "sine heavy average");
+  TEST_OK(FLOAT_EQ(hma.read(1), .04485260926676986), "sawtooth heavy average");
+}
+
 int main(int argc, char *argv[]) {
   testRingBuffer();
 
@@ -93,6 +113,8 @@ int main(int argc, char *argv[]) {
   testDFT(SINE, .9999999999999972, .7071067809649849, -3.0102999593614452);
   testDFT(SAWTOOTH, .7797470999951004, .5774080013883754, -6.93126867978036);
   testDFT(SQUARE, .9004644293093976, 1., -0.9106687653789797);
+
+  testMovingAverage();
 
   cout << "1.." << TEST_COUNT << endl;
   return 0;

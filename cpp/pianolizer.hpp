@@ -120,6 +120,10 @@ class MovingAverage {
 
 class FastMovingAverage : public MovingAverage {
   public:
+    FastMovingAverage(unsigned channels_, unsigned sampleRate_)
+      : MovingAverage{ channels_, sampleRate_ }
+    {}
+
     void update(float levels[]) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
@@ -133,27 +137,33 @@ class FastMovingAverage : public MovingAverage {
 
 class HeavyMovingAverage : public MovingAverage {
   private:
-    std::vector<RingBuffer> history;
+    std::vector<RingBuffer*> history;
 
-  private:
+  public:
     HeavyMovingAverage(unsigned channels_, unsigned sampleRate_, unsigned maxWindow = 0)
       : MovingAverage{ channels_, sampleRate_ }
     {
+      history.reserve(channels);
       for (unsigned n = 0; n < channels; n++)
-        history.push_back(RingBuffer(maxWindow ? maxWindow : sampleRate));
+        history.push_back(new RingBuffer(maxWindow ? maxWindow : sampleRate));
+    }
+
+    ~HeavyMovingAverage() {
+      for (unsigned n = 0; n < channels; n++)
+        history[n]->~RingBuffer();
     }
 
     void update(float levels[]) {
       for (unsigned n = 0; n < channels; n++) {
         const float value = levels[n];
-        history[n].write(value);
+        history[n]->write(value);
         sum[n] += value;
 
         if (targetAverageWindow == averageWindow) {
-          sum[n] -= history[n].read(averageWindow);
+          sum[n] -= history[n]->read(averageWindow);
         } else if (targetAverageWindow < averageWindow) {
-          sum[n] -= history[n].read(averageWindow);
-          sum[n] -= history[n].read(averageWindow - 1);
+          sum[n] -= history[n]->read(averageWindow);
+          sum[n] -= history[n]->read(averageWindow - 1);
         }
       }
       updateAverageWindow();
