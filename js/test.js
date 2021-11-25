@@ -1,4 +1,4 @@
-import { RingBuffer, DFTBin } from './pianolizer.js'
+import { RingBuffer, DFTBin, FastMovingAverage, HeavyMovingAverage } from './pianolizer.js'
 
 const waveform = {
   SINE: 0,
@@ -40,6 +40,25 @@ function testDFT (type, expected) {
   }
 }
 
+function testMovingAverage () {
+  const fma = new FastMovingAverage(2, 44100)
+  fma.averageWindowInSeconds = 0.01
+
+  const hma = new HeavyMovingAverage(2, 44100, 500)
+  hma.averageWindowInSeconds = 0.01
+
+  for (let i = 0; i < 500; i++) {
+    const sample = [oscillator(i, waveform.SINE), oscillator(i, waveform.SAWTOOTH)]
+    fma.update(sample)
+    hma.update(sample)
+  }
+
+  console.log(hma.read(0))
+  console.log(hma.read(1))
+}
+
 testDFT(waveform.SINE, 999999)
 testDFT(waveform.SAWTOOTH, 779747)
 testDFT(waveform.SQUARE, 900464)
+
+testMovingAverage()
