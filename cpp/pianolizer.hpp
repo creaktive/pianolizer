@@ -34,8 +34,8 @@ class RingBuffer {
 
 class DFTBin {
   private:
-    const double PI = acos(-1.);
-    const double SQRT2 = sqrt(2.);
+    const float PI = acos(-1.);
+    const float SQRT2 = sqrt(2.);
     float k, N;
     float totalPower = 0.;
     std::complex<float> coeff;
@@ -44,15 +44,13 @@ class DFTBin {
   public:
     float referenceAmplitude = 1.; // 0 dB level
 
-    DFTBin(unsigned k_, unsigned N_) {
-      if (k_ == 0) {
+    DFTBin(unsigned k_, unsigned N_)
+      : k(k_), N(N_) {
+      if (k == 0)
         throw std::invalid_argument("k=0 (DC) not implemented");
-      } else if (N_ == 0) {
+      else if (N == 0)
         throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
-      }
 
-      k = k_;
-      N = N_;
       coeff = exp(std::complex<float>(0., 2. * PI * (k / N)));
     }
 
@@ -89,9 +87,8 @@ class MovingAverage {
     unsigned targetAverageWindow;
     float *sum;
 
-    MovingAverage(unsigned channels_, unsigned sampleRate_) {
-      channels = channels_;
-      sampleRate = sampleRate_;
+    MovingAverage(unsigned channels_, unsigned sampleRate_)
+      : channels(channels_), sampleRate(sampleRate_) {
       sum = new float[channels];
     }
 
@@ -105,17 +102,15 @@ class MovingAverage {
 
     void averageWindowInSeconds(float value) {
       targetAverageWindow = round(value * sampleRate);
-      if (averageWindow == -1) {
+      if (averageWindow == -1)
         averageWindow = targetAverageWindow;
-      }
     }
 
     void updateAverageWindow() {
-      if (targetAverageWindow > averageWindow) {
+      if (targetAverageWindow > averageWindow)
         averageWindow++;
-      } else if (targetAverageWindow < averageWindow) {
+      else if (targetAverageWindow < averageWindow)
         averageWindow--;
-      }
     }
 
     float read(unsigned n) {
@@ -144,15 +139,8 @@ class HeavyMovingAverage : public MovingAverage {
     HeavyMovingAverage(unsigned channels_, unsigned sampleRate_, unsigned maxWindow = 0)
       : MovingAverage{ channels_, sampleRate_ }
     {
-      for (unsigned n = 0; n < channels; n++) {
-        const RingBuffer *ringBuffer = new RingBuffer(maxWindow ? maxWindow : sampleRate);
-        history.push_back(*ringBuffer);
-      }
-    }
-
-    ~HeavyMovingAverage() {
-      history.clear();
-      history.~vector();
+      for (unsigned n = 0; n < channels; n++)
+        history.push_back(RingBuffer(maxWindow ? maxWindow : sampleRate));
     }
 
     void update(float levels[]) {
