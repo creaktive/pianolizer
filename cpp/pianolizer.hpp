@@ -150,7 +150,7 @@ class HeavyMovingAverage : public MovingAverage {
 
     ~HeavyMovingAverage() {
       for (unsigned n = 0; n < channels; n++)
-        history[n]->~RingBuffer();
+        delete history[n];
     }
 
     void update(float levels[]) {
