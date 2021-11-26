@@ -3,26 +3,27 @@
 
 using namespace emscripten;
 
-const unsigned KEYS = 61;
-
 class Pianolizer {
+  private:
+    SlidingDFT* slidingDFT;
+    unsigned bands;
+
   public:
     Pianolizer(unsigned sampleRate) {
+      PianoTuning tuning = PianoTuning(sampleRate);
+      bands = tuning.bands;
+      slidingDFT = new SlidingDFT(tuning);
+    }
+
+    ~Pianolizer() {
+      delete slidingDFT;
     }
 
     val process(uintptr_t samplesPtr, unsigned samplesLength, float averageWindowInSeconds = 0) {
       float* samples = reinterpret_cast<float*>(samplesPtr);
-
-      for (unsigned i = 0; i < samplesLength; i++) {
-        levels[0] += abs(samples[i]);
-      }
-      levels[0] /= samplesLength;
-
-      return val(typed_memory_view(sizeof(levels) / sizeof(float), levels));
+      float* levels = slidingDFT->process(samples, samplesLength, averageWindowInSeconds);
+      return val(typed_memory_view(bands, levels));
     }
-  
-  private:
-    float levels[KEYS];
 };
 
 EMSCRIPTEN_BINDINGS(CLASS_Pianolizer) {
