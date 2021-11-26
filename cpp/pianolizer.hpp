@@ -168,3 +168,60 @@ class HeavyMovingAverage : public MovingAverage {
       updateAverageWindow();
     }
 };
+
+class Tuning {
+  public:
+    unsigned sampleRate, bands;
+    struct tuningValues {
+      unsigned k, N;
+    };
+
+    Tuning(unsigned sampleRate_, unsigned bands_)
+      : sampleRate(sampleRate_), bands(bands_)
+    {}
+
+    tuningValues frequencyAndBandwidthToKAndN(double frequency, double bandwidth) {
+      double N = floor(sampleRate / bandwidth);
+      const double k = floor(frequency / bandwidth);
+
+      // find such N that (sampleRate * (k / N)) is the closest to freq
+      // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
+      double delta = abs(sampleRate * (k / N) - frequency);
+      for (unsigned i = N - 1; ; i--) {
+        const double tmpDelta = abs(sampleRate * (k / i) - frequency);
+        if (tmpDelta < delta) {
+          delta = tmpDelta;
+          N = i;
+        } else {
+          tuningValues result = { (unsigned) k, (unsigned) N };
+          return result;
+        }
+      }
+    }
+};
+
+class PianoTuning : public Tuning {
+  private:
+    unsigned referenceKey;
+    double pitchFork;
+
+  public:
+    PianoTuning(unsigned sampleRate_, unsigned keysNum = 61, unsigned referenceKey_ = 33, double pitchFork_ = 440.0)
+      : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_)
+    {}
+
+    double keyToFreq(double key) {
+      return pitchFork * pow(2., (key - referenceKey) / 12.);
+    }
+
+    std::vector<tuningValues> mapping() {
+      std::vector<tuningValues> output;
+      output.reserve(bands);
+      for (unsigned key = 0; key < bands; key++) {
+        const double frequency = keyToFreq(key);
+        const double bandwidth = 2. * (keyToFreq(key + .5) - frequency);
+        output.push_back(frequencyAndBandwidthToKAndN(frequency, bandwidth));
+      }
+      return output;
+    }
+};

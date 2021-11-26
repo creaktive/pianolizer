@@ -47,6 +47,8 @@ void testRingBuffer() {
   TEST_OK(rb.read(17) == 18, "wrap back to 1");
 }
 
+const unsigned SAMPLE_RATE = 44100;
+
 const unsigned SINE = 0;
 const unsigned SAWTOOTH = 1;
 const unsigned SQUARE = 2;
@@ -85,10 +87,10 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
 }
 
 void testMovingAverage() {
-  FastMovingAverage fma = FastMovingAverage(2, 44100);
+  FastMovingAverage fma = FastMovingAverage(2, SAMPLE_RATE);
   fma.averageWindowInSeconds(0.01);
 
-  HeavyMovingAverage hma = HeavyMovingAverage(2, 44100, 500);
+  HeavyMovingAverage hma = HeavyMovingAverage(2, SAMPLE_RATE, 500);
   hma.averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
@@ -104,6 +106,22 @@ void testMovingAverage() {
   TEST_OK(FLOAT_EQ(hma.read(1), .04485260926676986), "sawtooth heavy average");
 }
 
+void testTuning() {
+  PianoTuning pt = PianoTuning(SAMPLE_RATE);
+  vector<Tuning::tuningValues> m = pt.mapping();
+
+  TEST_OK(m.size() == 61, "mapping size");
+
+  TEST_OK(m[0].k == 17, "C2 k");
+  TEST_OK(m[0].N == 11462, "C2 N");
+
+  TEST_OK(m[33].k == 17, "A4 k");
+  TEST_OK(m[33].N == 1704, "A4 N");
+
+  TEST_OK(m[60].k == 17, "C7 k");
+  TEST_OK(m[60].N == 358, "C7 N");
+}
+
 int main(int argc, char *argv[]) {
   testRingBuffer();
 
@@ -113,6 +131,7 @@ int main(int argc, char *argv[]) {
   testDFT(SQUARE, .9004644293093976, 1., -0.9106687653789797);
 
   testMovingAverage();
+  testTuning();
 
   cout << "1.." << TEST_COUNT << endl;
   return 0;
