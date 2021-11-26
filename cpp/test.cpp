@@ -14,7 +14,7 @@ unsigned static TEST_COUNT = 0;
     cerr << __FUNCTION__ << " failed on line " << __LINE__ << endl; \
   } \
 }
-#define FLOAT_EQ(a, b) (abs(a - b) <= 1e-4)
+#define FLOAT_EQ(a, b) (abs(a - b) <= 1e-7)
 
 void testRingBuffer() {
   RingBuffer rb = RingBuffer(15);
@@ -53,7 +53,7 @@ const unsigned SQUARE = 2;
 const unsigned NOISE = 3;
 
 // 441Hz wave period is 100 samples when the sample rate is 44100Hz
-float oscillator(unsigned s, unsigned type = SINE) {
+double oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
       return sin(M_PI / 50. * s);
@@ -67,14 +67,14 @@ float oscillator(unsigned s, unsigned type = SINE) {
   return 0.;
 }
 
-void testDFT(unsigned type, float expNAS, float expRMS, float expLog) {
+void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   const unsigned N = 1700;
   DFTBin bin = DFTBin(17, N);
   RingBuffer rb = RingBuffer(N);
   for (unsigned i = 0; i < 2000; i++) {
-    const float currentSample = oscillator(i, type);
+    const double currentSample = oscillator(i, type);
     rb.write(currentSample);
-    const float previousSample = rb.read(N);
+    const double previousSample = rb.read(N);
     bin.update(previousSample, currentSample);
   }
 
@@ -92,7 +92,7 @@ void testMovingAverage() {
   hma.averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
-    float sample[2] = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
+    double sample[2] = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
     fma.update(sample);
     hma.update(sample);
   }
