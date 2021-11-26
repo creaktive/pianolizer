@@ -55,7 +55,7 @@ const unsigned SQUARE = 2;
 const unsigned NOISE = 3;
 
 // 441Hz wave period is 100 samples when the sample rate is 44100Hz
-double oscillator(unsigned s, unsigned type = SINE) {
+float oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
       return sin(M_PI / 50. * s);
@@ -94,7 +94,7 @@ void testMovingAverage() {
   hma.averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
-    double sample[2] = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
+    float sample[2] = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
     fma.update(sample);
     hma.update(sample);
   }

@@ -125,7 +125,7 @@ class FastMovingAverage : public MovingAverage {
       : MovingAverage{ channels_, sampleRate_ }
     {}
 
-    void update(double levels[]) {
+    void update(float levels[]) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
         const double currentSum = sum[n];
@@ -154,7 +154,7 @@ class HeavyMovingAverage : public MovingAverage {
         delete history[n];
     }
 
-    void update(double levels[]) {
+    void update(float levels[]) {
       for (unsigned n = 0; n < channels; n++) {
         const double value = levels[n];
         history[n]->write(value);
@@ -201,7 +201,7 @@ class Tuning {
       }
     }
 
-    std::vector<tuningValues> mapping();
+    // std::vector<tuningValues> mapping();
 };
 
 class PianoTuning : public Tuning {
