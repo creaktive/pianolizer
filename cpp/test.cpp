@@ -47,8 +47,6 @@ void testRingBuffer() {
   TEST_OK(rb.read(17) == 18, "wrap back to 1");
 }
 
-const float TWO_PI = 2. * acos(-1.);
-
 const unsigned SINE = 0;
 const unsigned SAWTOOTH = 1;
 const unsigned SQUARE = 2;
@@ -58,7 +56,7 @@ const unsigned NOISE = 3;
 float oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
-      return sin(TWO_PI / 100. * s);
+      return sin(M_PI / 50. * s);
     case SAWTOOTH:
       return ((s % 100) / 50.) - 1.;
     case SQUARE:

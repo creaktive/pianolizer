@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <complex>
 #include <vector>
@@ -34,8 +35,6 @@ class RingBuffer {
 
 class DFTBin {
   private:
-    const float PI = acos(-1.);
-    const float SQRT2 = sqrt(2.);
     float k, N;
     float totalPower = 0.;
     std::complex<float> coeff;
@@ -51,7 +50,7 @@ class DFTBin {
       else if (N == 0)
         throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
 
-      coeff = exp(std::complex<float>(0., 2. * PI * (k / N)));
+      coeff = exp(std::complex<float>(0., 2. * M_PI * (k / N)));
     }
 
     void update(float previousSample, float currentSample) {
@@ -66,7 +65,7 @@ class DFTBin {
     }
 
     float amplitudeSpectrum() {
-      return SQRT2 * (sqrt(norm(dft)) / N);
+      return M_SQRT2 * (sqrt(norm(dft)) / N);
     }
 
     float normalizedAmplitudeSpectrum() {
