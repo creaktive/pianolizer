@@ -7,14 +7,14 @@ class RingBuffer {
   private:
     unsigned mask;
     unsigned index = 0;
-    double* buffer;
+    float* buffer;
 
   public:
     RingBuffer(unsigned requestedSize) {
       const unsigned bits = ceil(log2(requestedSize + 1));
       const unsigned size = 1 << bits;
       mask = size - 1;
-      buffer = new double[size];
+      buffer = new float[size];
       for (unsigned i = 0; i < size; i++)
         buffer[i] = 0.;
     }
@@ -84,11 +84,11 @@ class MovingAverage {
     unsigned channels, sampleRate;
     int averageWindow = -1;
     unsigned targetAverageWindow;
-    double *sum;
+    float *sum;
 
     MovingAverage(unsigned channels_, unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
-      sum = new double[channels];
+      sum = new float[channels];
     }
 
     ~MovingAverage() {
