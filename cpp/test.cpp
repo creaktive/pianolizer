@@ -122,6 +122,12 @@ void testTuning() {
   TEST_OK(m[60].N == 358, "C7 N");
 }
 
+void testSlidingDFT() {
+  SlidingDFT sdft = SlidingDFT(PianoTuning(SAMPLE_RATE));
+  float test[4] = {1., 2., 3., 4.};
+  sdft.process(test, 4);
+}
+
 int main(int argc, char *argv[]) {
   testRingBuffer();
 
@@ -132,6 +138,7 @@ int main(int argc, char *argv[]) {
 
   testMovingAverage();
   testTuning();
+  testSlidingDFT();
 
   cout << "1.." << TEST_COUNT << endl;
   return 0;

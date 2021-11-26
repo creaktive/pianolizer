@@ -35,12 +35,12 @@ class RingBuffer {
 
 class DFTBin {
   private:
-    double k, N;
     double totalPower = 0.;
     std::complex<double> coeff;
     std::complex<double> dft = std::complex<double>(0., 0.);
 
   public:
+    double k, N;
     double referenceAmplitude = 1.; // 0 dB level
 
     DFTBin(unsigned k_, unsigned N_)
@@ -115,6 +115,8 @@ class MovingAverage {
     double read(unsigned n) {
       return sum[n] / averageWindow;
     }
+
+    void update(float levels[]) {}
 };
 
 class FastMovingAverage : public MovingAverage {
@@ -198,6 +200,8 @@ class Tuning {
         }
       }
     }
+
+    std::vector<tuningValues> mapping();
 };
 
 class PianoTuning : public Tuning {
@@ -223,5 +227,80 @@ class PianoTuning : public Tuning {
         output.push_back(frequencyAndBandwidthToKAndN(frequency, bandwidth));
       }
       return output;
+    }
+};
+
+class SlidingDFT {
+  private:
+    std::vector<DFTBin*> bins;
+    float* levels;
+    RingBuffer* ringBuffer;
+    MovingAverage* movingAverage;
+
+  public:
+    SlidingDFT(PianoTuning tuning, double maxAverageWindowInSeconds = 0.) {
+      bins.reserve(tuning.bands);
+      levels = new float[tuning.bands];
+
+      unsigned maxN = 0;
+      for (auto band : tuning.mapping()) {
+        bins.push_back(new DFTBin(band.k, band.N));
+        maxN = fmax(maxN, band.N);
+      }
+
+      ringBuffer = new RingBuffer(maxN);
+
+      if (maxAverageWindowInSeconds > 0.) {
+        movingAverage = new HeavyMovingAverage(
+          tuning.bands,
+          tuning.sampleRate,
+          round(tuning.sampleRate * maxAverageWindowInSeconds)
+        );
+      } else if (maxAverageWindowInSeconds < 0.) {
+        movingAverage = new FastMovingAverage(
+          tuning.bands,
+          tuning.sampleRate
+        );
+      } else {
+        movingAverage = NULL;
+      }
+    }
+
+    ~SlidingDFT() {
+      delete [] levels;
+      delete ringBuffer;
+      delete movingAverage;
+    }
+
+    float* process(float samples[], unsigned samplesLength, double averageWindowInSeconds = 0.) {
+      if (movingAverage != NULL)
+        movingAverage->averageWindowInSeconds(averageWindowInSeconds);
+
+      const unsigned binsNum = bins.size();
+
+      // store in the ring buffer & process
+      for (unsigned i = 0; i < samplesLength; i++) {
+        const float currentSample = samples[i];
+        samples[i] = 0.;
+        ringBuffer->write(currentSample);
+
+        for (unsigned band = 0; band < binsNum; band++) {
+          DFTBin* bin = bins[band];
+          const float previousSample = ringBuffer->read(bin->N);
+          bin->update(previousSample, currentSample);
+          levels[band] = bin->normalizedAmplitudeSpectrum();
+          // levels[band] = bin->logarithmicUnitDecibels();
+        }
+
+        if (movingAverage != NULL)
+          movingAverage->update(levels);
+      }
+
+      // snapshot of the levels, after smoothing
+      if (movingAverage != NULL && movingAverage->averageWindow > 0)
+        for (unsigned band = 0; band < binsNum; band++)
+          levels[band] = movingAverage->read(band);
+
+      return levels;
     }
 };
