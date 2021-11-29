@@ -116,7 +116,7 @@ class MovingAverage {
       return sum[n] / averageWindow;
     }
 
-    void update(float levels[]) {}
+    virtual void update(float levels[]) = 0;
 };
 
 class FastMovingAverage : public MovingAverage {
@@ -201,7 +201,7 @@ class Tuning {
       }
     }
 
-    // std::vector<tuningValues> mapping();
+    virtual std::vector<tuningValues> mapping() = 0;
 };
 
 class PianoTuning : public Tuning {
@@ -238,12 +238,12 @@ class SlidingDFT {
     MovingAverage* movingAverage;
 
   public:
-    SlidingDFT(PianoTuning tuning, double maxAverageWindowInSeconds = 0.) {
-      bins.reserve(tuning.bands);
-      levels = new float[tuning.bands];
+    SlidingDFT(Tuning* tuning, double maxAverageWindowInSeconds = 0.) {
+      bins.reserve(tuning->bands);
+      levels = new float[tuning->bands];
 
       unsigned maxN = 0;
-      for (auto band : tuning.mapping()) {
+      for (auto band : tuning->mapping()) {
         bins.push_back(new DFTBin(band.k, band.N));
         maxN = fmax(maxN, band.N);
       }
@@ -252,14 +252,14 @@ class SlidingDFT {
 
       if (maxAverageWindowInSeconds > 0.) {
         movingAverage = new HeavyMovingAverage(
-          tuning.bands,
-          tuning.sampleRate,
-          round(tuning.sampleRate * maxAverageWindowInSeconds)
+          tuning->bands,
+          tuning->sampleRate,
+          round(tuning->sampleRate * maxAverageWindowInSeconds)
         );
       } else if (maxAverageWindowInSeconds < 0.) {
         movingAverage = new FastMovingAverage(
-          tuning.bands,
-          tuning.sampleRate
+          tuning->bands,
+          tuning->sampleRate
         );
       } else {
         movingAverage = NULL;
@@ -269,7 +269,7 @@ class SlidingDFT {
     ~SlidingDFT() {
       delete [] levels;
       delete ringBuffer;
-      delete movingAverage;
+      // delete movingAverage;
     }
 
     float* process(float samples[], unsigned samplesLength, double averageWindowInSeconds = 0.) {

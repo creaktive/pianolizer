@@ -10,9 +10,9 @@ class Pianolizer {
 
   public:
     Pianolizer(unsigned sampleRate) {
-      PianoTuning tuning = PianoTuning(sampleRate);
-      bands = tuning.bands;
-      slidingDFT = new SlidingDFT(tuning);
+      PianoTuning* tuning = new PianoTuning(sampleRate);
+      bands = tuning->bands;
+      slidingDFT = new SlidingDFT(tuning, -1.);
     }
 
     ~Pianolizer() {

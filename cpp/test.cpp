@@ -123,7 +123,7 @@ void testTuning() {
 }
 
 void testSlidingDFT() {
-  SlidingDFT sdft = SlidingDFT(PianoTuning(SAMPLE_RATE));
+  SlidingDFT sdft = SlidingDFT(new PianoTuning(SAMPLE_RATE), -1.);
   float test[4] = {1., 2., 3., 4.};
   sdft.process(test, 4);
 }
