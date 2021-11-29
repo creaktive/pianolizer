@@ -263,7 +263,7 @@ class SlidingDFT {
       // store in the ring buffer & process
       for (unsigned i = 0; i < samplesLength; i++) {
         const float currentSample = samples[i];
-        samples[i] = 0.;
+        // samples[i] = 0.;
         ringBuffer->write(currentSample);
 
         for (unsigned band = 0; band < binsNum; band++) {
