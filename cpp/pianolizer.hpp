@@ -85,6 +85,8 @@ class MovingAverage {
       sum = std::make_unique<float[]>(channels);
     }
 
+    virtual ~MovingAverage() {}
+
     double averageWindowInSeconds() {
       return averageWindow / sampleRate;
     }
@@ -167,6 +169,8 @@ class Tuning {
       : sampleRate(sampleRate_), bands(bands_)
     {}
 
+    virtual ~Tuning() {}
+
     tuningValues frequencyAndBandwidthToKAndN(double frequency, double bandwidth) {
       double N = floor(sampleRate / bandwidth);
       const double k = floor(frequency / bandwidth);
@@ -219,7 +223,7 @@ class SlidingDFT {
   private:
     std::vector<std::shared_ptr<DFTBin>> bins;
     std::unique_ptr<RingBuffer> ringBuffer;
-    MovingAverage* movingAverage;
+    std::shared_ptr<MovingAverage> movingAverage;
 
   public:
     SlidingDFT(Tuning* tuning, double maxAverageWindowInSeconds = 0.) {
@@ -234,30 +238,23 @@ class SlidingDFT {
       ringBuffer = std::make_unique<RingBuffer>(maxN);
 
       if (maxAverageWindowInSeconds > 0.) {
-        movingAverage = new HeavyMovingAverage(
+        movingAverage = std::make_shared<HeavyMovingAverage>(
           tuning->bands,
           tuning->sampleRate,
           round(tuning->sampleRate * maxAverageWindowInSeconds)
         );
       } else if (maxAverageWindowInSeconds < 0.) {
-        movingAverage = new FastMovingAverage(
+        movingAverage = std::make_shared<FastMovingAverage>(
           tuning->bands,
           tuning->sampleRate
         );
       } else {
-        movingAverage = NULL;
+        movingAverage = nullptr;
       }
     }
 
-    /*
-    ~SlidingDFT() {
-      delete [] levels;
-      // delete movingAverage;
-    }
-    */
-
     float* process(float samples[], unsigned samplesLength, double averageWindowInSeconds = 0.) {
-      if (movingAverage != NULL)
+      if (movingAverage != nullptr)
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
 
       const unsigned binsNum = bins.size();
@@ -277,12 +274,12 @@ class SlidingDFT {
           // levels[band] = bin->logarithmicUnitDecibels();
         }
 
-        if (movingAverage != NULL)
+        if (movingAverage != nullptr)
           movingAverage->update(levels);
       }
 
       // snapshot of the levels, after smoothing
-      if (movingAverage != NULL && movingAverage->averageWindow > 0)
+      if (movingAverage != nullptr && movingAverage->averageWindow > 0)
         for (unsigned band = 0; band < binsNum; band++)
           levels[band] = movingAverage->read(band);
 

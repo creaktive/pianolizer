@@ -87,23 +87,23 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
 }
 
 void testMovingAverage() {
-  auto fma = FastMovingAverage(2, SAMPLE_RATE);
-  fma.averageWindowInSeconds(0.01);
+  auto fma = make_unique<FastMovingAverage>(2, SAMPLE_RATE);
+  fma->averageWindowInSeconds(0.01);
 
-  auto hma = HeavyMovingAverage(2, SAMPLE_RATE, 500);
-  hma.averageWindowInSeconds(0.01);
+  auto hma = make_unique<HeavyMovingAverage>(2, SAMPLE_RATE, 500);
+  hma->averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
     vector<float> sample = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
-    fma.update(sample);
-    hma.update(sample);
+    fma->update(sample);
+    hma->update(sample);
   }
 
-  TEST_OK(FLOAT_EQ(fma.read(0), -.024506002326671227), "sine fast average");
-  TEST_OK(FLOAT_EQ(fma.read(1), .01886483060529713), "sawtooth fast average");
+  TEST_OK(FLOAT_EQ(fma->read(0), -.024506002326671227), "sine fast average");
+  TEST_OK(FLOAT_EQ(fma->read(1), .01886483060529713), "sawtooth fast average");
 
-  TEST_OK(FLOAT_EQ(hma.read(0), -.06714661267338967), "sine heavy average");
-  TEST_OK(FLOAT_EQ(hma.read(1), .04485260926676986), "sawtooth heavy average");
+  TEST_OK(FLOAT_EQ(hma->read(0), -.06714661267338967), "sine heavy average");
+  TEST_OK(FLOAT_EQ(hma->read(1), .04485260926676986), "sawtooth heavy average");
 }
 
 void testTuning() {
