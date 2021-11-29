@@ -7,20 +7,14 @@ class RingBuffer {
   private:
     unsigned mask;
     unsigned index = 0;
-    float* buffer;
+    std::unique_ptr<float[]> buffer;
 
   public:
     RingBuffer(unsigned requestedSize) {
       const unsigned bits = ceil(log2(requestedSize + 1));
       const unsigned size = 1 << bits;
       mask = size - 1;
-      buffer = new float[size];
-      for (unsigned i = 0; i < size; i++)
-        buffer[i] = 0.;
-    }
-
-    ~RingBuffer() {
-      delete [] buffer;
+      buffer = std::make_unique<float[]>(size);
     }
 
     void write(double value) {
@@ -84,15 +78,11 @@ class MovingAverage {
     unsigned channels, sampleRate;
     int averageWindow = -1;
     unsigned targetAverageWindow;
-    float *sum;
+    std::unique_ptr<float[]> sum;
 
     MovingAverage(unsigned channels_, unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
-      sum = new float[channels];
-    }
-
-    ~MovingAverage() {
-      delete [] sum;
+      sum = std::make_unique<float[]>(channels);
     }
 
     double averageWindowInSeconds() {
@@ -138,7 +128,7 @@ class FastMovingAverage : public MovingAverage {
 
 class HeavyMovingAverage : public MovingAverage {
   private:
-    std::vector<RingBuffer*> history;
+    std::vector<std::unique_ptr<RingBuffer>> history;
 
   public:
     HeavyMovingAverage(unsigned channels_, unsigned sampleRate_, unsigned maxWindow = 0)
@@ -146,12 +136,7 @@ class HeavyMovingAverage : public MovingAverage {
     {
       history.reserve(channels);
       for (unsigned n = 0; n < channels; n++)
-        history.push_back(new RingBuffer(maxWindow ? maxWindow : sampleRate));
-    }
-
-    ~HeavyMovingAverage() {
-      for (unsigned n = 0; n < channels; n++)
-        delete history[n];
+        history.push_back(std::make_unique<RingBuffer>(maxWindow ? maxWindow : sampleRate));
     }
 
     void update(float levels[]) {
@@ -234,7 +219,7 @@ class SlidingDFT {
   private:
     std::vector<DFTBin*> bins;
     float* levels;
-    RingBuffer* ringBuffer;
+    std::unique_ptr<RingBuffer> ringBuffer;
     MovingAverage* movingAverage;
 
   public:
@@ -248,7 +233,7 @@ class SlidingDFT {
         maxN = fmax(maxN, band.N);
       }
 
-      ringBuffer = new RingBuffer(maxN);
+      ringBuffer = std::make_unique<RingBuffer>(maxN);
 
       if (maxAverageWindowInSeconds > 0.) {
         movingAverage = new HeavyMovingAverage(
@@ -266,11 +251,12 @@ class SlidingDFT {
       }
     }
 
+    /*
     ~SlidingDFT() {
       delete [] levels;
-      delete ringBuffer;
       // delete movingAverage;
     }
+    */
 
     float* process(float samples[], unsigned samplesLength, double averageWindowInSeconds = 0.) {
       if (movingAverage != NULL)

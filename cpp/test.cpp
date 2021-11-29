@@ -14,7 +14,7 @@ unsigned static TEST_COUNT = 0;
     cerr << __FUNCTION__ << " failed on line " << __LINE__ << endl; \
   } \
 }
-#define FLOAT_EQ(a, b) (abs(a - b) <= 1e-8)
+#define FLOAT_EQ(a, b) (abs(a - b) <= 1e-7)
 
 void testRingBuffer() {
   auto rb = RingBuffer(15);

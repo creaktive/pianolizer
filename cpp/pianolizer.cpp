@@ -5,18 +5,14 @@ using namespace emscripten;
 
 class Pianolizer {
   private:
-    SlidingDFT* slidingDFT;
+    std::unique_ptr<SlidingDFT> slidingDFT;
     unsigned bands;
 
   public:
     Pianolizer(unsigned sampleRate) {
       auto tuning = new PianoTuning(sampleRate);
       bands = tuning->bands;
-      slidingDFT = new SlidingDFT(tuning, -1.);
-    }
-
-    ~Pianolizer() {
-      delete slidingDFT;
+      slidingDFT = std::make_unique<SlidingDFT>(tuning, -1.);
     }
 
     val process(uintptr_t samplesPtr, unsigned samplesLength, float averageWindowInSeconds = 0) {
