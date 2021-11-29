@@ -94,7 +94,7 @@ void testMovingAverage() {
   hma.averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
-    float sample[2] = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
+    vector<float> sample = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
     fma.update(sample);
     hma.update(sample);
   }
