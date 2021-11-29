@@ -217,7 +217,7 @@ class PianoTuning : public Tuning {
 
 class SlidingDFT {
   private:
-    std::vector<DFTBin*> bins;
+    std::vector<std::shared_ptr<DFTBin>> bins;
     std::unique_ptr<RingBuffer> ringBuffer;
     MovingAverage* movingAverage;
 
@@ -227,7 +227,7 @@ class SlidingDFT {
 
       unsigned maxN = 0;
       for (auto band : tuning->mapping()) {
-        bins.push_back(new DFTBin(band.k, band.N));
+        bins.push_back(std::make_shared<DFTBin>(band.k, band.N));
         maxN = fmax(maxN, band.N);
       }
 
