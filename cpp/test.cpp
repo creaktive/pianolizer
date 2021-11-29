@@ -17,7 +17,7 @@ unsigned static TEST_COUNT = 0;
 #define FLOAT_EQ(a, b) (abs(a - b) <= 1e-8)
 
 void testRingBuffer() {
-  RingBuffer rb = RingBuffer(15);
+  auto rb = RingBuffer(15);
 
   TEST_OK(rb.read(0) == 0, "initalized to zeroes");
 
@@ -71,8 +71,8 @@ float oscillator(unsigned s, unsigned type = SINE) {
 
 void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   const unsigned N = 1700;
-  DFTBin bin = DFTBin(17, N);
-  RingBuffer rb = RingBuffer(N);
+  auto bin = DFTBin(17, N);
+  auto rb = RingBuffer(N);
   for (unsigned i = 0; i < 2000; i++) {
     const double currentSample = oscillator(i, type);
     rb.write(currentSample);
@@ -87,10 +87,10 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
 }
 
 void testMovingAverage() {
-  FastMovingAverage fma = FastMovingAverage(2, SAMPLE_RATE);
+  auto fma = FastMovingAverage(2, SAMPLE_RATE);
   fma.averageWindowInSeconds(0.01);
 
-  HeavyMovingAverage hma = HeavyMovingAverage(2, SAMPLE_RATE, 500);
+  auto hma = HeavyMovingAverage(2, SAMPLE_RATE, 500);
   hma.averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
@@ -107,8 +107,8 @@ void testMovingAverage() {
 }
 
 void testTuning() {
-  PianoTuning pt = PianoTuning(SAMPLE_RATE);
-  vector<Tuning::tuningValues> m = pt.mapping();
+  auto pt = PianoTuning(SAMPLE_RATE);
+  auto m = pt.mapping();
 
   TEST_OK(m.size() == 61, "mapping size");
 
@@ -123,7 +123,7 @@ void testTuning() {
 }
 
 void testSlidingDFT() {
-  SlidingDFT sdft = SlidingDFT(new PianoTuning(SAMPLE_RATE), -1.);
+  auto sdft = SlidingDFT(new PianoTuning(SAMPLE_RATE), -1.);
   float test[4] = {1., 2., 3., 4.};
   sdft.process(test, 4);
 }

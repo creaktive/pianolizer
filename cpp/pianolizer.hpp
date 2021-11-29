@@ -285,7 +285,7 @@ class SlidingDFT {
         ringBuffer->write(currentSample);
 
         for (unsigned band = 0; band < binsNum; band++) {
-          DFTBin* bin = bins[band];
+          auto bin = bins[band];
           const float previousSample = ringBuffer->read(bin->N);
           bin->update(previousSample, currentSample);
           levels[band] = bin->normalizedAmplitudeSpectrum();

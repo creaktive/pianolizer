@@ -10,7 +10,7 @@ class Pianolizer {
 
   public:
     Pianolizer(unsigned sampleRate) {
-      PianoTuning* tuning = new PianoTuning(sampleRate);
+      auto tuning = new PianoTuning(sampleRate);
       bands = tuning->bands;
       slidingDFT = new SlidingDFT(tuning, -1.);
     }
@@ -20,8 +20,8 @@ class Pianolizer {
     }
 
     val process(uintptr_t samplesPtr, unsigned samplesLength, float averageWindowInSeconds = 0) {
-      float* samples = reinterpret_cast<float*>(samplesPtr);
-      float* levels = slidingDFT->process(samples, samplesLength, averageWindowInSeconds);
+      auto samples = reinterpret_cast<float*>(samplesPtr);
+      auto levels = slidingDFT->process(samples, samplesLength, averageWindowInSeconds);
       return val(typed_memory_view(bands, levels));
     }
 };
