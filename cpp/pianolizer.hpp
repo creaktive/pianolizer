@@ -226,7 +226,7 @@ class SlidingDFT {
     std::shared_ptr<MovingAverage> movingAverage;
 
   public:
-    SlidingDFT(Tuning* tuning, double maxAverageWindowInSeconds = 0.) {
+    SlidingDFT(std::shared_ptr<Tuning> tuning, double maxAverageWindowInSeconds = 0.) {
       bins.reserve(tuning->bands);
 
       unsigned maxN = 0;
