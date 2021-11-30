@@ -133,13 +133,13 @@ void testSlidingDFT() {
     unsigned j = i % bufferSize;
     input[j] = oscillator(i, SAWTOOTH);
     if (j == bufferSize - 1)
-      output = sdft.process(input, bufferSize);
+      output = sdft.process(input, bufferSize, .05);
   }
   auto end = chrono::high_resolution_clock::now();
-  chrono::duration<double, ratio<1, 1>> elapsed = end-start;
+  chrono::duration<double, ratio<1, 1>> elapsed = end - start;
   cerr << "# benchmark: " << i / elapsed.count() << " samples per second" << endl;
 
-  TEST_OK(FLOAT_EQ(output[33], .7779726982116699), "A4 sawtooth");
+  TEST_OK(FLOAT_EQ(output[33], .7777045965194702), "A4 sawtooth");
   // char buf[20]; snprintf(buf, 20, "%.16f", output[33]); cerr << buf << endl;
 }
 
