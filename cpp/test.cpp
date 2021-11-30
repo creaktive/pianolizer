@@ -124,8 +124,23 @@ void testTuning() {
 
 void testSlidingDFT() {
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE), -1.);
-  float test[4] = {1., 2., 3., 4.};
-  sdft.process(test, 4);
+  const unsigned bufferSize = 128;
+  float input[bufferSize], *output;
+
+  auto start = chrono::high_resolution_clock::now();
+  unsigned i;
+  for (i = 0; i < bufferSize * 10000; i++) {
+    unsigned j = i % bufferSize;
+    input[j] = oscillator(i, SAWTOOTH);
+    if (j == bufferSize - 1)
+      output = sdft.process(input, bufferSize);
+  }
+  auto end = chrono::high_resolution_clock::now();
+  chrono::duration<double, ratio<1, 1>> elapsed = end-start;
+  cerr << "# benchmark: " << i / elapsed.count() << " samples per second" << endl;
+
+  TEST_OK(FLOAT_EQ(output[33], .7779726982116699), "A4 sawtooth");
+  // char buf[20]; snprintf(buf, 20, "%.16f", output[33]); cerr << buf << endl;
 }
 
 int main(int argc, char *argv[]) {
