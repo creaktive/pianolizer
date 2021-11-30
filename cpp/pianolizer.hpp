@@ -108,7 +108,7 @@ class MovingAverage {
       return sum[n] / averageWindow;
     }
 
-    virtual void update(std::vector<float> levels) = 0;
+    virtual void update(std::vector<float>& levels) = 0;
 };
 
 class FastMovingAverage : public MovingAverage {
@@ -117,7 +117,7 @@ class FastMovingAverage : public MovingAverage {
       : MovingAverage{ channels_, sampleRate_ }
     {}
 
-    void update(std::vector<float> levels) {
+    void update(std::vector<float>& levels) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
         const double currentSum = sum[n];
@@ -141,7 +141,7 @@ class HeavyMovingAverage : public MovingAverage {
         history.push_back(std::make_unique<RingBuffer>(maxWindow ? maxWindow : sampleRate));
     }
 
-    void update(std::vector<float> levels) {
+    void update(std::vector<float>& levels) {
       for (unsigned n = 0; n < channels; n++) {
         const double value = levels[n];
         history[n]->write(value);
@@ -184,8 +184,7 @@ class Tuning {
           delta = tmpDelta;
           N = i;
         } else {
-          tuningValues result = { (unsigned) k, (unsigned) N };
-          return result;
+          return { (unsigned) k, (unsigned) N };
         }
       }
     }
@@ -222,12 +221,14 @@ class PianoTuning : public Tuning {
 class SlidingDFT {
   private:
     std::vector<std::shared_ptr<DFTBin>> bins;
+    std::vector<float> levels;
     std::unique_ptr<RingBuffer> ringBuffer;
     std::shared_ptr<MovingAverage> movingAverage;
 
   public:
     SlidingDFT(std::shared_ptr<Tuning> tuning, double maxAverageWindowInSeconds = 0.) {
       bins.reserve(tuning->bands);
+      levels.reserve(tuning->bands);
 
       unsigned maxN = 0;
       for (auto band : tuning->mapping()) {
@@ -258,7 +259,6 @@ class SlidingDFT {
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
 
       const unsigned binsNum = bins.size();
-      static std::vector<float> levels(binsNum);
 
       // store in the ring buffer & process
       for (unsigned i = 0; i < samplesLength; i++) {
@@ -266,12 +266,13 @@ class SlidingDFT {
         // samples[i] = 0.;
         ringBuffer->write(currentSample);
 
-        for (unsigned band = 0; band < binsNum; band++) {
-          auto bin = bins[band];
+        unsigned band = 0;
+        for (auto bin : bins) {
           const float previousSample = ringBuffer->read(bin->N);
           bin->update(previousSample, currentSample);
           levels[band] = bin->normalizedAmplitudeSpectrum();
           // levels[band] = bin->logarithmicUnitDecibels();
+          band++;
         }
 
         if (movingAverage != nullptr)
