@@ -63,7 +63,7 @@ class DFTBin {
     }
 
     double normalizedAmplitudeSpectrum() {
-      return totalPower > 0.
+      return isnormal(totalPower)
         ? amplitudeSpectrum() / rms()
         : 0.;
     }
@@ -233,7 +233,7 @@ class SlidingDFT {
       unsigned maxN = 0;
       for (auto band : tuning->mapping()) {
         bins.push_back(std::make_shared<DFTBin>(band.k, band.N));
-        maxN = fmax(maxN, band.N);
+        maxN = maxN > band.N ? maxN : band.N;
       }
 
       ringBuffer = std::make_unique<RingBuffer>(maxN);
