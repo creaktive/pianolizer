@@ -10,19 +10,19 @@ class RingBuffer {
     std::unique_ptr<double[]> buffer;
 
   public:
-    RingBuffer(unsigned requestedSize) {
+    RingBuffer(const unsigned requestedSize) {
       const unsigned bits = ceil(log2(requestedSize + 1));
       const unsigned size = 1 << bits;
       mask = size - 1;
       buffer = std::make_unique<double[]>(size);
     }
 
-    void write(double value) {
+    void write(const double value) {
       index &= mask;
       buffer[index++] = value;
     }
 
-    double read(unsigned position) {
+    double read(const unsigned position) {
       return buffer[(index + (~position)) & mask];
     }
 };
@@ -37,7 +37,7 @@ class DFTBin {
     double k, N;
     double referenceAmplitude = 1.; // 0 dB level
 
-    DFTBin(unsigned k_, unsigned N_)
+    DFTBin(const unsigned k_, const unsigned N_)
       : k(k_), N(N_) {
       if (k == 0)
         throw std::invalid_argument("k=0 (DC) not implemented");
@@ -47,7 +47,7 @@ class DFTBin {
       coeff = exp(std::complex<double>(0., 2. * M_PI * (k / N)));
     }
 
-    void update(double previousSample, double currentSample) {
+    void update(const double previousSample, const double currentSample) {
       totalPower += currentSample * currentSample;
       totalPower -= previousSample * previousSample;
 
@@ -80,7 +80,7 @@ class MovingAverage {
     unsigned targetAverageWindow;
     std::unique_ptr<double[]> sum;
 
-    MovingAverage(unsigned channels_, unsigned sampleRate_)
+    MovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
       sum = std::make_unique<double[]>(channels);
     }
@@ -91,7 +91,7 @@ class MovingAverage {
       return averageWindow / sampleRate;
     }
 
-    void averageWindowInSeconds(double value) {
+    void averageWindowInSeconds(const double value) {
       targetAverageWindow = round(value * sampleRate);
       if (averageWindow == -1)
         averageWindow = targetAverageWindow;
@@ -104,20 +104,20 @@ class MovingAverage {
         averageWindow--;
     }
 
-    double read(unsigned n) {
+    double read(const unsigned n) {
       return sum[n] / averageWindow;
     }
 
-    virtual void update(std::vector<double>& levels) = 0;
+    virtual void update(const std::vector<double>& levels) = 0;
 };
 
 class FastMovingAverage : public MovingAverage {
   public:
-    FastMovingAverage(unsigned channels_, unsigned sampleRate_)
+    FastMovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : MovingAverage{ channels_, sampleRate_ }
     {}
 
-    void update(std::vector<double>& levels) {
+    void update(const std::vector<double>& levels) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
         const double currentSum = sum[n];
@@ -133,7 +133,7 @@ class HeavyMovingAverage : public MovingAverage {
     std::vector<std::unique_ptr<RingBuffer>> history;
 
   public:
-    HeavyMovingAverage(unsigned channels_, unsigned sampleRate_, unsigned maxWindow = 0)
+    HeavyMovingAverage(const unsigned channels_, const unsigned sampleRate_, const unsigned maxWindow = 0)
       : MovingAverage{ channels_, sampleRate_ }
     {
       history.reserve(channels);
@@ -141,7 +141,7 @@ class HeavyMovingAverage : public MovingAverage {
         history.push_back(std::make_unique<RingBuffer>(maxWindow ? maxWindow : sampleRate));
     }
 
-    void update(std::vector<double>& levels) {
+    void update(const std::vector<double>& levels) {
       for (unsigned n = 0; n < channels; n++) {
         const double value = levels[n];
         history[n]->write(value);
@@ -165,13 +165,13 @@ class Tuning {
       unsigned k, N;
     };
 
-    Tuning(unsigned sampleRate_, unsigned bands_)
+    Tuning(const unsigned sampleRate_, const unsigned bands_)
       : sampleRate(sampleRate_), bands(bands_)
     {}
 
     virtual ~Tuning() {}
 
-    tuningValues frequencyAndBandwidthToKAndN(double frequency, double bandwidth) {
+    const tuningValues frequencyAndBandwidthToKAndN(const double frequency, const double bandwidth) {
       double N = floor(sampleRate / bandwidth);
       const double k = floor(frequency / bandwidth);
 
@@ -189,7 +189,7 @@ class Tuning {
       }
     }
 
-    virtual std::vector<tuningValues> mapping() = 0;
+    const virtual std::vector<tuningValues> mapping() = 0;
 };
 
 class PianoTuning : public Tuning {
@@ -198,15 +198,15 @@ class PianoTuning : public Tuning {
     double pitchFork;
 
   public:
-    PianoTuning(unsigned sampleRate_, unsigned keysNum = 61, unsigned referenceKey_ = 33, double pitchFork_ = 440.0)
+    PianoTuning(const unsigned sampleRate_, const unsigned keysNum = 61, const unsigned referenceKey_ = 33, const double pitchFork_ = 440.0)
       : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_)
     {}
 
-    double keyToFreq(double key) {
+    double keyToFreq(const double key) {
       return pitchFork * pow(2., (key - referenceKey) / 12.);
     }
 
-    std::vector<tuningValues> mapping() {
+    const std::vector<tuningValues> mapping() {
       std::vector<tuningValues> output;
       output.reserve(bands);
       for (unsigned key = 0; key < bands; key++) {
@@ -226,7 +226,7 @@ class SlidingDFT {
     std::shared_ptr<MovingAverage> movingAverage;
 
   public:
-    SlidingDFT(std::shared_ptr<Tuning> tuning, double maxAverageWindowInSeconds = 0.) {
+    SlidingDFT(const std::shared_ptr<Tuning> tuning, const double maxAverageWindowInSeconds = 0.) {
       bins.reserve(tuning->bands);
       levels.reserve(tuning->bands);
 
@@ -254,7 +254,7 @@ class SlidingDFT {
       }
     }
 
-    double* process(float samples[], unsigned samplesLength, double averageWindowInSeconds = 0.) {
+    const double* process(const float samples[], const unsigned samplesLength, const double averageWindowInSeconds = 0.) {
       if (movingAverage != nullptr)
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
 
@@ -263,7 +263,6 @@ class SlidingDFT {
       // store in the ring buffer & process
       for (unsigned i = 0; i < samplesLength; i++) {
         const double currentSample = samples[i];
-        // samples[i] = 0.;
         ringBuffer->write(currentSample);
 
         unsigned band = 0;

@@ -126,7 +126,7 @@ void testSlidingDFT() {
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE), -1.);
   const unsigned bufferSize = 128;
   float input[bufferSize];
-  double *output;
+  const double *output;
 
   auto start = chrono::high_resolution_clock::now();
   unsigned i;
