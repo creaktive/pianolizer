@@ -5,24 +5,35 @@ class Pianolizer {
     this.pianolizer = new Module.Pianolizer(sampleRate)
   }
 
-  process (samples, averageWindowInSeconds = 0) {
-    const samplesBufferSize = samples.length
-    const samplesBuffer = Module._malloc(samplesBufferSize * Float32Array.BYTES_PER_ELEMENT)
-    const startOffset = samplesBuffer / Float32Array.BYTES_PER_ELEMENT
-    const endOffset = startOffset + samplesBufferSize
-    const samplesView = Module.HEAPF32.subarray(startOffset, endOffset)
+  adjustSamplesBuffer (requestedSamplesBufferSize) {
+    if (this.samplesBufferSize === requestedSamplesBufferSize) {
+      return
+    }
 
-    for (let i = 0; i < samplesBufferSize; i++) {
-      samplesView[i] = samples[i]
+    if (this.samplesBuffer !== undefined) {
+      Module._free(this.samplesBuffer)
+    }
+
+    this.samplesBufferSize = requestedSamplesBufferSize
+    this.samplesBuffer = Module._malloc(this.samplesBufferSize * Float32Array.BYTES_PER_ELEMENT)
+    const startOffset = this.samplesBuffer / Float32Array.BYTES_PER_ELEMENT
+    const endOffset = startOffset + this.samplesBufferSize
+    this.samplesView = Module.HEAPF32.subarray(startOffset, endOffset)
+  }
+
+  process (samples, averageWindowInSeconds = 0) {
+    this.adjustSamplesBuffer(samples.length)
+
+    for (let i = 0; i < this.samplesBufferSize; i++) {
+      this.samplesView[i] = samples[i]
     }
 
     const levels = this.pianolizer.process(
-      samplesBuffer,
-      samplesBufferSize,
+      this.samplesBuffer,
+      this.samplesBufferSize,
       averageWindowInSeconds
     )
 
-    Module._free(samplesBuffer)
     return new Float32Array(levels)
   }
 }
