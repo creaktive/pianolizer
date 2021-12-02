@@ -1,7 +1,5 @@
-// uncomment for NodeJS:
-// import { Pianolizer } from './pianolizer.js'
+import { Pianolizer } from './pianolizer.js'
 
-// eslint-disable-next-line no-undef
 const pianolizer = new Pianolizer(44100)
 const bufferSize = 128
 const input = new Float32Array(bufferSize)
@@ -19,4 +17,6 @@ for (i = 0; i < bufferSize * 10000; i++) {
 const end = performance.now()
 const elapsed = (end - start) / 1000
 console.log('# benchmark: ' + Math.round(i / elapsed) + ' samples per second')
-console.log(output[33]) // === 0.7777045965194702)
+if (Math.abs(output[33] - 0.7777045965194702) > 1e-5) {
+  throw new Error('BAD OUTPUT')
+}

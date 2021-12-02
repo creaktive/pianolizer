@@ -17,9 +17,12 @@
           fetchText(pianolizerImplementation),
           fetchText('js/benchmark.js')
         ])
-        const blob = new Blob(modules, { type: 'application/javascript' })
-        const worker = new Worker(URL.createObjectURL(blob))
-        console.log(worker)
+        const patchedModules = modules.map(
+          str => str.replace(/\b(export\b|import\s+\{.+?\n)/gs, '') // hackity-hack
+        )
+        const blob = new Blob(patchedModules, { type: 'application/javascript' })
+
+        return new Worker(URL.createObjectURL(blob))
       }
 
       loader()
