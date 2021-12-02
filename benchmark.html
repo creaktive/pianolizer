@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <title>benchmark</title>
+  </head>
+  <body>
+    <script type="module">
+      // import('./js/benchmark.js')
+
+      async function loader () {
+        const fetchText = url => fetch(url).then(response => response.text())
+        const pianolizerImplementation = window.location.search.toLowerCase() === '?wasm'
+          ? '/js/pianolizer-wasm.js'
+          : '/js/pianolizer.js'
+        const modules = await Promise.all([
+          fetchText(pianolizerImplementation),
+          fetchText('js/benchmark.js')
+        ])
+        const blob = new Blob(modules, { type: 'application/javascript' })
+        const worker = new Worker(URL.createObjectURL(blob))
+        console.log(worker)
+      }
+
+      loader()
+    </script>
+  </body>
+</html>
