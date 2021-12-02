@@ -11,8 +11,8 @@
       async function loader () {
         const fetchText = url => fetch(url).then(response => response.text())
         const pianolizerImplementation = window.location.search.toLowerCase() === '?wasm'
-          ? '/js/pianolizer-wasm.js'
-          : '/js/pianolizer.js'
+          ? 'js/pianolizer-wasm.js'
+          : 'js/pianolizer.js'
         const modules = await Promise.all([
           fetchText(pianolizerImplementation),
           fetchText('js/benchmark.js')
