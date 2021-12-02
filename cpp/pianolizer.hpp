@@ -51,7 +51,7 @@ class DFTBin {
       totalPower += currentSample * currentSample;
       totalPower -= previousSample * previousSample;
 
-      dft = coeff * ((dft - std::complex<double>(previousSample, 0.)) + std::complex<double>(currentSample, 0.));
+      dft = coeff * (dft - std::complex<double>(previousSample, 0.) + std::complex<double>(currentSample, 0.));
     }
 
     double rms() {
