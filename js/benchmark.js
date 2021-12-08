@@ -1,5 +1,7 @@
 import { Pianolizer } from './pianolizer.js'
 
+const isNode = globalThis.process?.release?.name || false
+
 const pianolizer = new Pianolizer(44100)
 const bufferSize = 128
 const input = new Float32Array(bufferSize)
@@ -16,7 +18,12 @@ for (i = 0; i < bufferSize * 10000; i++) {
 }
 const end = performance.now()
 const elapsed = (end - start) / 1000
-console.log('# benchmark: ' + Math.round(i / elapsed) + ' samples per second')
+const message = '# benchmark: ' + Math.round(i / elapsed) + ' samples per second'
+if (isNode) {
+  console.log(message)
+} else {
+  postMessage(message)
+}
 if (Math.abs(output[33] - 0.7777045965194702) > 1e-5) {
   throw new Error('BAD OUTPUT')
 }

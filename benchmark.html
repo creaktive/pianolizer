@@ -5,12 +5,11 @@
     <title>benchmark</title>
   </head>
   <body>
+    <pre id="output"></pre>
     <script type="module">
-      // import('./js/benchmark.js')
-
-      async function loader () {
+      async function loader (useWasm) {
         const fetchText = url => fetch(url).then(response => response.text())
-        const pianolizerImplementation = window.location.search.toLowerCase() === '?wasm'
+        const pianolizerImplementation = useWasm
           ? 'js/pianolizer-wasm.js'
           : 'js/pianolizer.js'
         const modules = await Promise.all([
@@ -22,10 +21,21 @@
         )
         const blob = new Blob(patchedModules, { type: 'application/javascript' })
 
-        return new Worker(URL.createObjectURL(blob))
+        const worker = new Worker(URL.createObjectURL(blob))
+        return new Promise(resolve => {
+          worker.onmessage = e => resolve(e.data)
+        })
       }
 
-      loader()
+      async function benchmark () {
+        const output = document.getElementById('output')
+        output.innerHTML += 'testing Pure JS...\n'
+        output.innerText += await loader(false)
+        output.innerHTML += '\ntesting WASM...\n'
+        output.innerText += await loader(true)
+      }
+
+      benchmark()
     </script>
   </body>
 </html>

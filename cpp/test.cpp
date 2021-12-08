@@ -138,7 +138,7 @@ void testSlidingDFT() {
   }
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<double, ratio<1, 1>> elapsed = end - start;
-  cerr << "# benchmark: " << i / elapsed.count() << " samples per second" << endl;
+  cerr << "# benchmark: " << (unsigned) (i / elapsed.count()) << " samples per second" << endl;
 
   TEST_OK(FLOAT_EQ(output[33], .7777003371299068), "A4 sawtooth");
   // char buf[20]; snprintf(buf, 20, "%.16f", output[33]); cerr << buf << endl;
