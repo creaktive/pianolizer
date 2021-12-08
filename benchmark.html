@@ -29,9 +29,10 @@
 
       async function benchmark () {
         const output = document.getElementById('output')
-        output.innerHTML += 'testing Pure JS...\n'
+        output.innerText = window.navigator.userAgent
+        output.innerText += '\ntesting Pure JS...\n'
         output.innerText += await loader(false)
-        output.innerHTML += '\ntesting WASM...\n'
+        output.innerText += '\ntesting WASM...\n'
         output.innerText += await loader(true)
       }
 
