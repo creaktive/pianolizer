@@ -1,6 +1,6 @@
 WASM_TARGET=js/pianolizer-wasm.js
 TEST_BINARY=./test
-CFLAGS=-O3 -std=c++14 -Wall -Werror
+CFLAGS=-O3 -ffast-math -std=c++14 -Wall -Werror
 
 all: $(WASM_TARGET)
 

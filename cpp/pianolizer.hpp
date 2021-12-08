@@ -254,7 +254,7 @@ class SlidingDFT {
       }
     }
 
-    const double* process(const float samples[], const unsigned samplesLength, const double averageWindowInSeconds = 0.) {
+    const double* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {
       if (movingAverage != nullptr)
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
 
