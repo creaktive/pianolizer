@@ -26,6 +26,7 @@ class Pianolizer {
 
     for (let i = 0; i < this.samplesBufferSize; i++) {
       this.samplesView[i] = samples[i]
+      samples[i] = 0
     }
 
     const levels = this.pianolizer.process(

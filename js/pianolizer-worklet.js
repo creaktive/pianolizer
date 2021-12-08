@@ -57,6 +57,7 @@ class PianolizerWorklet extends AudioWorkletProcessor {
 
     // I hope all the channels have the same # of samples; but 128 frames per block is
     // subject to change, even *during* the lifetime of an AudioWorkletProcessor instance!
+    // WARNING: since this.samples is being reused, values must be set to zero after each iteration!!!
     const windowSize = input[0][0].length
     if (this.samples === null || this.samples.length !== windowSize) {
       this.samples = new Float32Array(windowSize)
