@@ -63,7 +63,7 @@ class DFTBin {
     }
 
     double normalizedAmplitudeSpectrum() {
-      return isnormal(totalPower)
+      return totalPower > 0.
         ? amplitudeSpectrum() / rms()
         : 0.;
     }
