@@ -40,6 +40,7 @@
   </head>
   <body>
     <div id="controls">
+      <a id="implementation"></a>
       <label>
         Source:
         <select id="source">
@@ -108,6 +109,10 @@
         }
       }
 
+      function isPureJS () {
+        return window.location.search.toLowerCase() === '?purejs'
+      }
+
       async function setupAudio () {
         if (audioContext === undefined) {
           audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -117,9 +122,9 @@
           // https://bugzilla.mozilla.org/show_bug.cgi?id=1636121
           // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
           const fetchText = url => fetch(url).then(response => response.text())
-          const pianolizerImplementation = window.location.search.toLowerCase() === '?wasm'
-            ? 'js/pianolizer-wasm.js'
-            : 'js/pianolizer.js'
+          const pianolizerImplementation = isPureJS()
+            ? 'js/pianolizer.js'
+            : 'js/pianolizer-wasm.js'
           const modules = await Promise.all([
             fetchText(pianolizerImplementation),
             fetchText('js/pianolizer-worklet.js')
@@ -164,7 +169,7 @@
             {
               description: 'Audio',
               accept: {
-                'audio/*': ['.mp3', '.flac', '.ogg', '.webm']
+                'audio/*': ['.mp3', '.flac', '.ogg', '.webm', '.wav']
               }
             }
           ],
@@ -213,6 +218,16 @@
         if (pianolizer !== undefined) {
           pianolizer.parameters.get('smooth').value = value
         }
+      }
+
+      const implementationSwitch = document.getElementById('implementation')
+      const myURL = window.location.href.replace(/\?.*/, '')
+      if (isPureJS()) {
+        implementationSwitch.href = myURL
+        implementationSwitch.innerText = 'WASM'
+      } else {
+        implementationSwitch.href = myURL + '?purejs'
+        implementationSwitch.innerText = 'Pure JS'
       }
     </script>
   </body>
