@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <stdlib.h>
 #include "pianolizer.hpp"
@@ -122,15 +123,15 @@ void testTuning() {
   TEST_OK(m[60].N == 358, "C7 N");
 }
 
-void testSlidingDFT() {
+void testSlidingDFT(unsigned cycles) {
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE), -1.);
   const unsigned bufferSize = 128;
   float input[bufferSize];
-  const double *output;
+  const double *output = nullptr;
 
   auto start = chrono::high_resolution_clock::now();
   unsigned i;
-  for (i = 0; i < bufferSize * 10000; i++) {
+  for (i = 0; i < bufferSize * cycles; i++) {
     unsigned j = i % bufferSize;
     input[j] = oscillator(i, SAWTOOTH);
     if (j == bufferSize - 1)
@@ -138,7 +139,7 @@ void testSlidingDFT() {
   }
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<double, ratio<1, 1>> elapsed = end - start;
-  cerr << "# benchmark: " << (unsigned) (i / elapsed.count()) << " samples per second" << endl;
+  cerr << "# benchmark: " << (int)round(i / elapsed.count()) << " samples per second" << endl;
 
   TEST_OK(FLOAT_EQ(output[33], .7777003371299068), "A4 sawtooth");
   // char buf[20]; snprintf(buf, 20, "%.16f", output[33]); cerr << buf << endl;
@@ -154,7 +155,11 @@ int main(int argc, char *argv[]) {
 
   testMovingAverage();
   testTuning();
-  testSlidingDFT();
+  
+  auto cycles = argc == 2
+    ? atoi(argv[1])
+    : 10000;
+  testSlidingDFT(cycles);
 
   cout << "1.." << TEST_COUNT << endl;
   return 0;

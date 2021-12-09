@@ -7,37 +7,35 @@
   <body>
     <pre id="output"></pre>
     <script type="module">
-      async function loader (useWasm) {
-        const fetchText = url => fetch(url).then(response => response.text())
-        const pianolizerImplementation = useWasm
-          ? 'js/pianolizer-wasm.js'
-          : 'js/pianolizer.js'
-        const modules = await Promise.all([
-          fetchText(pianolizerImplementation),
-          fetchText('js/benchmark.js')
-        ])
-        const patchedModules = modules.map(
-          str => str.replace(/\b(export\b|import\s+\{.+?\n)/gs, '') // hackity-hack
-        )
-        const blob = new Blob(patchedModules, { type: 'application/javascript' })
+      async function fetchScript (url) {
+        return fetch(url)
+          .then(response => response.text())
+          .then(text => text.replace(/\bimport\s+Pianolizer\b[^\n]+/gs, '')) // hackity-hack
+      }
 
-        const worker = new Worker(URL.createObjectURL(blob))
+      async function benchmark (library) {
+        const modules = await Promise.all([
+          fetchScript(library),
+          fetchScript('js/benchmark.js')
+        ])
+        const blob = new Blob(modules, { type: 'application/javascript' })
+        const worker = new Worker(URL.createObjectURL(blob), { type: 'module' })
         return new Promise(resolve => {
           worker.onmessage = e => resolve(e.data)
         })
       }
 
-      async function benchmark () {
+      async function main () {
         const output = document.getElementById('output')
         output.innerText = window.navigator.userAgent
         output.innerText += '\ntesting Pure JS...\n'
-        output.innerText += await loader(false)
+        output.innerText += await benchmark('js/pianolizer.js')
         output.innerText += '\ntesting WASM...\n'
-        output.innerText += await loader(true)
+        output.innerText += await benchmark('js/pianolizer-wasm.js')
         output.innerText += '\nfinished!'
       }
 
-      benchmark()
+      main()
     </script>
   </body>
 </html>
