@@ -1,6 +1,6 @@
 WASM_TARGET=js/pianolizer-wasm.js
 TEST_BINARY=./test
-CFLAGS=-O3 -ffast-math -std=c++14 -Wall -Werror
+CFLAGS=-ffast-math -std=c++14 -Wall -Werror -Wextra
 
 all: $(WASM_TARGET)
 
@@ -9,6 +9,7 @@ clean:
 
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 	@emcc $(CFLAGS) \
+		-O3 \
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
 		-s ALLOW_MEMORY_GROWTH=1 \
@@ -20,7 +21,7 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 
 test: cpp/test.cpp cpp/pianolizer.hpp
 	@g++ $(CFLAGS) \
-		-stdlib=libc++ \
+		-Ofast \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp
 	@$(TEST_BINARY)
