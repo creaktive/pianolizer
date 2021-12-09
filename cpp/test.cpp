@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include <map>
 #include <stdlib.h>
 #include "pianolizer.hpp"
 
@@ -141,7 +142,15 @@ void testSlidingDFT(unsigned cycles) {
   chrono::duration<double, ratio<1, 1>> elapsed = end - start;
   cerr << "# benchmark: " << (int)round(i / elapsed.count()) << " samples per second" << endl;
 
-  TEST_OK(FLOAT_EQ(output[33], .7777003371299068), "A4 sawtooth");
+  map<int,double> test = {
+    { 21, .0039842028203572 },
+    { 33, .7777003371299069 },
+    { 45, .3889044217798130 },
+    { 52, .2582185831581467 },
+    { 57, .1949653144384861 }
+  };
+  for (auto kv : test)
+    TEST_OK(FLOAT_EQ(output[kv.first], test[kv.first]), "sawtooth, key #" + to_string(kv.first));
   // char buf[20]; snprintf(buf, 20, "%.16f", output[33]); cerr << buf << endl;
 }
 

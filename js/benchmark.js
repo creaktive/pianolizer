@@ -22,6 +22,16 @@ const end = performance.now()
 const elapsed = (end - start) / 1000
 const message = '# benchmark: ' + Math.round(i / elapsed) + ' samples per second'
 print(message)
-if (Math.abs(output[33] - 0.7777045965194702) > 1e-5) {
-  throw new Error('BAD OUTPUT')
+
+const test = {
+  21: 0.0039842028203572,
+  33: 0.7777003371299069,
+  45: 0.3889044217798130,
+  52: 0.2582185831581467,
+  57: 0.1949653144384861
+}
+for (const key in test) {
+  if (Math.abs(output[key] - test[key]) > 1e-5) {
+    throw new Error('BAD OUTPUT FOR KEY ' + key)
+  }
 }
