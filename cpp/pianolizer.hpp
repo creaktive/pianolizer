@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <complex>
+#include <memory>
 #include <vector>
 
 class RingBuffer {
@@ -77,7 +78,7 @@ class MovingAverage {
   public:
     unsigned channels, sampleRate;
     int averageWindow = -1;
-    unsigned targetAverageWindow;
+    int targetAverageWindow;
     std::unique_ptr<double[]> sum;
 
     MovingAverage(const unsigned channels_, const unsigned sampleRate_)
