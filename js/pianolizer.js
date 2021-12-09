@@ -4,7 +4,7 @@
  * @export
  * @class Pianolizer
  */
-export class Pianolizer {
+export default class Pianolizer {
   /**
    * Creates an instance of Pianolizer.
    * @param {Number} sampleRate in Hz
