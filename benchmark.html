@@ -10,7 +10,7 @@
       async function fetchScript (url) {
         return fetch(url)
           .then(response => response.text())
-          .then(text => text.replace(/\bimport\s+Pianolizer\b[^\n]+/gs, '')) // hackity-hack
+          .then(text => text.replace(/\b(export\s+(default\s+)?|import\s+Pianolizer\b[^\n]+)/gs, '')) // hackity-hack
       }
 
       async function benchmark (library) {
