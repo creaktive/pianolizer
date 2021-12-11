@@ -16,14 +16,15 @@
       }
 
       async function benchmark (library) {
-        const modules = await Promise.all([
+        return Promise.all([
           fetchScript(library),
           fetchScript('js/benchmark.js')
-        ])
-        const blob = new Blob(modules, { type: 'application/javascript' })
-        const worker = new Worker(URL.createObjectURL(blob), { type: 'module' })
-        return new Promise(resolve => {
-          worker.onmessage = e => resolve(e.data)
+        ]).then(modules => {
+          const blob = new Blob(modules, { type: 'application/javascript' })
+          const worker = new Worker(URL.createObjectURL(blob), { type: 'module' })
+          return new Promise(resolve => {
+            worker.onmessage = e => resolve(e.data)
+          })
         })
       }
 
