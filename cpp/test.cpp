@@ -57,7 +57,7 @@ const unsigned SQUARE = 2;
 const unsigned NOISE = 3;
 
 // 441Hz wave period is 100 samples when the sample rate is 44100Hz
-double oscillator(unsigned s, unsigned type = SINE) {
+float oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
       return sin(M_PI / 50. * s);
@@ -96,7 +96,7 @@ void testMovingAverage() {
   hma->averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
-    vector<double> sample = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
+    vector<float> sample = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
     fma->update(sample);
     hma->update(sample);
   }
@@ -128,7 +128,7 @@ void testSlidingDFT(unsigned cycles) {
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE), -1.);
   const unsigned bufferSize = 128;
   float input[bufferSize];
-  const double *output = nullptr;
+  const float *output = nullptr;
 
   auto start = chrono::high_resolution_clock::now();
   unsigned i;
@@ -143,15 +143,16 @@ void testSlidingDFT(unsigned cycles) {
   cerr << "# benchmark: " << (int)round(i / elapsed.count()) << " samples per second" << endl;
 
   map<int,double> test = {
-    { 21, .0039842028203572 },
-    { 33, .7777003371299069 },
-    { 45, .3889044217798130 },
-    { 52, .2582185831581467 },
-    { 57, .1949653144384861 }
+    { 21, .0039842012338340 },
+    { 33, .7776550054550171 },
+    { 45, .3889078497886658 },
+    { 52, .2582178413867950 },
+    { 57, .1949640512466431 }
   };
-  for (auto kv : test)
+  for (auto kv : test) {
     TEST_OK(FLOAT_EQ(output[kv.first], test[kv.first]), "sawtooth, key #" + to_string(kv.first));
-  // char buf[20]; snprintf(buf, 20, "%.16f", output[33]); cerr << buf << endl;
+    // char buf[20]; snprintf(buf, 20, "%.16f", output[kv.first]); cerr << buf << endl;
+  }
 }
 
 int main(int argc, char *argv[]) {

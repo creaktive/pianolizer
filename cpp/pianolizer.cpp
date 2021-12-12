@@ -14,7 +14,7 @@ class Pianolizer {
       slidingDFT = std::make_unique<SlidingDFT>(tuning, -1.);
     }
 
-    val process(const uintptr_t samplesPtr, const unsigned samplesLength, const float averageWindowInSeconds = 0.) {
+    val process(const uintptr_t samplesPtr, const unsigned samplesLength, const double averageWindowInSeconds = 0.) {
       auto samples = reinterpret_cast<float*>(samplesPtr);
       auto levels = slidingDFT->process(samples, samplesLength, averageWindowInSeconds);
       return val(typed_memory_view(tuning->bands, levels));

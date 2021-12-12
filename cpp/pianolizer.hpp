@@ -79,20 +79,20 @@ class MovingAverage {
     unsigned channels, sampleRate;
     int averageWindow = -1;
     int targetAverageWindow;
-    std::unique_ptr<double[]> sum;
+    std::unique_ptr<float[]> sum;
 
     MovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
-      sum = std::make_unique<double[]>(channels);
+      sum = std::make_unique<float[]>(channels);
     }
 
     virtual ~MovingAverage() {}
 
-    double averageWindowInSeconds() {
+    float averageWindowInSeconds() {
       return averageWindow / sampleRate;
     }
 
-    void averageWindowInSeconds(const double value) {
+    void averageWindowInSeconds(const float value) {
       targetAverageWindow = round(value * sampleRate);
       if (averageWindow == -1)
         averageWindow = targetAverageWindow;
@@ -105,11 +105,11 @@ class MovingAverage {
         averageWindow--;
     }
 
-    double read(const unsigned n) {
+    float read(const unsigned n) {
       return sum[n] / averageWindow;
     }
 
-    virtual void update(const std::vector<double>& levels) = 0;
+    virtual void update(const std::vector<float>& levels) = 0;
 };
 
 class FastMovingAverage : public MovingAverage {
@@ -118,10 +118,10 @@ class FastMovingAverage : public MovingAverage {
       : MovingAverage{ channels_, sampleRate_ }
     {}
 
-    void update(const std::vector<double>& levels) {
+    void update(const std::vector<float>& levels) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
-        const double currentSum = sum[n];
+        const float currentSum = sum[n];
         sum[n] = averageWindow
           ? currentSum + levels[n] - currentSum / averageWindow
           : levels[n];
@@ -142,9 +142,9 @@ class HeavyMovingAverage : public MovingAverage {
         history.push_back(std::make_unique<RingBuffer>(maxWindow ? maxWindow : sampleRate));
     }
 
-    void update(const std::vector<double>& levels) {
+    void update(const std::vector<float>& levels) {
       for (unsigned n = 0; n < channels; n++) {
-        const double value = levels[n];
+        const float value = levels[n];
         history[n]->write(value);
         sum[n] += value;
 
@@ -222,7 +222,7 @@ class PianoTuning : public Tuning {
 class SlidingDFT {
   private:
     std::vector<std::shared_ptr<DFTBin>> bins;
-    std::vector<double> levels;
+    std::vector<float> levels;
     std::unique_ptr<RingBuffer> ringBuffer;
     std::shared_ptr<MovingAverage> movingAverage;
 
@@ -255,7 +255,7 @@ class SlidingDFT {
       }
     }
 
-    const double* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {
+    const float* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {
       if (movingAverage != nullptr)
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
 
@@ -263,12 +263,12 @@ class SlidingDFT {
 
       // store in the ring buffer & process
       for (unsigned i = 0; i < samplesLength; i++) {
-        const double currentSample = samples[i];
+        const float currentSample = samples[i];
         ringBuffer->write(currentSample);
 
         unsigned band = 0;
         for (auto bin : bins) {
-          const double previousSample = ringBuffer->read(bin->N);
+          const float previousSample = ringBuffer->read(bin->N);
           bin->update(previousSample, currentSample);
           levels[band] = bin->normalizedAmplitudeSpectrum();
           // levels[band] = bin->logarithmicUnitDecibels();
