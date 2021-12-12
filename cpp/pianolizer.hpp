@@ -8,22 +8,22 @@ class RingBuffer {
   private:
     unsigned mask;
     unsigned index = 0;
-    std::unique_ptr<double[]> buffer;
+    std::unique_ptr<float[]> buffer;
 
   public:
     RingBuffer(const unsigned requestedSize) {
       const unsigned bits = ceil(log2(requestedSize + 1));
       const unsigned size = 1 << bits;
       mask = size - 1;
-      buffer = std::make_unique<double[]>(size);
+      buffer = std::make_unique<float[]>(size);
     }
 
-    void write(const double value) {
+    void write(const float value) {
       index &= mask;
       buffer[index++] = value;
     }
 
-    double read(const unsigned position) {
+    float read(const unsigned position) {
       return buffer[(index + (~position)) & mask];
     }
 };
