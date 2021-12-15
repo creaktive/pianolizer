@@ -6,6 +6,13 @@
 
 using namespace std;
 
+void testRingBuffer();
+float oscillator(unsigned s, unsigned type);
+void testDFT(unsigned type, double expNAS, double expRMS, double expLog);
+void testMovingAverage();
+void testTuning();
+void testSlidingDFT(unsigned cycles);
+
 // kill me
 unsigned static TEST_COUNT = 0;
 #define TEST_OK(expression, description) { \
@@ -67,6 +74,8 @@ float oscillator(unsigned s, unsigned type = SINE) {
       return ((s % 100) < 50) ? 1. : -1.;
     case NOISE:
       return 2. * (rand() / RAND_MAX) - 1.;
+    default:
+      throw invalid_argument("unknown oscillator type " + to_string(type));
   }
   return 0.;
 }

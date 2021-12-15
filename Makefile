@@ -1,6 +1,13 @@
 WASM_TARGET=js/pianolizer-wasm.js
 TEST_BINARY=./test
-CFLAGS=-ffast-math -std=c++14 -Wall -Werror -Wextra -Wsign-conversion -Wold-style-cast
+
+# https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
+CFLAGS=-ffast-math -std=c++14 \
+	-Werror -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
+	-Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast \
+	-Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo \
+	-Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused \
+	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel
 
 all: $(WASM_TARGET)
 
