@@ -89,7 +89,7 @@ class MovingAverage {
     virtual ~MovingAverage() {}
 
     float averageWindowInSeconds() {
-      return averageWindow / sampleRate;
+      return averageWindow / static_cast<float>(sampleRate);
     }
 
     void averageWindowInSeconds(const float value) {
@@ -149,10 +149,10 @@ class HeavyMovingAverage : public MovingAverage {
         sum[n] += value;
 
         if (targetAverageWindow == averageWindow) {
-          sum[n] -= history[n]->read(averageWindow);
+          sum[n] -= history[n]->read(static_cast<unsigned>(averageWindow));
         } else if (targetAverageWindow < averageWindow) {
-          sum[n] -= history[n]->read(averageWindow);
-          sum[n] -= history[n]->read(averageWindow - 1);
+          sum[n] -= history[n]->read(static_cast<unsigned>(averageWindow));
+          sum[n] -= history[n]->read(static_cast<unsigned>(averageWindow) - 1);
         }
       }
       updateAverageWindow();
@@ -185,7 +185,7 @@ class Tuning {
           delta = tmpDelta;
           N = i;
         } else {
-          return { (unsigned) k, (unsigned) N };
+          return { static_cast<unsigned>(k), static_cast<unsigned>(N) };
         }
       }
     }

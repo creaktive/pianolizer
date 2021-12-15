@@ -140,7 +140,7 @@ void testSlidingDFT(unsigned cycles) {
   }
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<double, ratio<1, 1>> elapsed = end - start;
-  cerr << "# benchmark: " << (int)round(i / elapsed.count()) << " samples per second" << endl;
+  cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
 
   map<int,double> test = {
     { 21, .0039842012338340 },
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   testTuning();
   
   auto cycles = argc == 2
-    ? atoi(argv[1])
+    ? static_cast<unsigned>(atoi(argv[1]))
     : 10000;
   testSlidingDFT(cycles);
 
