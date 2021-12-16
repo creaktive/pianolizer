@@ -13,7 +13,7 @@ class RingBuffer {
   public:
     RingBuffer(const unsigned requestedSize) {
       const unsigned bits = ceil(log2(requestedSize + 1));
-      const unsigned size = 1 << bits;
+      const unsigned size = static_cast<unsigned>(1) << bits;
       mask = size - 1;
       buffer = std::make_unique<float[]>(size);
     }
