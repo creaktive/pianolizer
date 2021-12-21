@@ -140,7 +140,7 @@ TEST(SlidingDFT, IntegrationBenchmark) {
       output = sdft.process(input, bufferSize, .05);
   }
   auto end = chrono::high_resolution_clock::now();
-  chrono::duration<double, ratio<1, 1>> elapsed = end - start;
+  chrono::duration<double> elapsed = end - start;
   cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
 
   map<int,double> test = {
