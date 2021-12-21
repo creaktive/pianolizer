@@ -156,8 +156,3 @@ TEST(SlidingDFT, IntegrationBenchmark) {
     // char buf[20]; snprintf(buf, 20, "%.16f", output[kv.first]); cerr << buf << endl;
   }
 }
-
-int main(int argc, char *argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
