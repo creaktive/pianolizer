@@ -77,9 +77,9 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   }
 
   const string prefix = "oscillator #" + to_string(type) + "; ";
-  EXPECT_FLOAT_EQ(expNAS, bin.normalizedAmplitudeSpectrum()) << prefix + "normalized amplitude spectrum";
-  EXPECT_FLOAT_EQ(expRMS, bin.rms()) << prefix + "RMS";
-  EXPECT_FLOAT_EQ(expLog, bin.logarithmicUnitDecibels()) << prefix + "log dB";
+  EXPECT_NEAR(expNAS, bin.normalizedAmplitudeSpectrum(), ABS_ERROR) << prefix + "normalized amplitude spectrum";
+  EXPECT_NEAR(expRMS, bin.rms(), ABS_ERROR) << prefix + "RMS";
+  EXPECT_NEAR(expLog, bin.logarithmicUnitDecibels(), ABS_ERROR) << prefix + "log dB";
 }
 
 TEST(DFTBin, Oscillators) {
@@ -151,7 +151,7 @@ TEST(SlidingDFT, IntegrationBenchmark) {
     { 57, .1949640512466431 }
   };
   for (auto kv : test) {
-    EXPECT_FLOAT_EQ(output[kv.first], test[kv.first]) << "sawtooth, key #" + to_string(kv.first);
+    EXPECT_NEAR(output[kv.first], test[kv.first], ABS_ERROR) << "sawtooth, key #" + to_string(kv.first);
     // char buf[20]; snprintf(buf, 20, "%.16f", output[kv.first]); cerr << buf << endl;
   }
 }
