@@ -2,38 +2,22 @@
 #include <iostream>
 #include <map>
 #include <stdlib.h>
+#include <gtest/gtest.h>
 #include "pianolizer.hpp"
 
 using namespace std;
 
-void testRingBuffer();
-float oscillator(unsigned s, unsigned type);
-void testDFT(unsigned type, double expNAS, double expRMS, double expLog);
-void testMovingAverage();
-void testTuning();
-void testSlidingDFT(unsigned cycles);
+#define ABS_ERROR 1e-7
 
-// kill me
-unsigned static TEST_COUNT = 0;
-#define TEST_OK(expression, description) { \
-  if (expression) {\
-    cout << "ok " << ++TEST_COUNT << " - " << description << endl; \
-  } else { \
-    cout << "not ok " << ++TEST_COUNT << " - " << description << endl; \
-    cerr << __FUNCTION__ << " failed on line " << __LINE__ << endl; \
-  } \
-}
-#define FLOAT_EQ(a, b) (abs(a - b) <= 1e-7)
-
-void testRingBuffer() {
+TEST(RingBuffer, Tiny) {
   auto rb = RingBuffer(15);
 
-  TEST_OK(rb.read(0) == 0, "initalized to zeroes");
+  EXPECT_EQ(rb.read(0), 0) << "initalized to zeroes";
 
   // write one single element
   rb.write(1);
-  TEST_OK(rb.read(0) == 1, "insertion succeeded");
-  TEST_OK(rb.read(1) == 0, "boundary shifted");
+  EXPECT_EQ(rb.read(0), 1) << "insertion succeeded";
+  EXPECT_EQ(rb.read(1), 0) << "boundary shifted";
 
   // write 9 more elements
   for (unsigned i = 2; i < 10; i++)
@@ -41,19 +25,19 @@ void testRingBuffer() {
 
   // read in sequence
   for (unsigned i = 0; i < 10; i++)
-    TEST_OK(rb.read(9 - i) == i, "sequence value matches");
+    EXPECT_EQ(rb.read(9 - i), i) << "sequence value matches";
 
   // overflow
   for (unsigned i = 10; i < 20; i++)
     rb.write(i);
 
   // both the head and the tail are expected values
-  TEST_OK(rb.read(0) == 19, "head as expected");
-  TEST_OK(rb.read(15) == 4, "tail as expected");
+  EXPECT_EQ(rb.read(0), 19) << "head as expected";
+  EXPECT_EQ(rb.read(15), 4) << "tail as expected";
 
   // reading beyond the capacity of ring buffer wraps it around
-  TEST_OK(rb.read(16) == 19, "wrap back to 0");
-  TEST_OK(rb.read(17) == 18, "wrap back to 1");
+  EXPECT_EQ(rb.read(16), 19) << "wrap back to 0";
+  EXPECT_EQ(rb.read(17), 18) << "wrap back to 1";
 }
 
 const unsigned SAMPLE_RATE = 44100;
@@ -64,6 +48,7 @@ const unsigned SQUARE = 2;
 const unsigned NOISE = 3;
 
 // 441Hz wave period is 100 samples when the sample rate is 44100Hz
+float oscillator(unsigned s, unsigned type);
 float oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
@@ -80,6 +65,7 @@ float oscillator(unsigned s, unsigned type = SINE) {
   return 0.;
 }
 
+void testDFT(unsigned type, double expNAS, double expRMS, double expLog);
 void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   const unsigned N = 1700;
   auto bin = DFTBin(17, N);
@@ -92,12 +78,19 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   }
 
   const string prefix = "oscillator #" + to_string(type) + "; ";
-  TEST_OK(FLOAT_EQ(expNAS, bin.normalizedAmplitudeSpectrum()), prefix + "normalized amplitude spectrum");
-  TEST_OK(FLOAT_EQ(expRMS, bin.rms()), prefix + "RMS");
-  TEST_OK(FLOAT_EQ(expLog, bin.logarithmicUnitDecibels()), prefix + "log dB");
+  EXPECT_FLOAT_EQ(expNAS, bin.normalizedAmplitudeSpectrum()) << prefix + "normalized amplitude spectrum";
+  EXPECT_FLOAT_EQ(expRMS, bin.rms()) << prefix + "RMS";
+  EXPECT_FLOAT_EQ(expLog, bin.logarithmicUnitDecibels()) << prefix + "log dB";
 }
 
-void testMovingAverage() {
+TEST(DFTBin, Oscillators) {
+  // reference values from the JS implementation
+  testDFT(SINE, .9999999999999972, .7071067809649849, -3.0102999593614452);
+  testDFT(SAWTOOTH, .7797470999951004, .5774080013883754, -6.93126867978036);
+  testDFT(SQUARE, .9004644293093976, 1., -0.9106687653789797);
+}
+
+TEST(MovingAverage, FastAndHeavy) {
   auto fma = make_unique<FastMovingAverage>(2, SAMPLE_RATE);
   fma->averageWindowInSeconds(0.01);
 
@@ -110,30 +103,30 @@ void testMovingAverage() {
     hma->update(sample);
   }
 
-  TEST_OK(FLOAT_EQ(fma->read(0), -.024506002326671227), "sine fast average");
-  TEST_OK(FLOAT_EQ(fma->read(1), .01886483060529713), "sawtooth fast average");
+  EXPECT_NEAR(fma->read(0), -.024506002326671227, ABS_ERROR) << "sine fast average";
+  EXPECT_NEAR(fma->read(1), .01886483060529713, ABS_ERROR) << "sawtooth fast average";
 
-  TEST_OK(FLOAT_EQ(hma->read(0), -.06714661267338967), "sine heavy average");
-  TEST_OK(FLOAT_EQ(hma->read(1), .04485260926676986), "sawtooth heavy average");
+  EXPECT_NEAR(hma->read(0), -.06714661267338967, ABS_ERROR) << "sine heavy average";
+  EXPECT_NEAR(hma->read(1), .04485260926676986, ABS_ERROR) << "sawtooth heavy average";
 }
 
-void testTuning() {
+TEST(PianoTuning, DFTValues) {
   auto pt = PianoTuning(SAMPLE_RATE);
   auto m = pt.mapping();
 
-  TEST_OK(m.size() == 61, "mapping size");
+  EXPECT_EQ(m.size(), static_cast<unsigned>(61)) << "mapping size";
 
-  TEST_OK(m[0].k == 17, "C2 k");
-  TEST_OK(m[0].N == 11462, "C2 N");
+  EXPECT_EQ(static_cast<int>(m[0].k), 17) << "C2 k";
+  EXPECT_EQ(static_cast<int>(m[0].N), 11462) << "C2 N";
 
-  TEST_OK(m[33].k == 17, "A4 k");
-  TEST_OK(m[33].N == 1704, "A4 N");
+  EXPECT_EQ(static_cast<int>(m[33].k), 17) << "A4 k";
+  EXPECT_EQ(static_cast<int>(m[33].N), 1704) << "A4 N";
 
-  TEST_OK(m[60].k == 17, "C7 k");
-  TEST_OK(m[60].N == 358, "C7 N");
+  EXPECT_EQ(static_cast<int>(m[60].k), 17) << "C7 k";
+  EXPECT_EQ(static_cast<int>(m[60].N), 358) << "C7 N";
 }
 
-void testSlidingDFT(unsigned cycles) {
+TEST(SlidingDFT, IntegrationBenchmark) {
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE), -1.);
   const unsigned bufferSize = 128;
   float input[bufferSize];
@@ -141,7 +134,7 @@ void testSlidingDFT(unsigned cycles) {
 
   auto start = chrono::high_resolution_clock::now();
   unsigned i;
-  for (i = 0; i < bufferSize * cycles; i++) {
+  for (i = 0; i < bufferSize * 10000; i++) {
     unsigned j = i % bufferSize;
     input[j] = oscillator(i, SAWTOOTH);
     if (j == bufferSize - 1)
@@ -159,27 +152,12 @@ void testSlidingDFT(unsigned cycles) {
     { 57, .1949640512466431 }
   };
   for (auto kv : test) {
-    TEST_OK(FLOAT_EQ(output[kv.first], test[kv.first]), "sawtooth, key #" + to_string(kv.first));
+    EXPECT_FLOAT_EQ(output[kv.first], test[kv.first]) << "sawtooth, key #" + to_string(kv.first);
     // char buf[20]; snprintf(buf, 20, "%.16f", output[kv.first]); cerr << buf << endl;
   }
 }
 
 int main(int argc, char *argv[]) {
-  testRingBuffer();
-
-  // reference values from the JS implementation
-  testDFT(SINE, .9999999999999972, .7071067809649849, -3.0102999593614452);
-  testDFT(SAWTOOTH, .7797470999951004, .5774080013883754, -6.93126867978036);
-  testDFT(SQUARE, .9004644293093976, 1., -0.9106687653789797);
-
-  testMovingAverage();
-  testTuning();
-  
-  auto cycles = argc == 2
-    ? static_cast<unsigned>(atoi(argv[1]))
-    : 10000;
-  testSlidingDFT(cycles);
-
-  cout << "1.." << TEST_COUNT << endl;
-  return 0;
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

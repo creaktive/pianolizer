@@ -6,8 +6,8 @@ CFLAGS=-ffast-math -std=c++14 \
 	-Werror -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
 	-Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast \
 	-Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo \
-	-Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused \
-	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel
+	-Wstrict-overflow=5 -Wswitch-default -Wno-unused \
+	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wundef
 
 all: $(WASM_TARGET)
 
@@ -29,6 +29,7 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 test: cpp/test.cpp cpp/pianolizer.hpp
 	@g++ $(CFLAGS) \
 		-Ofast \
+		-lgtest \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp
 	@$(TEST_BINARY)
