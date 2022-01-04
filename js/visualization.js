@@ -82,6 +82,7 @@ export class PianoKeyboard {
     this.whiteOffset = 0
     this.whiteIndex = 0 // C2
     this.startFrom = 0
+    this.startOctave = 2
   }
 
   drawKey (index, offset, width, height, group) {
@@ -117,8 +118,18 @@ export class PianoKeyboard {
         this.drawKey(i - this.startFrom, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
       } else {
         // white
-        const whiteWidth = this.whiteKeys[whiteIndex % this.whiteKeys.length]
+        const note = whiteIndex % this.whiteKeys.length
+        const octave =  0 | whiteIndex / this.whiteKeys.length+ this.startOctave
+        const whiteWidth = this.whiteKeys[note]
         this.drawKey(i - this.startFrom, whiteOffset, whiteWidth, this.whiteHeight, whiteKeyGroup)
+
+        const labelElement = document.createElementNS(this.ns, 'text')
+        labelElement.setAttribute('x', whiteOffset + 5 * this.scale)
+        labelElement.setAttribute('y', this.whiteHeight - 6 * this.scale)
+        labelElement.classList.add('piano-key-label')
+        labelElement.textContent = String.fromCharCode(note + (note < 5 ? 67 : 60)) + octave
+        whiteKeyGroup.appendChild(labelElement)
+
         whiteIndex++
         whiteOffset += whiteWidth
       }
@@ -163,6 +174,7 @@ export class PianoKeyboardFull extends PianoKeyboard {
     this.whiteOffset = 0
     this.whiteIndex = 5 // A0
     this.startFrom = 9
+    this.startOctave = 0
   }
 }
 */
