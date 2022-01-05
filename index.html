@@ -103,6 +103,7 @@
 
       function draw (currentTimestamp) {
         if (
+          !audioElement.paused &&
           levels !== undefined &&
           palette !== undefined &&
           currentTimestamp !== lastTimestamp
