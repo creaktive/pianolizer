@@ -49,6 +49,7 @@ const unsigned SQUARE = 2;
 const unsigned NOISE = 3;
 
 // 441Hz wave period is 100 samples when the sample rate is 44100Hz
+float oscillator(unsigned s, unsigned type);
 float oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
@@ -65,6 +66,7 @@ float oscillator(unsigned s, unsigned type = SINE) {
   return 0.;
 }
 
+void testDFT(unsigned type, double expNAS, double expRMS, double expLog);
 void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   const unsigned N = 1700;
   auto bin = DFTBin(17, N);
