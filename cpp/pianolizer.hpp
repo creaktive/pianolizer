@@ -224,7 +224,9 @@ class SlidingDFT {
     std::vector<std::shared_ptr<DFTBin>> bins;
     std::vector<float> levels;
     std::unique_ptr<RingBuffer> ringBuffer;
+#ifndef DISABLE_MOVING_AVERAGE
     std::shared_ptr<MovingAverage> movingAverage;
+#endif
 
   public:
     SlidingDFT(const std::shared_ptr<Tuning> tuning, const double maxAverageWindowInSeconds = 0.) {
@@ -239,6 +241,7 @@ class SlidingDFT {
 
       ringBuffer = std::make_unique<RingBuffer>(maxN);
 
+#ifndef DISABLE_MOVING_AVERAGE
       if (maxAverageWindowInSeconds > 0.) {
         movingAverage = std::make_shared<HeavyMovingAverage>(
           tuning->bands,
@@ -253,11 +256,14 @@ class SlidingDFT {
       } else {
         movingAverage = nullptr;
       }
+#endif
     }
 
     const float* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {
+#ifndef DISABLE_MOVING_AVERAGE
       if (movingAverage != nullptr)
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
+#endif
 
       const unsigned binsNum = bins.size();
 
@@ -275,6 +281,9 @@ class SlidingDFT {
           band++;
         }
 
+#ifdef DISABLE_MOVING_AVERAGE
+      }
+#else
         if (movingAverage != nullptr)
           movingAverage->update(levels);
       }
@@ -283,6 +292,7 @@ class SlidingDFT {
       if (movingAverage != nullptr && movingAverage->averageWindow > 0)
         for (unsigned band = 0; band < binsNum; band++)
           levels[band] = movingAverage->read(band);
+#endif
 
       return levels.data();
     }
