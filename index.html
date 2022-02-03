@@ -13,11 +13,23 @@
       label {
         font-weight: bold;
       }
+      a {
+        color: #fff;
+      }
       #controls {
         text-align: center;
       }
+      #rotation {
+        width: 100px;
+      }
+      #smoothing {
+        width: 100px;
+      }
+      #smoothing-value {
+        font-family: monospace;
+      }
       #source {
-        width: 300px;
+        width: 250px;
       }
       #pianolizer {
         position: relative;
@@ -45,7 +57,6 @@
   </head>
   <body>
     <div id="controls">
-      <a id="implementation"></a>
       <label>
         Source:
         <select id="source">
@@ -69,6 +80,8 @@
         <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.05"/>
         (<span id="smoothing-value">0.050</span>s)
       </label>
+      |
+      Switch to <a id="implementation"></a>
     </div>
     <div id="pianolizer">
       <div id="help">
