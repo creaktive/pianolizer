@@ -21,17 +21,26 @@ class MidiInputHandler(object):
         self.port = port
         self.keys = keys
         self.first_key = first_key
+        self.update_pending = 0
 
     def __call__(self, event, data=None):
         message, deltatime = event
         status, key, velocity = message
         key -= self.first_key
+
         if status == 0x90:
             self.keys[key] = velocity
         elif status == 0x80:
             self.keys[key] = 0
         else:
             print("WTF: %r" % message)
+
+        self.update_pending = 1
+
+    def update(self):
+        tmp = self.update_pending
+        self.update_pending = 0
+        return tmp
 
 if __name__ == '__main__':
     # Prompts user for MIDI input port, unless a valid port number or name
@@ -45,7 +54,8 @@ if __name__ == '__main__':
         sys.exit()
 
     keys = array('B', [0] * 61)
-    midiin.set_callback(MidiInputHandler(port_name, keys))
+    midi_handler = MidiInputHandler(port_name, keys)
+    midiin.set_callback(midi_handler)
 
     strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
     strip.begin()
@@ -53,11 +63,12 @@ if __name__ == '__main__':
     print("Entering main loop. Press Control-C to exit.")
     try:
         while True:
-            for i in range(len(keys)):
-                c = keys[i] * 2
-                for j in range(2):
-                    strip.setPixelColor(i * 2 + j, Color(c, c, c))
-            strip.show()
+            if midi_handler.update():
+                for i in range(len(keys)):
+                    c = keys[i] * 2
+                    for j in range(2):
+                        strip.setPixelColor(i * 2 + j, Color(c, c, c))
+                strip.show()
             time.sleep(1 / 60) # 60 fps
     except KeyboardInterrupt:
         print('')
