@@ -119,7 +119,7 @@ export class PianoKeyboard {
       } else {
         // white
         const note = whiteIndex % this.whiteKeys.length
-        const octave =  0 | whiteIndex / this.whiteKeys.length+ this.startOctave
+        const octave = 0 | whiteIndex / this.whiteKeys.length + this.startOctave
         const whiteWidth = this.whiteKeys[note]
         this.drawKey(i - this.startFrom, whiteOffset, whiteWidth, this.whiteHeight, whiteKeyGroup)
 
