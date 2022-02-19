@@ -1,5 +1,6 @@
 WASM_TARGET=js/pianolizer-wasm.js
 TEST_BINARY=./test
+NATIVE_BINARY=./pianolizer
 
 # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
 CFLAGS=-ffast-math -std=c++14 \
@@ -9,10 +10,10 @@ CFLAGS=-ffast-math -std=c++14 \
 	-Wstrict-overflow=5 -Wswitch-default -Wno-unused \
 	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wundef
 
-all: $(WASM_TARGET)
+all: $(WASM_TARGET) $(NATIVE_BINARY)
 
 clean:
-	@rm -f $(WASM_TARGET) $(TEST_BINARY)
+	@rm -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
 
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 	@emcc $(CFLAGS) \
@@ -33,3 +34,9 @@ test: cpp/test.cpp cpp/pianolizer.hpp
 		-o $(TEST_BINARY) \
 		cpp/test.cpp
 	@$(TEST_BINARY)
+
+$(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
+	@g++ $(CFLAGS) \
+		-Ofast \
+		-o $(NATIVE_BINARY) \
+		cpp/main.cpp
