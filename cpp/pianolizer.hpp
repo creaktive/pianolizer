@@ -199,7 +199,7 @@ class PianoTuning : public Tuning {
     double pitchFork;
 
   public:
-    PianoTuning(const unsigned sampleRate_, const unsigned keysNum = 61, const unsigned referenceKey_ = 33, const double pitchFork_ = 440.0)
+    PianoTuning(const unsigned sampleRate_, const double pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33)
       : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_)
     {}
 
