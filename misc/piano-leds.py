@@ -6,7 +6,7 @@ from rtmidi.midiutil import open_midiinput
 from rpi_ws281x import PixelStrip, Color
 
 # LED strip configuration:
-LED_COUNT = 144       # Number of LED pixels.
+LED_COUNT = 61 * 2    # Number of LED pixels.
 LED_PIN = 12          # GPIO pin connected to the pixels
 LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 
