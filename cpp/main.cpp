@@ -1,4 +1,5 @@
 #include <climits>
+#include <cstring>
 #include <iostream>
 #include <getopt.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 
 using namespace std;
 
+void help();
 void help() {
   cout << "Usage: sox -d -traw -b32 -c1 -efloat --no-show-progress - | ./pianolizer" << endl;
   exit(EXIT_SUCCESS);

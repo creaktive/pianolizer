@@ -30,9 +30,9 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 test: cpp/test.cpp cpp/pianolizer.hpp
 	@g++ $(CFLAGS) \
 		-Ofast \
-		-lgtest -lgtest_main \
 		-o $(TEST_BINARY) \
-		cpp/test.cpp
+		cpp/test.cpp \
+		-lgtest -lgtest_main
 	@$(TEST_BINARY)
 
 $(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
