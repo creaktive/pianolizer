@@ -16,10 +16,13 @@ if __name__ == '__main__':
     )
     strip.begin()
 
-    for line in fileinput.input():
-        levels = [c for c in bytes.fromhex(line.rstrip())]
-        for key in range(len(levels)):
-            color = Color(levels[key], levels[key], levels[key])
-            for i in range(2):
-                strip.setPixelColor(key * 2 + i, color)
-        strip.show()
+    try:
+        for line in fileinput.input():
+            levels = [c for c in bytes.fromhex(line.rstrip())]
+            for key in range(len(levels)):
+                color = Color(levels[key], levels[key], levels[key])
+                for i in range(2):
+                    strip.setPixelColor(key * 2 + i, color)
+            strip.show()
+    except KeyboardInterrupt:
+        print('')
