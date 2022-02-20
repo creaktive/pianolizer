@@ -10,7 +10,17 @@ using namespace std;
 
 void help();
 void help() {
-  cout << "Usage: sox -d -traw -b32 -c1 -efloat --no-show-progress - | ./pianolizer" << endl;
+  cout << "Usage:" << endl;
+  cout << "\tsox -d -traw -b32 -c1 -efloat - | ./pianolizer [options]" << endl;
+  cout << endl;
+  cout << "Options:" << endl;
+  cout << "\t-h\tthis" << endl;
+  cout << "\t-b\tbuffer size; default: 735 (1/60th of a second for 44.1kHz sample rate)" << endl;
+  cout << "\t-s\tsample rate; default: 44100 (Hz)" << endl;
+  cout << "\t-p\tA4 reference frequency; default: 440 (Hz)" << endl;
+  cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.050 (seconds; 0 to disable)" << endl;
+  cout << endl;
+  cout << "Description:" << endl;
   exit(EXIT_SUCCESS);
 }
 
