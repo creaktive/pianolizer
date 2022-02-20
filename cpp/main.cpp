@@ -1,6 +1,8 @@
 #include <climits>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <getopt.h>
 #include <stdio.h>
 
@@ -76,10 +78,14 @@ int main(int argc, char *argv[]) {
       if (ferror(stdin) && !feof(stdin))
         throw runtime_error(strerror(errno));
 
-      output = sdft.process(input.get(), len, averageWindow);
+      if ((output = sdft.process(input.get(), len, averageWindow)) == nullptr)
+        throw runtime_error("sdft.process() returned nothing");
+
+      stringstream stream;
       for (unsigned i = 0; i < tuning->bands; i++)
-        printf("%02x", static_cast<unsigned char>(round(output[i] * 255.)));
-      cout << endl;
+        stream << setfill('0') << setw(2) << hex
+          << static_cast<unsigned>(round(output[i] * 255.));
+      cout << stream.str() << endl;
     }
   } catch (exception const& e) {
     cerr << e.what() << endl;
