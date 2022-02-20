@@ -26,3 +26,6 @@ if __name__ == '__main__':
             strip.show()
     except KeyboardInterrupt:
         print('')
+    finally:
+        for i in range(LED_COUNT):
+            strip.setPixelColor(i, Color(0, 0, 0))
