@@ -8,9 +8,10 @@ from palette import Palette
 
 KEYS = 61
 LEDS_PER_KEY = 2
+LED_OFFSET = 2
 
 # LED strip configuration:
-LED_COUNT = KEYS * LEDS_PER_KEY
+LED_COUNT = KEYS * LEDS_PER_KEY + LED_OFFSET
 LED_PIN = 12          # GPIO pin connected to the pixels
 LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 
@@ -42,7 +43,7 @@ if __name__ == '__main__':
             for key in range(len(leds)):
                 color = leds[key]
                 for i in range(LEDS_PER_KEY):
-                    strip.setPixelColor(key * LEDS_PER_KEY + i, color)
+                    strip.setPixelColor(LED_OFFSET + key * LEDS_PER_KEY + i, color)
             strip.show()
     except KeyboardInterrupt:
         print('')
