@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from ctypes import FormatError
 import fileinput
 import re
 
