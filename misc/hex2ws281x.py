@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+from ctypes import FormatError
 import fileinput
+import re
 
 from rpi_ws281x import PixelStrip, Color
 
+KEYS = 61
+LEDS_PER_KEY = 2
+
 # LED strip configuration:
-LED_COUNT = 61 * 2    # Number of LED pixels.
+LED_COUNT = KEYS * LEDS_PER_KEY
 LED_PIN = 12          # GPIO pin connected to the pixels
 LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 
@@ -16,13 +21,19 @@ if __name__ == '__main__':
     )
     strip.begin()
 
+    validator = re.compile(r'^[0-9a-f]{%d}$' % (KEYS * 2), re.IGNORECASE)
+
     try:
         for line in fileinput.input():
-            levels = [c for c in bytes.fromhex(line.rstrip())]
+            hexString = line.rstrip()
+            if not validator.match(hexString):
+                raise FormatError('bad input')
+
+            levels = [c for c in bytes.fromhex(hexString)]
             for key in range(len(levels)):
                 color = Color(levels[key], levels[key], levels[key])
-                for i in range(2):
-                    strip.setPixelColor(key * 2 + i, color)
+                for i in range(LEDS_PER_KEY):
+                    strip.setPixelColor(key * LEDS_PER_KEY + i, color)
             strip.show()
     except KeyboardInterrupt:
         print('')
