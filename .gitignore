@@ -3,3 +3,4 @@ VERSION
 .DS_Store
 test
 pianolizer
+*.pyc
