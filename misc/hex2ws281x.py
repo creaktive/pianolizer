@@ -5,6 +5,8 @@ import re
 
 from rpi_ws281x import PixelStrip, Color
 
+from palette import Palette
+
 KEYS = 61
 LEDS_PER_KEY = 2
 
@@ -22,6 +24,7 @@ if __name__ == '__main__':
     strip.begin()
 
     validator = re.compile(r'^[0-9a-f]{%d}$' % (KEYS * 2), re.IGNORECASE)
+    palette = Palette('palette.json')
 
     try:
         for line in fileinput.input():
@@ -29,9 +32,16 @@ if __name__ == '__main__':
             if not validator.match(hexString):
                 raise FormatError('bad input')
 
-            levels = [c for c in bytes.fromhex(hexString)]
-            for key in range(len(levels)):
-                color = Color(levels[key], levels[key], levels[key])
+            levels = [c / 255 for c in bytes.fromhex(hexString)]
+            leds = list(
+                map(
+                    lambda c: Color(c[0], c[1], c[2]),
+                    palette.getKeyColors(levels)
+                )
+            )
+
+            for key in range(len(leds)):
+                color = leds[key]
                 for i in range(LEDS_PER_KEY):
                     strip.setPixelColor(key * LEDS_PER_KEY + i, color)
             strip.show()
