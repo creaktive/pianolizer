@@ -32,7 +32,7 @@ class MidiInputHandler(object):
         if status == 0x90:
             c = self.palette.getKeyColor(
                 key,
-                velocity * 2, # max velocity is 127; max brightness 255
+                velocity / 127, # max velocity is 127
             )
             color = Color(c[0], c[1], c[2])
         elif status == 0x80:
