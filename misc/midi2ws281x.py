@@ -41,9 +41,8 @@ class MidiInputHandler(object):
             print("WTF: %r" % message)
 
         if color is not None:
-            # 2 LEDs per key
-            for i in range(2):
-                self.strip.setPixelColor(key * 2 + i, color)
+            for i in range(LEDS_PER_KEY):
+                self.strip.setPixelColor(LED_OFFSET + key * LEDS_PER_KEY + i, color)
 
             strip.show()
 
