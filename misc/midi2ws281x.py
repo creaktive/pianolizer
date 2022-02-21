@@ -5,16 +5,23 @@ import time
 from rtmidi.midiutil import open_midiinput
 from rpi_ws281x import PixelStrip, Color
 
+from palette import Palette
+
+KEYS = 61
+LEDS_PER_KEY = 2
+LED_OFFSET = 2
+
 # LED strip configuration:
-LED_COUNT = 61 * 2    # Number of LED pixels.
+LED_COUNT = KEYS * LEDS_PER_KEY + LED_OFFSET
 LED_PIN = 12          # GPIO pin connected to the pixels
 LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 
 class MidiInputHandler(object):
-    def __init__(self, port, strip, first_key=36):
+    def __init__(self, port, strip, first_key=36, palette_file='palette.json'):
         self.port = port
         self.strip = strip
         self.first_key = first_key
+        self.palette = Palette(palette_file)
 
     def __call__(self, event, data=None):
         message, deltatime = event
@@ -23,8 +30,11 @@ class MidiInputHandler(object):
 
         color = None
         if status == 0x90:
-            c = velocity * 2 # max velocity is 127; max brightness 255
-            color = Color(c, c, c)
+            c = self.palette.getKeyColor(
+                key,
+                velocity * 2, # max velocity is 127; max brightness 255
+            )
+            color = Color(c[0], c[1], c[2])
         elif status == 0x80:
             color = Color(0, 0, 0)
         else:
