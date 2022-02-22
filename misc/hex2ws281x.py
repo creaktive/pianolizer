@@ -28,11 +28,11 @@ if __name__ == '__main__':
 
     try:
         for line in fileinput.input():
-            hexString = line.rstrip()
-            if not validator.match(hexString):
-                raise FormatError('bad input')
+            match = validator.match(line)
+            if not match:
+                raise RuntimeError('bad input')
 
-            levels = [c / 255 for c in bytes.fromhex(hexString)]
+            levels = [c / 255 for c in bytes.fromhex(match.group())]
             leds = list(
                 map(
                     lambda c: Color(c[0], c[1], c[2]),
