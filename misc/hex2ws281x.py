@@ -23,7 +23,7 @@ if __name__ == '__main__':
     )
     strip.begin()
 
-    validator = re.compile(r'^[0-9a-f]{%d}$' % (KEYS * 2), re.IGNORECASE)
+    validator = re.compile(r'^\s*[0-9a-f]{%d}\b' % (KEYS * 2), re.IGNORECASE)
     palette = Palette('palette.json')
 
     try:
