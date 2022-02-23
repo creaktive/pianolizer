@@ -10,7 +10,7 @@ CFLAGS=-ffast-math -std=c++14 \
 	-Wstrict-overflow=5 -Wswitch-default -Wno-unused \
 	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wundef
 
-all: $(WASM_TARGET) $(NATIVE_BINARY)
+all: $(WASM_TARGET) pianolizer
 
 clean:
 	@rm -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
@@ -35,7 +35,7 @@ test: cpp/test.cpp cpp/pianolizer.hpp
 		-lgtest -lgtest_main
 	@$(TEST_BINARY)
 
-$(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
+pianolizer: cpp/main.cpp cpp/pianolizer.hpp
 	@g++ $(CFLAGS) \
 		-Ofast \
 		-o $(NATIVE_BINARY) \
