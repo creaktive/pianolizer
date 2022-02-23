@@ -176,7 +176,7 @@
           ).then(stream => {
             microphoneSource = audioContext.createMediaStreamSource(stream)
             microphoneSource.connect(pianolizer)
-          }).catch(() => window.alert('Microphone access denied'))
+          }).catch(error => window.alert('Microphone access denied: ' + error))
         } else {
           microphoneSource.connect(pianolizer)
         }
