@@ -20,7 +20,7 @@ void help() {
   cout << "\t-b\tbuffer size; default: 256" << endl;
   cout << "\t-s\tsample rate; default: 44100 (Hz)" << endl;
   cout << "\t-p\tA4 reference frequency; default: 440 (Hz)" << endl;
-  cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.1 (seconds; 0 to disable)" << endl;
+  cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)" << endl;
   cout << endl;
   cout << "Description:" << endl;
   exit(EXIT_SUCCESS);
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   size_t bufferSize = 256; // known to work on RPi3b
   int sampleRate = 44100;
   float pitchFork = 440.;
-  float averageWindow = 0.1;
+  float averageWindow = 0.04;
 
   for (;;) {
     switch (getopt(argc, argv, "b:s:p:a:h")) {
