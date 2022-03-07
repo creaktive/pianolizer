@@ -170,7 +170,7 @@
         audioSource.disconnect(audioContext.destination)
 
         if (microphoneSource === undefined) {
-          navigator.mediaDevices.getUserMedia(
+          await navigator.mediaDevices.getUserMedia(
             { audio: true, video: false }
           ).then(stream => {
             microphoneSource = audioContext.createMediaStreamSource(stream)
@@ -219,8 +219,8 @@
         }
       }
 
-      audioElement.onplay = () => {
-        setupAudio()
+      audioElement.onplay = async () => {
+        await setupAudio()
         audioElement.play()
       }
 
