@@ -16,20 +16,20 @@
       a {
         color: #fff;
       }
+      button {
+        width: 5rem;
+      }
+      input[type=range] {
+        -webkit-appearance: none;
+        border-radius: 10px;
+        height: 10px;
+        width: 5rem;
+      }
       #controls {
         text-align: center;
       }
-      #rotation {
-        width: 100px;
-      }
-      #smoothing {
-        width: 100px;
-      }
       #smoothing-value {
         font-family: monospace;
-      }
-      #source {
-        width: 250px;
       }
       #pianolizer {
         position: relative;
@@ -70,7 +70,9 @@
           <option value="audio/noise.flac">Pink noise</option>
         </select>
       </label>
-      <audio id="input" src="audio/mazurka.mp3" controls></audio>
+      <audio id="input" src="audio/mazurka.mp3" loop></audio>
+      <button id="play-toggle">Play</button>
+      <button id="play-restart">Restart</button>
       <label>
         Palette rotation:
         <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
@@ -105,6 +107,8 @@
         .then(data => { palette = new Palette(data) })
 
       const audioElement = document.getElementById('input')
+      const playToggle = document.getElementById('play-toggle')
+      const playRestart = document.getElementById('play-restart')
 
       const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
       pianoKeyboard.drawKeyboard()
@@ -200,14 +204,18 @@
 
       document.getElementById('source').onchange = event => {
         audioElement.pause()
+        playToggle.innerText = 'Play'
 
         const selectedValue = event.target.value
         if (selectedValue === '*') {
           // microphone source
-          audioElement.style['pointer-events'] = 'none'
+          playToggle.disabled = true
+          playRestart.disabled = true
           setupMicrophone()
         } else {
           // <audio> element source
+          playToggle.disabled = false
+          playRestart.disabled = false
           try { microphoneSource.disconnect(pianolizer) } catch { console.warn('Microphone was not connected') }
           audioElement.style['pointer-events'] = 'auto'
           if (selectedValue === '/') {
@@ -219,9 +227,20 @@
         }
       }
 
-      audioElement.onplay = async () => {
-        await setupAudio()
-        audioElement.play()
+      playToggle.onclick = async event => {
+        if (audioElement.paused) {
+          await setupAudio()
+          audioElement.play()
+          playToggle.innerText = 'Pause'
+        } else {
+          audioElement.pause()
+          playToggle.innerText = 'Play'
+        }
+      }
+
+      playRestart.onclick = event => {
+        audioElement.load()
+        playToggle.innerText = 'Play'
       }
 
       document.getElementById('rotation').oninput = event => {
