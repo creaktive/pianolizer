@@ -86,7 +86,7 @@ class MovingAverage {
       sum = std::make_unique<float[]>(channels);
     }
 
-    virtual ~MovingAverage() {}
+    virtual ~MovingAverage() = default;
 
     float averageWindowInSeconds() {
       return averageWindow / static_cast<float>(sampleRate);
@@ -170,7 +170,7 @@ class Tuning {
       : sampleRate(sampleRate_), bands(bands_)
     {}
 
-    virtual ~Tuning() {}
+    virtual ~Tuning() = default;
 
     const tuningValues frequencyAndBandwidthToKAndN(const double frequency, const double bandwidth) {
       double N = floor(sampleRate / bandwidth);

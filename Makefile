@@ -8,6 +8,7 @@ CFLAGS=-ffast-math -std=c++14 \
 	-Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast \
 	-Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo \
 	-Wstrict-overflow=5 -Wswitch-default -Wno-unused \
+	#-fsanitize=address
 	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wundef
 
 all: $(WASM_TARGET) pianolizer
