@@ -45,7 +45,8 @@ class DFTBin {
       else if (N == 0)
         throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
 
-      coeff = exp(std::complex<double>(0., 2. * M_PI * (k / N)));
+      const double q = 2. * M_PI * k / N;
+      coeff = std::complex<double>(cos(q), sin(q));
     }
 
     void update(const double previousSample, const double currentSample) {
