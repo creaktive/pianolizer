@@ -90,20 +90,6 @@ export class Complex {
   }
 
   /**
-   * Exponential.
-   *
-   * @return {Complex} Exponential of the instance.
-   * @memberof Complex
-   */
-  exp () {
-    const tmp = Math.exp(this.re)
-    return new Complex(
-      tmp * Math.cos(this.im),
-      tmp * Math.sin(this.im)
-    )
-  }
-
-  /**
    * Magnitude.
    *
    * @readonly
