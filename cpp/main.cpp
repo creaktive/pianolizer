@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
         throw runtime_error("sdft.process() returned nothing");
 
       stringstream stream;
-      for (unsigned i = 0; i < tuning->bands; i++)
+      for (unsigned i = 0; i < sdft.bands; i++)
         stream << setfill('0') << setw(2) << hex
           << static_cast<unsigned>(round(output[i] * 255.));
       cout << stream.str() << endl;

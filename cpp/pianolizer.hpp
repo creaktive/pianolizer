@@ -230,9 +230,13 @@ class SlidingDFT {
 #endif
 
   public:
+    unsigned sampleRate, bands;
+
     SlidingDFT(const std::shared_ptr<Tuning> tuning, const double maxAverageWindowInSeconds = 0.) {
-      bins.reserve(tuning->bands);
-      levels.reserve(tuning->bands);
+      sampleRate = tuning->sampleRate;
+      bands = tuning->bands;
+      bins.reserve(bands);
+      levels.reserve(bands);
 
       unsigned maxN = 0;
       for (auto band : tuning->mapping()) {
@@ -245,14 +249,14 @@ class SlidingDFT {
 #ifndef DISABLE_MOVING_AVERAGE
       if (maxAverageWindowInSeconds > 0.) {
         movingAverage = std::make_shared<HeavyMovingAverage>(
-          tuning->bands,
-          tuning->sampleRate,
-          round(tuning->sampleRate * maxAverageWindowInSeconds)
+          bands,
+          sampleRate,
+          round(sampleRate * maxAverageWindowInSeconds)
         );
       } else if (maxAverageWindowInSeconds < 0.) {
         movingAverage = std::make_shared<FastMovingAverage>(
-          tuning->bands,
-          tuning->sampleRate
+          bands,
+          sampleRate
         );
       } else {
         movingAverage = nullptr;

@@ -504,8 +504,10 @@ export class SlidingDFT {
    * @memberof SlidingDFT
    */
   constructor (tuning, maxAverageWindowInSeconds = 0) {
+    this.sampleRate = tuning.sampleRate
+    this.bands = tuning.bands
     this.bins = []
-    this.levels = new Float32Array(tuning.bands)
+    this.levels = new Float32Array(this.bands)
 
     let maxN = 0
     tuning.mapping.forEach((band) => {
@@ -517,14 +519,14 @@ export class SlidingDFT {
 
     if (maxAverageWindowInSeconds > 0) {
       this.movingAverage = new HeavyMovingAverage(
-        tuning.bands,
-        tuning.sampleRate,
-        Math.round(tuning.sampleRate * maxAverageWindowInSeconds)
+        this.bands,
+        this.sampleRate,
+        Math.round(this.sampleRate * maxAverageWindowInSeconds)
       )
     } else if (maxAverageWindowInSeconds < 0) {
       this.movingAverage = new FastMovingAverage(
-        tuning.bands,
-        tuning.sampleRate
+        this.bands,
+        this.sampleRate
       )
     } else {
       this.movingAverage = null
