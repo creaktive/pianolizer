@@ -4,7 +4,7 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/Cellar/emscripten/3.1.5/libexec/system/include",
+                "/usr/local/Cellar/emscripten/3.1.6/libexec/system/include",
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk/usr/include",
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk/usr/include/c++/v1",
                 "/usr/local/include"
