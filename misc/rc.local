@@ -23,6 +23,9 @@ iwconfig wlan0 power off
 # disable CPU throttling
 cpupower frequency-set -g performance
 
+# a reasonable microphone setting for seeed-voicecard
+amixer sset 'ADC PCM' -- '-18dB'
+
 # start pianolizer
 SAMPLE_RATE=48000
 cd /home/pi/pianolizer
