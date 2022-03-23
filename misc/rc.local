@@ -24,7 +24,8 @@ iwconfig wlan0 power off
 cpupower frequency-set -g performance
 
 # start pianolizer
+SAMPLE_RATE=48000
 cd /home/pi/pianolizer
-nohup nice -n -20 sh -c 'sox -V -d -traw -r48000 -b32 -c1 -efloat - | ./pianolizer -s 48000 | sudo misc/hex2ws281x.py' > /dev/null &
+nohup nice -n -20 sh -c "sox -V -d -traw -r${SAMPLE_RATE} -b32 -c1 -efloat - | ./pianolizer -s ${SAMPLE_RATE} | misc/hex2ws281x.py" > /dev/null &
 
 exit 0
