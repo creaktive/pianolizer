@@ -16,6 +16,7 @@ export default class Pianolizer {
    * @param {Number} sampleRate in Hz
    * @memberof Pianolizer
    * @example
+   * // common sample rate
    * const pianolizer = new Pianolizer(44100)
    */
   constructor (sampleRate) {
@@ -142,7 +143,7 @@ export class Complex {
  * @class RingBuffer
  * @example
  * const ringBuffer = new RingBuffer(100)
- * for (const i = 0; i < 200; i++) {
+ * for (let i = 0; i < 200; i++) {
  *   ringBuffer.write(i)
  * }
  * console.log(ringBuffer.read(25))
