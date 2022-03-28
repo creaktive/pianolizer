@@ -197,6 +197,18 @@ export class RingBuffer {
  * Discrete Fourier Transform computation for one single bin.
  *
  * @class DFTBin
+ * @example
+ * // Detect a 441Hz tone when the sample rate is 44100Hz
+ * const N = 1700
+ * const bin = new DFTBin(17, N)
+ * const rb = new RingBuffer(N)
+ *
+ * for (let i = 0; i < 2000; i++) {
+ *   const currentSample = sin(Math.PI / 50 * i) // sine wave oscillator
+ *   rb.write(currentSample);
+ *   const previousSample = rb.read(N)
+ *   bin.update(previousSample, currentSample)
+ * }
  */
 export class DFTBin {
   /**
@@ -204,6 +216,11 @@ export class DFTBin {
    * @param {Number} k Frequency divided by the bandwidth (must be an integer!).
    * @param {Number} N Sample rate divided by the bandwidth (must be an integer!).
    * @memberof DFTBin
+   * @example
+   * // (provided the sample rate of 44100Hz)
+   * // center: 439.96Hz
+   * // bandwidth: 25.88Hz
+   * const bin = new DFTBin(17, 1704)
    */
   constructor (k, N) {
     if (k === 0) {
@@ -231,6 +248,9 @@ export class DFTBin {
    * @param {Number} previousSample Sample from N frames ago.
    * @param {Number} currentSample The latest sample.
    * @memberof DFTBin
+   * @example
+   * // previousSample should be taken N samples before currentSample is taken
+   * bin.update(previousSample, currentSample)
    */
   update (previousSample, currentSample) {
     this.totalPower += currentSample * currentSample
@@ -250,6 +270,8 @@ export class DFTBin {
    *
    * @readonly
    * @memberof DFTBin
+   * @example
+   * console.log(bin.rms)
    */
   get rms () {
     return Math.sqrt(this.totalPower / this.N)
@@ -261,6 +283,8 @@ export class DFTBin {
    * @see {@link https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf}
    * @readonly
    * @memberof DFTBin
+   * @example
+   * console.log(bin.amplitudeSpectrum)
    */
   get amplitudeSpectrum () {
     return Math.SQRT2 * (this.dft.magnitude / this.N)
@@ -272,6 +296,8 @@ export class DFTBin {
    *
    * @readonly
    * @memberof DFTBin
+   * @example
+   * console.log(bin.normalizedAmplitudeSpectrum)
    */
   get normalizedAmplitudeSpectrum () {
     return this.totalPower > 0
@@ -285,6 +311,8 @@ export class DFTBin {
    *
    * @readonly
    * @memberof DFTBin
+   * @example
+   * console.log(bin.logarithmicUnitDecibels)
    */
   get logarithmicUnitDecibels () {
     return 20 * Math.log10(this.amplitudeSpectrum / this.referenceAmplitude)
