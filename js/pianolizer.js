@@ -3,12 +3,20 @@
  *
  * @export
  * @class Pianolizer
+ * @example
+ * const pianolizer = new Pianolizer(44100)
+ * const input = new Float32Array(128)
+ * let output
+ * // fill the input buffer somehow
+ * output = pianolizer.process(input)
  */
 export default class Pianolizer {
   /**
    * Creates an instance of Pianolizer.
    * @param {Number} sampleRate in Hz
    * @memberof Pianolizer
+   * @example
+   * const pianolizer = new Pianolizer(44100)
    */
   constructor (sampleRate) {
     this.slidingDFT = new SlidingDFT(
@@ -24,6 +32,9 @@ export default class Pianolizer {
    * @param {Number} [averageWindowInSeconds=0] Adjust the moving average window size.
    * @return {Float32Array} Snapshot of the levels after processing all the samples.
    * @memberof Pianolizer
+   * @example
+   * // average over a 0.05 seconds window
+   * output = pianolizer.process(input, 0.05)
    */
   process (samples, averageWindowInSeconds = 0) {
     return this.slidingDFT.process(samples, averageWindowInSeconds)
