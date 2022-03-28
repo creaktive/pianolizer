@@ -52,6 +52,12 @@ export class Complex {
    * @param {Number} [re=0] Real part.
    * @param {Number} [im=0] Imaginary part.
    * @memberof Complex
+   * @example
+   * let dft = new Complex()
+   * dft = dft
+   *   .sub(previousComplexSample)
+   *   .add(currentComplexSample)
+   *   .mul(coeff)
    */
   constructor (re = 0, im = 0) {
     this.re = re
@@ -59,11 +65,15 @@ export class Complex {
   }
 
   /**
-   * Addition.
+   * Complex number addition.
    *
    * @param {Complex} z Complex number to add.
    * @return {Complex} Sum of the instance and z.
    * @memberof Complex
+   * @example
+   * const a = new Complex(1, 0)
+   * const b = new Complex(0, 1)
+   * const c = a.add(b)
    */
   add (z) {
     return new Complex(
@@ -73,11 +83,15 @@ export class Complex {
   }
 
   /**
-   * Subtraction.
+   * Complex number subtraction.
    *
    * @param {Complex} z Complex number to subtract.
    * @return {Complex} Sum of the instance and z.
    * @memberof Complex
+   * @example
+   * const a = new Complex(1, 0)
+   * const b = new Complex(0, 1)
+   * const c = a.sub(b)
    */
   sub (z) {
     return new Complex(
@@ -87,11 +101,15 @@ export class Complex {
   }
 
   /**
-   * Multiplication.
+   * Complex number multiplication.
    *
    * @param {Complex} z Complex number to multiply.
    * @return {Complex} Product of the instance and z.
    * @memberof Complex
+   * @example
+   * const a = new Complex(1, 0)
+   * const b = new Complex(0, 1)
+   * const c = a.mul(b)
    */
   mul (z) {
     return new Complex(
@@ -101,10 +119,13 @@ export class Complex {
   }
 
   /**
-   * Magnitude.
+   * Complex number magnitude.
    *
    * @readonly
    * @memberof Complex
+   * @example
+   * const a = new Complex(2, 2)
+   * console.log(a.magnitude)
    */
   get magnitude () {
     return Math.sqrt(
