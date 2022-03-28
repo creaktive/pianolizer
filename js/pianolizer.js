@@ -140,12 +140,20 @@ export class Complex {
  * Caveat: the size of the allocated memory is always a power of two!
  *
  * @class RingBuffer
+ * @example
+ * const ringBuffer = new RingBuffer(100)
+ * for (const i = 0; i < 200; i++) {
+ *   ringBuffer.write(i)
+ * }
+ * console.log(ringBuffer.read(25))
  */
 export class RingBuffer {
   /**
    * Creates an instance of RingBuffer.
    * @param {Number} requestedSize How long the RingBuffer is expected to be.
    * @memberof RingBuffer
+   * @example
+   * const ringBuffer = new RingBuffer(100)
    */
   constructor (requestedSize) {
     const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
@@ -162,6 +170,8 @@ export class RingBuffer {
    *
    * @param {Number} value Value to be stored in an Float32Array.
    * @memberof RingBuffer
+   * @example
+   * ringBuffer.write(Math.random())
    */
   write (value) {
     this.index &= this.mask
@@ -174,6 +184,8 @@ export class RingBuffer {
    * @param {Number} position Position within the RingBuffer.
    * @return {Number} The value at the position.
    * @memberof RingBuffer
+   * @example
+   * ringBuffer.read(0)
    */
   read (position) {
     return this.buffer[(this.index + (~position)) & this.mask]
