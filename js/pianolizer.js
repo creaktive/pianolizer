@@ -4,20 +4,19 @@
  * @export
  * @class Pianolizer
  * @example
+ * // common sample rate
  * const pianolizer = new Pianolizer(44100)
  * const input = new Float32Array(128)
+ * // fill the input buffer with the samples
  * let output
- * // fill the input buffer somehow
- * output = pianolizer.process(input)
+ * // average over a 0.05 seconds window
+ * output = pianolizer.process(input, 0.05)
  */
 export default class Pianolizer {
   /**
    * Creates an instance of Pianolizer.
    * @param {Number} sampleRate in Hz
    * @memberof Pianolizer
-   * @example
-   * // common sample rate
-   * const pianolizer = new Pianolizer(44100)
    */
   constructor (sampleRate) {
     this.slidingDFT = new SlidingDFT(
@@ -33,9 +32,6 @@ export default class Pianolizer {
    * @param {Number} [averageWindowInSeconds=0] Adjust the moving average window size.
    * @return {Float32Array} Snapshot of the levels after processing all the samples.
    * @memberof Pianolizer
-   * @example
-   * // average over a 0.05 seconds window
-   * output = pianolizer.process(input, 0.05)
    */
   process (samples, averageWindowInSeconds = 0) {
     return this.slidingDFT.process(samples, averageWindowInSeconds)
@@ -59,6 +55,7 @@ export class Complex {
    *   .sub(previousComplexSample)
    *   .add(currentComplexSample)
    *   .mul(coeff)
+   * console.log(dft.magnitude)
    */
   constructor (re = 0, im = 0) {
     this.re = re
@@ -71,10 +68,6 @@ export class Complex {
    * @param {Complex} z Complex number to add.
    * @return {Complex} Sum of the instance and z.
    * @memberof Complex
-   * @example
-   * const a = new Complex(1, 0)
-   * const b = new Complex(0, 1)
-   * const c = a.add(b)
    */
   add (z) {
     return new Complex(
@@ -89,10 +82,6 @@ export class Complex {
    * @param {Complex} z Complex number to subtract.
    * @return {Complex} Sum of the instance and z.
    * @memberof Complex
-   * @example
-   * const a = new Complex(1, 0)
-   * const b = new Complex(0, 1)
-   * const c = a.sub(b)
    */
   sub (z) {
     return new Complex(
@@ -107,10 +96,6 @@ export class Complex {
    * @param {Complex} z Complex number to multiply.
    * @return {Complex} Product of the instance and z.
    * @memberof Complex
-   * @example
-   * const a = new Complex(1, 0)
-   * const b = new Complex(0, 1)
-   * const c = a.mul(b)
    */
   mul (z) {
     return new Complex(
@@ -124,9 +109,6 @@ export class Complex {
    *
    * @readonly
    * @memberof Complex
-   * @example
-   * const a = new Complex(2, 2)
-   * console.log(a.magnitude)
    */
   get magnitude () {
     return Math.sqrt(
@@ -142,19 +124,18 @@ export class Complex {
  *
  * @class RingBuffer
  * @example
- * const ringBuffer = new RingBuffer(100)
+ * const rb = new RingBuffer(100)
  * for (let i = 0; i < 200; i++) {
- *   ringBuffer.write(i)
+ *   rb.write(i)
  * }
- * console.log(ringBuffer.read(25))
+ * // prints 174:
+ * console.log(rb.read(25))
  */
 export class RingBuffer {
   /**
    * Creates an instance of RingBuffer.
    * @param {Number} requestedSize How long the RingBuffer is expected to be.
    * @memberof RingBuffer
-   * @example
-   * const ringBuffer = new RingBuffer(100)
    */
   constructor (requestedSize) {
     const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
@@ -171,8 +152,6 @@ export class RingBuffer {
    *
    * @param {Number} value Value to be stored in an Float32Array.
    * @memberof RingBuffer
-   * @example
-   * ringBuffer.write(Math.random())
    */
   write (value) {
     this.index &= this.mask
@@ -185,8 +164,6 @@ export class RingBuffer {
    * @param {Number} position Position within the RingBuffer.
    * @return {Number} The value at the position.
    * @memberof RingBuffer
-   * @example
-   * ringBuffer.read(0)
    */
   read (position) {
     return this.buffer[(this.index + (~position)) & this.mask]
@@ -206,9 +183,15 @@ export class RingBuffer {
  * for (let i = 0; i < 2000; i++) {
  *   const currentSample = sin(Math.PI / 50 * i) // sine wave oscillator
  *   rb.write(currentSample);
+ *   // previousSample should be taken N samples before currentSample is taken
  *   const previousSample = rb.read(N)
  *   bin.update(previousSample, currentSample)
  * }
+ *
+ * console.log(bin.rms)
+ * console.log(bin.amplitudeSpectrum)
+ * console.log(bin.normalizedAmplitudeSpectrum)
+ * console.log(bin.logarithmicUnitDecibels)
  */
 export class DFTBin {
   /**
@@ -221,6 +204,8 @@ export class DFTBin {
    * // center: 439.96Hz
    * // bandwidth: 25.88Hz
    * const bin = new DFTBin(17, 1704)
+   * // samples are *NOT* complex!
+   * bin.update(previousSample, currentSample)
    */
   constructor (k, N) {
     if (k === 0) {
@@ -248,9 +233,6 @@ export class DFTBin {
    * @param {Number} previousSample Sample from N frames ago.
    * @param {Number} currentSample The latest sample.
    * @memberof DFTBin
-   * @example
-   * // previousSample should be taken N samples before currentSample is taken
-   * bin.update(previousSample, currentSample)
    */
   update (previousSample, currentSample) {
     this.totalPower += currentSample * currentSample
@@ -270,8 +252,6 @@ export class DFTBin {
    *
    * @readonly
    * @memberof DFTBin
-   * @example
-   * console.log(bin.rms)
    */
   get rms () {
     return Math.sqrt(this.totalPower / this.N)
@@ -283,8 +263,6 @@ export class DFTBin {
    * @see {@link https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf}
    * @readonly
    * @memberof DFTBin
-   * @example
-   * console.log(bin.amplitudeSpectrum)
    */
   get amplitudeSpectrum () {
     return Math.SQRT2 * (this.dft.magnitude / this.N)
@@ -296,8 +274,6 @@ export class DFTBin {
    *
    * @readonly
    * @memberof DFTBin
-   * @example
-   * console.log(bin.normalizedAmplitudeSpectrum)
    */
   get normalizedAmplitudeSpectrum () {
     return this.totalPower > 0
@@ -311,8 +287,6 @@ export class DFTBin {
    *
    * @readonly
    * @memberof DFTBin
-   * @example
-   * console.log(bin.logarithmicUnitDecibels)
    */
   get logarithmicUnitDecibels () {
     return 20 * Math.log10(this.amplitudeSpectrum / this.referenceAmplitude)
@@ -459,7 +433,7 @@ export class HeavyMovingAverage extends MovingAverage {
 /**
  * Base class for PianoTuning. Must implement this.mapping array.
  *
- * @class MovingAverage
+ * @class Tuning
  */
 export class Tuning {
   /**
