@@ -463,6 +463,17 @@ export class HeavyMovingAverage extends MovingAverage {
  * Base class for PianoTuning. Must implement this.mapping array.
  *
  * @class Tuning
+ * @example
+ * // Proof of concept; there's no advantage in using Sliding DFT if we need to cover the full spectrum
+ * export class RegularTuning extends Tuning {
+ *   constructor (sampleRate, bands) {
+ *     super(sampleRate, bands)
+ *     this.mapping = []
+ *     for (let band = 0; band < this.mapping.length; band++) {
+ *       this.mapping.push({ k: band, N: bands * 2 })
+ *     }
+ *   }
+ * }
  */
 export class Tuning {
   /**
@@ -501,19 +512,6 @@ export class Tuning {
     }
   }
 }
-
-/*
-// Proof of concept; there's no advantage in using Sliding DFT if we need to cover the full spectrum
-export class RegularTuning extends Tuning {
-  constructor (sampleRate, bands) {
-    super(sampleRate, bands)
-    this.mapping = []
-    for (let band = 0; band < this.mapping.length; band++) {
-      this.mapping.push({ k: band, N: bands * 2 })
-    }
-  }
-}
-*/
 
 /**
  * Essentially, creates an instance that provides the 'mapping',
