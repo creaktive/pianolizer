@@ -4,7 +4,7 @@
  * @export
  * @class Pianolizer
  * @example
- * // common sample rate
+ * // a common sample rate
  * const pianolizer = new Pianolizer(44100)
  * const input = new Float32Array(128)
  * // fill the input buffer with the samples
@@ -519,6 +519,19 @@ export class Tuning {
  *
  * @class PianoTuning
  * @extends {Tuning}
+ * @example
+ * // a common sample rate
+ * const tuning = new PianoTuning(44100)
+ *
+ * // prints 17 for the note C2:
+ * console.log(tuning.mapping[0].k)
+ * // prints 11462 for the note C2:
+ * console.log(tuning.mapping[0].N)
+ *
+ * // prints 17 for the note C7:
+ * console.log(tuning.mapping[60].k)
+ * // prints 358 for the note C7:
+ * console.log(tuning.mapping[60].N)
  */
 export class PianoTuning extends Tuning {
   /**
@@ -570,7 +583,7 @@ export class PianoTuning extends Tuning {
  * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
  * @class SlidingDFT
  * @example
- * // common sample rate
+ * // a common sample rate
  * const tuning = new PianoTuning(44100)
  * // no moving average
  * const slidingDFT = new SlidingDFT(tuning)
