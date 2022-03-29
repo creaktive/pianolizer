@@ -569,6 +569,16 @@ export class PianoTuning extends Tuning {
  *
  * @see {@link https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf}
  * @class SlidingDFT
+ * @example
+ * // common sample rate
+ * const tuning = new PianoTuning(44100)
+ * // no moving average
+ * const slidingDFT = new SlidingDFT(tuning)
+ * const input = new Float32Array(128)
+ * // fill the input buffer with the samples
+ * let output
+ * // just process; no moving average
+ * output = slidingDFT.process(input)
  */
 export class SlidingDFT {
   /**
