@@ -365,6 +365,20 @@ export class MovingAverage {
  * @see {@link https://www.daycounter.com/LabBook/Moving-Average.phtml}
  * @class FastMovingAverage
  * @extends {MovingAverage}
+ * @example
+ * // initialize the moving average object
+ * this.movingAverage = new FastMovingAverage(
+ *   levels.length,
+ *   sampleRate
+ * )
+ * // averageWindowInSeconds can be updated on-fly!
+ * movingAverage.averageWindowInSeconds = 0.05
+ * // for every processed frame
+ * movingAverage.update(levels)
+ * // overwrite the levels with the averaged ones
+ * for (let band = 0; band < levels.length; band++) {
+ *   levels[band] = movingAverage.read(band)
+ * }
  */
 export class FastMovingAverage extends MovingAverage {
   /**
@@ -390,6 +404,21 @@ export class FastMovingAverage extends MovingAverage {
  *
  * @class HeavyMovingAverage
  * @extends {MovingAverage}
+ * @example
+ * // initialize the moving average object
+ * movingAverage = new HeavyMovingAverage(
+ *   levels.length,
+ *   sampleRate,
+ *   Math.round(sampleRate * maxAverageWindowInSeconds)
+ * )
+ * // averageWindowInSeconds can be updated on-fly!
+ * movingAverage.averageWindowInSeconds = 0.05
+ * // for every processed frame
+ * movingAverage.update(levels)
+ * // overwrite the levels with the averaged ones
+ * for (let band = 0; band < levels.length; band++) {
+ *   levels[band] = movingAverage.read(band)
+ * }
  */
 export class HeavyMovingAverage extends MovingAverage {
   /**
