@@ -12,6 +12,18 @@
 #include <memory>
 #include <vector>
 
+/**
+ * Reasonably fast Ring Buffer implementation.
+ * Caveat: the size of the allocated memory is always a power of two!
+ *
+ * @class RingBuffer
+ * @par EXAMPLE
+ * auto rb = RingBuffer(100);
+ * for (unsigned i = 0; i < 200; i++)
+ *   rb.write(i);
+ * // prints 174:
+ * std::cout << rb.read(25));
+ */
 class RingBuffer {
   private:
     unsigned mask;
@@ -19,6 +31,11 @@ class RingBuffer {
     std::unique_ptr<float[]> buffer;
 
   public:
+    /**
+     * Creates an instance of RingBuffer.
+     * @param requestedSize How long the RingBuffer is expected to be.
+     * @memberof RingBuffer
+     */
     RingBuffer(const unsigned requestedSize) {
       const unsigned bits = ceil(log2(requestedSize + 1));
       const unsigned size = static_cast<unsigned>(1) << bits;
@@ -26,11 +43,24 @@ class RingBuffer {
       buffer = std::make_unique<float[]>(size);
     }
 
+    /**
+     * Shifts the RingBuffer and stores the value in the latest position.
+     *
+     * @param value Value to be stored.
+     * @memberof RingBuffer
+     */
     void write(const float value) {
       index &= mask;
       buffer[index++] = value;
     }
 
+    /**
+     * Retrieves the value stored at the position.
+     *
+     * @param position Position within the RingBuffer.
+     * @return The value at the position.
+     * @memberof RingBuffer
+     */
     float read(const unsigned position) {
       return buffer[(index + (~position)) & mask];
     }
