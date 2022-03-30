@@ -1,4 +1,12 @@
 /**
+ * @file pianolizer.js
+ * @description Musical tone pitch detection library based on the Sliding Discrete Fourier Transform algorithm.
+ * @see {@link http://github.com/creaktive/pianolizer}
+ * @author Stanislaw Pusep
+ * @license MIT
+ */
+
+/**
  * Convenience wrapper that ties together the rest of this library, with sane defaults.
  *
  * @export
