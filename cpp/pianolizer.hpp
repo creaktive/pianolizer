@@ -1,3 +1,11 @@
+/**
+ * @file pianolizer.hpp
+ * @brief Musical tone pitch detection library based on the Sliding Discrete Fourier Transform algorithm.
+ * @see http://github.com/creaktive/pianolizer
+ * @author Stanislaw Pusep
+ * @copyright MIT
+ */
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <complex>
