@@ -22,7 +22,7 @@
  * for (unsigned i = 0; i < 200; i++)
  *   rb.write(i);
  * // prints 174:
- * std::cout << rb.read(25));
+ * std::cout << rb.read(25) << std::endl;
  */
 class RingBuffer {
   private:
@@ -66,6 +66,28 @@ class RingBuffer {
     }
 };
 
+/**
+ * Discrete Fourier Transform computation for one single bin.
+ *
+ * @class DFTBin
+ * @par EXAMPLE
+ * // Detect a 441Hz tone when the sample rate is 44100Hz
+ * const unsigned N = 1700;
+ * auto bin = DFTBin(17, N);
+ * auto rb = RingBuffer(N);
+ * for (unsigned i = 0; i < 2000; i++) {
+ *   const double currentSample = sin(M_PI / 50 * i); // sine wave oscillator
+ *   rb.write(currentSample);
+ *   // previousSample should be taken N samples before currentSample is taken
+ *   const double previousSample = rb.read(N);
+ *   bin.update(previousSample, currentSample);
+ * }
+
+ * std::cout << bin.rms() << std::endl;
+ * std::cout << bin.amplitudeSpectrum() << std::endl;
+ * std::cout << bin.normalizedAmplitudeSpectrum() << std::endl;
+ * std::cout << bin.logarithmicUnitDecibels() << std::endl;
+ */
 class DFTBin {
   private:
     double totalPower = 0.;
@@ -76,6 +98,19 @@ class DFTBin {
     double k, N;
     double referenceAmplitude = 1.; // 0 dB level
 
+    /**
+     * Creates an instance of DFTBin.
+     * @param k_ Frequency divided by the bandwidth.
+     * @param N_ Sample rate divided by the bandwidth.
+     * @memberof DFTBin
+     * @par EXAMPLE
+     * // (provided the sample rate of 44100Hz)
+     * // center: 439.96Hz
+     * // bandwidth: 25.88Hz
+     * auto bin = DFTBin(17, 1704);
+     * // samples are *NOT* complex!
+     * bin.update(previousSample, currentSample);
+     */
     DFTBin(const unsigned k_, const unsigned N_)
       : k(k_), N(N_) {
       if (k == 0)
@@ -87,6 +122,13 @@ class DFTBin {
       coeff = std::complex<double>(cos(q), sin(q));
     }
 
+    /**
+     * Do the Sliding DFT computation.
+     *
+     * @param previousSample Sample from N frames ago.
+     * @param currentSample The latest sample.
+     * @memberof DFTBin
+     */
     void update(const double previousSample, const double currentSample) {
       totalPower += currentSample * currentSample;
       totalPower -= previousSample * previousSample;
@@ -94,20 +136,43 @@ class DFTBin {
       dft = coeff * (dft - std::complex<double>(previousSample, 0.) + std::complex<double>(currentSample, 0.));
     }
 
+    /**
+     * Root Mean Square.
+     *
+     * @memberof DFTBin
+     */
     double rms() {
       return sqrt(totalPower / N);
     }
 
+    /**
+     * Amplitude spectrum in volts RMS.
+     *
+     * @see https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf
+     * @memberof DFTBin
+     */
     double amplitudeSpectrum() {
       return M_SQRT2 * (sqrt(norm(dft)) / N);
     }
 
+    /**
+     * Normalized amplitude (always returns a value between 0.0 and 1.0).
+     * This is well suited to detect pure tones, and can be used to decode DTMF or FSK modulation.
+     *
+     * @memberof DFTBin
+     */
     double normalizedAmplitudeSpectrum() {
       return totalPower > 0.
         ? amplitudeSpectrum() / rms()
         : 0.;
     }
 
+    /**
+     * Using this unit of measure, it is easy to view wide dynamic ranges; that is,
+     * it is easy to see small signal components in the presence of large ones.
+     *
+     * @memberof DFTBin
+     */
     double logarithmicUnitDecibels() {
       return 20. * log10(amplitudeSpectrum() / referenceAmplitude);
     }
