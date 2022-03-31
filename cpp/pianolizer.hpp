@@ -256,7 +256,7 @@ class MovingAverage {
  * @see https://www.daycounter.com/LabBook/Moving-Average.phtml
  * @class FastMovingAverage
  * @extends MovingAverage
- * @example
+ * @par EXAMPLE
  * // initialize the moving average object
  * unsigned channels = 2;
  * auto movingAverage = FastMovingAverage(
@@ -294,11 +294,40 @@ class FastMovingAverage : public MovingAverage {
     }
 };
 
+/**
+ * Moving average of the output (effectively a low-pass to get the general envelope).
+ * This is the "proper" implementation; it does require lots of memory allocated for the RingBuffers!
+ *
+ * @class HeavyMovingAverage
+ * @extends MovingAverage
+ * @par EXAMPLE
+ * // initialize the moving average object
+ * unsigned channels = 2;
+ * movingAverage = HeavyMovingAverage(
+ *   channels,
+ *   sampleRate,
+ *   round(sampleRate * maxAverageWindowInSeconds)
+ * )
+ * // averageWindowInSeconds can be updated on-fly!
+ * movingAverage.averageWindowInSeconds(0.05);
+ * // for every processed frame
+ * movingAverage.update(levels);
+ * // overwrite the levels with the averaged ones
+ * for (unsigned band = 0; band < channels; band++)
+ *   levels[band] = movingAverage.read(band);
+ */
 class HeavyMovingAverage : public MovingAverage {
   private:
     std::vector<std::unique_ptr<RingBuffer>> history;
 
   public:
+    /**
+     * Creates an instance of HeavyMovingAverage.
+     * @param channels Number of channels to process.
+     * @param sampleRate Sample rate, used to convert between time and amount of samples.
+     * @param [maxWindow=sampleRate] Preallocate buffers of this size, per channel.
+     * @memberof HeavyMovingAverage
+     */
     HeavyMovingAverage(const unsigned channels_, const unsigned sampleRate_, const unsigned maxWindow = 0)
       : MovingAverage{ channels_, sampleRate_ }
     {
@@ -307,6 +336,12 @@ class HeavyMovingAverage : public MovingAverage {
         history.push_back(std::make_unique<RingBuffer>(maxWindow ? maxWindow : sampleRate));
     }
 
+    /**
+     * Update the internal state with from the input.
+     *
+     * @param levels Array of level values, one per channel.
+     * @memberof HeavyMovingAverage
+     */
     void update(const std::vector<float>& levels) {
       for (unsigned n = 0; n < channels; n++) {
         const float value = levels[n];
