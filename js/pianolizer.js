@@ -375,7 +375,7 @@ export class MovingAverage {
  * @extends {MovingAverage}
  * @example
  * // initialize the moving average object
- * this.movingAverage = new FastMovingAverage(
+ * movingAverage = new FastMovingAverage(
  *   levels.length,
  *   sampleRate
  * )

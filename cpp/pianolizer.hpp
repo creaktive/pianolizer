@@ -249,12 +249,40 @@ class MovingAverage {
     virtual void update(const std::vector<float>& levels) = 0;
 };
 
+/**
+ * Moving average of the output (effectively a low-pass to get the general envelope).
+ * Fast approximation of the MovingAverage; requires significantly less memory.
+ *
+ * @see https://www.daycounter.com/LabBook/Moving-Average.phtml
+ * @class FastMovingAverage
+ * @extends MovingAverage
+ * @example
+ * // initialize the moving average object
+ * unsigned channels = 2;
+ * auto movingAverage = FastMovingAverage(
+ *   channels,
+ *   sampleRate
+ * );
+ * // averageWindowInSeconds can be updated on-fly!
+ * movingAverage.averageWindowInSeconds(0.05);
+ * // for every processed frame
+ * movingAverage.update(levels);
+ * // overwrite the levels with the averaged ones
+ * for (unsigned band = 0; band < channels; band++)
+ *   levels[band] = movingAverage.read(band);
+ */
 class FastMovingAverage : public MovingAverage {
   public:
     FastMovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : MovingAverage{ channels_, sampleRate_ }
     {}
 
+    /**
+     * Update the internal state with from the input.
+     *
+     * @param levels Array of level values, one per channel.
+     * @memberof FastMovingAverage
+     */
     void update(const std::vector<float>& levels) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
