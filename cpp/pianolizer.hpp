@@ -478,6 +478,22 @@ class PianoTuning : public Tuning {
     }
 };
 
+/**
+ * Sliding Discrete Fourier Transform implementation for (westerns) musical frequencies.
+ *
+ * @see https://www.comm.utoronto.ca/~dimitris/ece431/slidingdft.pdf
+ * @class SlidingDFT
+ * @par EXAMPLE
+ * // a common sample rate
+ * auto tuning = PianoTuning(44100);
+ * // no moving average
+ * auto slidingDFT = SlidingDFT(tuning);
+ * auto input = make_unique<float[]>(128);
+ * // fill the input buffer with the samples
+ * float *output = nullptr;
+ * // just process; no moving average
+ * output = slidingDFT.process(input);
+ */
 class SlidingDFT {
   private:
     std::vector<std::shared_ptr<DFTBin>> bins;
@@ -490,6 +506,12 @@ class SlidingDFT {
   public:
     unsigned sampleRate, bands;
 
+    /**
+     * Creates an instance of SlidingDFT.
+     * @param tuning Tuning instance (a class derived from Tuning; for instance, PianoTuning).
+     * @param [maxAverageWindowInSeconds=0] Positive values are passed to MovingAverage implementation; negative values trigger FastMovingAverage implementation. Zero disables averaging.
+     * @memberof SlidingDFT
+     */
     SlidingDFT(const std::shared_ptr<Tuning> tuning, const double maxAverageWindowInSeconds = 0.) {
       sampleRate = tuning->sampleRate;
       bands = tuning->bands;
@@ -522,6 +544,14 @@ class SlidingDFT {
 #endif
     }
 
+    /**
+     * Process a batch of samples.
+     *
+     * @param samples Array with the batch of samples to process.
+     * @param [averageWindowInSeconds=0] Adjust the moving average window size.
+     * @return Snapshot of the levels after processing all the samples.
+     * @memberof SlidingDFT
+     */
     const float* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {
 #ifndef DISABLE_MOVING_AVERAGE
       if (movingAverage != nullptr)

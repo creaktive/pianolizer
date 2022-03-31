@@ -604,7 +604,7 @@ export class PianoTuning extends Tuning {
 export class SlidingDFT {
   /**
    * Creates an instance of SlidingDFT.
-   * @param {PianoTuning} tuning PianoTuning instance.
+   * @param {Tuning} tuning Tuning instance (a class derived from Tuning; for instance, PianoTuning).
    * @param {Number} [maxAverageWindowInSeconds=0] Positive values are passed to MovingAverage implementation; negative values trigger FastMovingAverage implementation. Zero disables averaging.
    * @memberof SlidingDFT
    */
