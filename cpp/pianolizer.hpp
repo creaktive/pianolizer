@@ -178,6 +178,11 @@ class DFTBin {
     }
 };
 
+/**
+ * Base class for FastMovingAverage & HeavyMovingAverage. Must implement the update(levels) method.
+ *
+ * @class MovingAverage
+ */
 class MovingAverage {
   public:
     unsigned channels, sampleRate;
@@ -185,6 +190,12 @@ class MovingAverage {
     int targetAverageWindow;
     std::unique_ptr<float[]> sum;
 
+    /**
+     * Creates an instance of MovingAverage.
+     * @param channels_ Number of channels to process.
+     * @param sampleRate_ Sample rate, used to convert between time and amount of samples.
+     * @memberof MovingAverage
+     */
     MovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
       sum = std::make_unique<float[]>(channels);
@@ -192,16 +203,31 @@ class MovingAverage {
 
     virtual ~MovingAverage() = default;
 
+    /**
+     * Get the current window size (in seconds).
+     *
+     * @memberof MovingAverage
+     */
     float averageWindowInSeconds() {
       return averageWindow / static_cast<float>(sampleRate);
     }
 
+    /**
+     * Set the current window size (in seconds).
+     *
+     * @memberof MovingAverage
+     */
     void averageWindowInSeconds(const float value) {
       targetAverageWindow = round(value * sampleRate);
       if (averageWindow == -1)
         averageWindow = targetAverageWindow;
     }
 
+    /**
+     * Adjust averageWindow in steps.
+     *
+     * @memberof MovingAverage
+     */
     void updateAverageWindow() {
       if (targetAverageWindow > averageWindow)
         averageWindow++;
@@ -209,6 +235,13 @@ class MovingAverage {
         averageWindow--;
     }
 
+    /**
+     * Retrieve the current moving average value for a given channel.
+     *
+     * @param n Number of channel to retrieve the moving average for.
+     * @return Current moving average value for the specified channel.
+     * @memberof MovingAverage
+     */
     float read(const unsigned n) {
       return sum[n] / averageWindow;
     }
