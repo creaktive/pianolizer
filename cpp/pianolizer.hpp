@@ -411,20 +411,61 @@ class Tuning {
     const virtual std::vector<tuningValues> mapping() = 0;
 };
 
+/**
+ * Essentially, creates an instance that provides the 'mapping',
+ * which is an array of objects providing the values for i, k & N.
+ *
+ * @class PianoTuning
+ * @extends Tuning
+ * @example
+ * // a common sample rate
+ * auto tuning = PianoTuning(44100);
+ *
+ * // prints 17 for the note C2:
+ * std::cout << tuning.mapping[0].k << std::endl;
+ * // prints 11462 for the note C2:
+ * std::cout << tuning.mapping[0].N << std::endl;
+ *
+ * // prints 17 for the note C7:
+ * std::cout << tuning.mapping[60].k << std::endl;
+ * // prints 358 for the note C7:
+ * std::cout << tuning.mapping[60].N << std::endl;
+ */
 class PianoTuning : public Tuning {
   private:
     unsigned referenceKey;
     double pitchFork;
 
   public:
+    /**
+     * Creates an instance of PianoTuning.
+     * @param sampleRate Self-explanatory.
+     * @param [keysNum=61] Most pianos will have 61 keys.
+     * @param [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
+     * @param [pitchFork=440.0] A4 is 440 Hz by default.
+     * @memberof PianoTuning
+     */
     PianoTuning(const unsigned sampleRate_, const double pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33)
       : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_)
     {}
 
+    /**
+     * Converts the piano key number to it's fundamental frequency.
+     *
+     * @see https://en.wikipedia.org/wiki/Piano_key_frequencies
+     * @param key
+     * @return frequency
+     * @memberof PianoTuning
+     */
     double keyToFreq(const double key) {
       return pitchFork * pow(2., (key - referenceKey) / 12.);
     }
 
+    /**
+     * Computes the array of tuningValues structs that specify the frequencies to analyze.
+     *
+     * @memberof PianoTuning
+     */
     const std::vector<tuningValues> mapping() {
       std::vector<tuningValues> output;
       output.reserve(bands);

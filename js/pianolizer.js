@@ -545,9 +545,9 @@ export class PianoTuning extends Tuning {
   /**
    * Creates an instance of PianoTuning.
    * @param {Number} sampleRate Self-explanatory.
-   * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
-   * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
    * @param {Number} [keysNum=61] Most pianos will have 61 keys.
+   * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
+   * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
    * @memberof PianoTuning
    */
   constructor (sampleRate, keysNum = 61, referenceKey = 33, pitchFork = 440.0) {
@@ -561,7 +561,7 @@ export class PianoTuning extends Tuning {
    *
    * @see {@link https://en.wikipedia.org/wiki/Piano_key_frequencies}
    * @param {Number} key
-   * @return {Number}
+   * @return {Number} frequency
    * @memberof PianoTuning
    */
   keyToFreq (key) {
