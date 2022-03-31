@@ -359,6 +359,11 @@ class HeavyMovingAverage : public MovingAverage {
     }
 };
 
+/**
+ * Base class for PianoTuning. Must implement mapping().
+ *
+ * @class Tuning
+ */
 class Tuning {
   public:
     unsigned sampleRate, bands;
@@ -366,12 +371,25 @@ class Tuning {
       unsigned k, N;
     };
 
+    /**
+     * Creates an instance of Tuning.
+     * @param sampleRate_ Self-explanatory.
+     * @param bands_ How many filters.
+     */
     Tuning(const unsigned sampleRate_, const unsigned bands_)
       : sampleRate(sampleRate_), bands(bands_)
     {}
 
     virtual ~Tuning() = default;
 
+    /**
+     * Approximate k & N values for DFTBin.
+     *
+     * @param frequency In Hz.
+     * @param bandwidth In Hz.
+     * @return tuningValues struct containing k & N that best approximate for the given frequency & bandwidth.
+     * @memberof Tuning
+     */
     const tuningValues frequencyAndBandwidthToKAndN(const double frequency, const double bandwidth) {
       double N = floor(sampleRate / bandwidth);
       const double k = floor(frequency / bandwidth);
