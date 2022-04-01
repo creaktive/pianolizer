@@ -55,6 +55,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
+  if (sampleRate < 8000 || sampleRate > 200000) {
+    cerr << "sampleRate must be between 8000 and 200000 Hz" << endl;
+    return EXIT_FAILURE;
+  }
+
   /*
   cerr << "bufferSize=" << bufferSize << endl;
   cerr << "sampleRate=" << sampleRate << endl;
