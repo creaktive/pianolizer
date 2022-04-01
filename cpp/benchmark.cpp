@@ -9,8 +9,17 @@
 
 using namespace std;
 
-int main() {
-  const unsigned SAMPLE_RATE = 44100;
+int main(int argc, char *argv[]) {
+  unsigned SAMPLE_RATE = 44100;
+  if (argc == 2) {
+    SAMPLE_RATE = atoi(argv[1]);
+    if (SAMPLE_RATE < 8000 || SAMPLE_RATE > 200000) {
+      cerr << "SAMPLE_RATE must be between 8000 and 200000 Hz" << endl;
+      return 1;
+    }
+  }
+  cerr << "# SAMPLE_RATE: " << SAMPLE_RATE << endl;
+
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE));
   const unsigned bufferSize = 128;
   float input[bufferSize];
@@ -27,4 +36,6 @@ int main() {
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<double> elapsed = end - start;
   cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
+
+  return 0;
 }
