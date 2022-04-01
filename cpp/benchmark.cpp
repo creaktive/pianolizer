@@ -10,17 +10,17 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  unsigned SAMPLE_RATE = 44100;
+  unsigned sampleRate = 44100;
   if (argc == 2) {
-    SAMPLE_RATE = atoi(argv[1]);
-    if (SAMPLE_RATE < 8000 || SAMPLE_RATE > 200000) {
-      cerr << "SAMPLE_RATE must be between 8000 and 200000 Hz" << endl;
-      return 1;
+    sampleRate = atoi(argv[1]);
+    if (sampleRate < 8000 || sampleRate > 200000) {
+      cerr << "sampleRate must be between 8000 and 200000 Hz" << endl;
+      return EXIT_FAILURE;
     }
   }
-  cerr << "# SAMPLE_RATE: " << SAMPLE_RATE << endl;
+  cerr << "sampleRate: " << sampleRate << endl;
 
-  auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE));
+  auto sdft = SlidingDFT(make_shared<PianoTuning>(sampleRate));
   const unsigned bufferSize = 128;
   float input[bufferSize];
   const float *output = nullptr;
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   }
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<double> elapsed = end - start;
-  cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
+  cerr << "benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
 
-  return 0;
+  return EXIT_SUCCESS;
 }
