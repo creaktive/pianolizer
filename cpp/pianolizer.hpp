@@ -91,6 +91,7 @@ class RingBuffer {
 class DFTBin {
   private:
     double totalPower = 0.;
+    double r;
     std::complex<double> coeff;
     std::complex<double> dft = std::complex<double>(0., 0.);
 
@@ -119,6 +120,7 @@ class DFTBin {
         throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
 
       const double q = 2. * M_PI * k / N;
+      r = M_SQRT2 / sqrt(N);
       coeff = std::complex<double>(cos(q), sin(q));
     }
 
@@ -152,7 +154,7 @@ class DFTBin {
      * @memberof DFTBin
      */
     double amplitudeSpectrum() {
-      return M_SQRT2 * (sqrt(norm(dft)) / N);
+      return M_SQRT2 * sqrt(norm(dft)) / N;
     }
 
     /**
@@ -163,7 +165,8 @@ class DFTBin {
      */
     double normalizedAmplitudeSpectrum() {
       return totalPower > 0.
-        ? amplitudeSpectrum() / rms()
+        // ? amplitudeSpectrum() / rms()
+        ? r * sqrt(norm(dft) / totalPower) // same as above, but uses less FLOPs
         : 0.;
     }
 

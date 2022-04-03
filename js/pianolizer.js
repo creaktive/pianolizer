@@ -113,16 +113,23 @@ export class Complex {
   }
 
   /**
+   * Complex number norm value.
+   *
+   * @readonly
+   * @memberof Complex
+   */
+  get norm () {
+    return this.re * this.re + this.im * this.im
+  }
+
+  /**
    * Complex number magnitude.
    *
    * @readonly
    * @memberof Complex
    */
   get magnitude () {
-    return Math.sqrt(
-      this.re * this.re +
-      this.im * this.im
-    )
+    return Math.sqrt(this.norm)
   }
 }
 
@@ -229,6 +236,7 @@ export class DFTBin {
     this.k = k
     this.N = N
     const q = 2 * Math.PI * k / N
+    this.r = Math.SQRT2 / Math.sqrt(N)
     this.coeff = new Complex(Math.cos(q), Math.sin(q))
     this.dft = new Complex()
     this.totalPower = 0.0
@@ -273,7 +281,7 @@ export class DFTBin {
    * @memberof DFTBin
    */
   get amplitudeSpectrum () {
-    return Math.SQRT2 * (this.dft.magnitude / this.N)
+    return Math.SQRT2 * this.dft.magnitude / this.N
   }
 
   /**
@@ -285,7 +293,8 @@ export class DFTBin {
    */
   get normalizedAmplitudeSpectrum () {
     return this.totalPower > 0
-      ? this.amplitudeSpectrum / this.rms
+      // ? this.amplitudeSpectrum / this.rms
+      ? this.r * Math.sqrt(this.dft.norm / this.totalPower) // same as above, but uses less FLOPs
       : 0
   }
 
