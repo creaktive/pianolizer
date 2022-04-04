@@ -120,6 +120,7 @@
 
       function draw (currentTimestamp) {
         if (
+          (playToggle.disabled === true || !audioElement.paused) &&
           levels !== undefined &&
           palette !== undefined &&
           currentTimestamp !== lastTimestamp
