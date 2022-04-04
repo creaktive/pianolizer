@@ -11,7 +11,9 @@ using namespace std;
 #define ABS_ERROR 1e-7
 
 TEST(RingBuffer, Tiny) {
-  auto rb = RingBuffer(15);
+  auto rb = RingBuffer(16);
+
+  EXPECT_EQ(rb.size, static_cast<unsigned>(16)) << "RingBuffer size correct";
 
   EXPECT_EQ(rb.read(0), 0) << "initalized to zeroes";
 
@@ -71,6 +73,7 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
   const unsigned N = 1700;
   auto bin = DFTBin(17, N);
   auto rb = RingBuffer(N);
+  EXPECT_EQ(rb.size, static_cast<unsigned>(2048)) << "RingBuffer size correct";
   for (unsigned i = 0; i < 2000; i++) {
     const double currentSample = oscillator(i, type);
     rb.write(currentSample);

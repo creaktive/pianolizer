@@ -153,12 +153,12 @@ export class RingBuffer {
    * @memberof RingBuffer
    */
   constructor (requestedSize) {
-    const bits = Math.ceil(Math.log2(requestedSize + 1)) | 0
+    const bits = Math.ceil(Math.log2(requestedSize)) | 0
     // console.info(`Allocating RingBuffer for ${bits} address bits`)
 
-    const size = 1 << bits
-    this.mask = size - 1
-    this.buffer = new Float32Array(size)
+    this.size = 1 << bits
+    this.mask = this.size - 1
+    this.buffer = new Float32Array(this.size)
     this.index = 0
   }
 

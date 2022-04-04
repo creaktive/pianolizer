@@ -31,14 +31,16 @@ class RingBuffer {
     std::unique_ptr<float[]> buffer;
 
   public:
+    unsigned size;
+
     /**
      * Creates an instance of RingBuffer.
      * @param requestedSize How long the RingBuffer is expected to be.
      * @memberof RingBuffer
      */
     RingBuffer(const unsigned requestedSize) {
-      const unsigned bits = ceil(log2(requestedSize + 1));
-      const unsigned size = static_cast<unsigned>(1) << bits;
+      const unsigned bits = ceil(log2(requestedSize));
+      size = static_cast<unsigned>(1) << bits;
       mask = size - 1;
       buffer = std::make_unique<float[]>(size);
     }
