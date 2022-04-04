@@ -32,7 +32,7 @@ if __name__ == '__main__':
             if not match:
                 raise RuntimeError('bad input')
 
-            levels = [(c / 255) ** 2 for c in bytes.fromhex(match.group())]
+            levels = [c / 255 for c in bytes.fromhex(match.group())]
             leds = list(
                 map(
                     lambda c: Color(c[0], c[1], c[2]),

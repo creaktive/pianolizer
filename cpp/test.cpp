@@ -89,9 +89,9 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
 
 TEST(DFTBin, Oscillators) {
   // reference values from the JS implementation
-  testDFT(SINE, .9999999999999972, .7071067809649849, -3.0102999593614452);
-  testDFT(SAWTOOTH, .7797470999951004, .5774080013883754, -6.93126867978036);
-  testDFT(SQUARE, .9004644293093976, 1., -0.9106687653789797);
+  testDFT(SINE, 1., .7071067809649849, -3.0102999593614452);
+  testDFT(SAWTOOTH, .60800554181617295, .5774080013883754, -6.93126867978036);
+  testDFT(SQUARE, .81083618845149907, 1., -0.9106687653789797);
 }
 
 TEST(MovingAverage, FastAndHeavy) {
@@ -149,11 +149,11 @@ TEST(SlidingDFT, IntegrationBenchmark) {
   cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
 
   map<int,double> test = {
-    { 21, .0039842012338340 },
-    { 33, .7776550054550171 },
-    { 45, .3889078497886658 },
-    { 52, .2582178413867950 },
-    { 57, .1949640512466431 }
+    { 21, .0000176868834387 },
+    { 33, .6048020720481872 },
+    { 45, .1517260670661926 },
+    { 52, .0671683400869369 },
+    { 57, .0384454987943172 }
   };
   for (auto kv : test) {
     EXPECT_NEAR(output[kv.first], test[kv.first], ABS_ERROR) << "sawtooth, key #" + to_string(kv.first);

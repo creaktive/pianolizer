@@ -122,7 +122,7 @@ class DFTBin {
         throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
 
       const double q = 2. * M_PI * k / N;
-      r = M_SQRT2 / sqrt(N);
+      r = 2. / N;
       coeff = std::complex<double>(cos(q), sin(q));
     }
 
@@ -162,13 +162,14 @@ class DFTBin {
     /**
      * Normalized amplitude (always returns a value between 0.0 and 1.0).
      * This is well suited to detect pure tones, and can be used to decode DTMF or FSK modulation.
+     * Depending on the application, you might need sqrt(d.normalizedAmplitudeSpectrum()).
      *
      * @memberof DFTBin
      */
     double normalizedAmplitudeSpectrum() {
       return totalPower > 0.
         // ? amplitudeSpectrum() / rms()
-        ? r * sqrt(norm(dft) / totalPower) // same as above, but uses less FLOPs
+        ? r * norm(dft) / totalPower // same as the square of the above, but uses less FLOPs
         : 0.;
     }
 
@@ -552,9 +553,9 @@ class SlidingDFT {
     /**
      * Process a batch of samples.
      *
-     * @param samples Array with the batch of samples to process.
+     * @param samples Array with the batch of samples to process. Value range is irrelevant (can be from -1.0 to 1.0 or 0 to 255 or whatever, as long as it is consistent).
      * @param [averageWindowInSeconds=0] Adjust the moving average window size.
-     * @return Snapshot of the levels after processing all the samples.
+     * @return Snapshot of the *squared* levels after processing all the samples. Value range is between 0.0 and 1.0. Depending on the application, you might need sqrt() of the level values (for visualization purposes it is actually better as is).
      * @memberof SlidingDFT
      */
     const float* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {

@@ -48,10 +48,9 @@ export class Palette {
 
     const paletteLength = this.palette.length
     for (let key = 0; key < levelsNum; key++) {
-      const level = Math.pow(levels[key], 2)
       const index = this.startOffset + key // start from C
       const rgbArray = this.palette[index % paletteLength]
-        .map(value => Math.round(level * value) | 0)
+        .map(value => Math.round(levels[key] * value) | 0)
       this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
     }
 

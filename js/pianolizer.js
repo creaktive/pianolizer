@@ -236,7 +236,7 @@ export class DFTBin {
     this.k = k
     this.N = N
     const q = 2 * Math.PI * k / N
-    this.r = Math.SQRT2 / Math.sqrt(N)
+    this.r = 2 / N
     this.coeff = new Complex(Math.cos(q), Math.sin(q))
     this.dft = new Complex()
     this.totalPower = 0.0
@@ -287,6 +287,7 @@ export class DFTBin {
   /**
    * Normalized amplitude (always returns a value between 0.0 and 1.0).
    * This is well suited to detect pure tones, and can be used to decode DTMF or FSK modulation.
+   * Depending on the application, you might need Math.sqrt(d.normalizedAmplitudeSpectrum).
    *
    * @readonly
    * @memberof DFTBin
@@ -294,7 +295,7 @@ export class DFTBin {
   get normalizedAmplitudeSpectrum () {
     return this.totalPower > 0
       // ? this.amplitudeSpectrum / this.rms
-      ? this.r * Math.sqrt(this.dft.norm / this.totalPower) // same as above, but uses less FLOPs
+      ? this.r * this.dft.norm / this.totalPower // same as the square of the above, but uses less FLOPs
       : 0
   }
 
@@ -650,9 +651,9 @@ export class SlidingDFT {
   /**
    * Process a batch of samples.
    *
-   * @param {Float32Array} samples Array with the batch of samples to process.
+   * @param {Float32Array} samples Array with the batch of samples to process. Value range is irrelevant (can be from -1.0 to 1.0 or 0 to 255 or whatever, as long as it is consistent).
    * @param {Number} [averageWindowInSeconds=0] Adjust the moving average window size.
-   * @return {Float32Array} Snapshot of the levels after processing all the samples.
+   * @return {Float32Array} Snapshot of the *squared* levels after processing all the samples. Value range is between 0.0 and 1.0. Depending on the application, you might need Math.sqrt() of the level values (for visualization purposes it is actually better as is).
    * @memberof SlidingDFT
    */
   process (samples, averageWindowInSeconds = 0) {

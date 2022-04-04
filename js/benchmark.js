@@ -24,14 +24,14 @@ const message = '# benchmark: ' + Math.round(i / elapsed) + ' samples per second
 print(message)
 
 const test = {
-  21: 0.0039842012338340,
-  33: 0.7776550054550171,
-  45: 0.3889078497886658,
-  52: 0.2582178413867950,
-  57: 0.1949640512466431
+  21: 0.0000176868034031,
+  33: 0.6048160195350647,
+  45: 0.1517304629087448,
+  52: 0.0671678557991981,
+  57: 0.0384459346532821
 }
 for (const key in test) {
-  if (Math.abs(output[key] - test[key]) > 1e-4) {
+  if (Math.abs(output[key] - test[key]) > 1e-7) {
     throw new Error('BAD OUTPUT FOR KEY ' + key)
   }
 }

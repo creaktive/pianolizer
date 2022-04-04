@@ -59,7 +59,7 @@ function testMovingAverage () {
 }
 
 testDFT(waveform.SINE, 999999)
-testDFT(waveform.SAWTOOTH, 779747)
-testDFT(waveform.SQUARE, 900464)
+testDFT(waveform.SAWTOOTH, 608005)
+testDFT(waveform.SQUARE, 810836)
 
 testMovingAverage()
