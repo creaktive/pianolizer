@@ -23,7 +23,7 @@
 export default class Pianolizer {
   /**
    * Creates an instance of Pianolizer.
-   * @param {Number} sampleRate in Hz
+   * @param {Number} sampleRate in Hz. This directly influences the memory usage: 44100Hz or 48000Hz will both allocate a buffer of 64KB (provided 32-bit floats are used).
    * @memberof Pianolizer
    */
   constructor (sampleRate) {
@@ -554,7 +554,7 @@ export class Tuning {
 export class PianoTuning extends Tuning {
   /**
    * Creates an instance of PianoTuning.
-   * @param {Number} sampleRate Self-explanatory.
+   * @param {Number} sampleRate This directly influences the memory usage: 44100Hz or 48000Hz will both allocate a buffer of 64KB (provided 32-bit floats are used).
    * @param {Number} [keysNum=61] Most pianos will have 61 keys.
    * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
    * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.

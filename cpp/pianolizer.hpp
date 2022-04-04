@@ -445,7 +445,7 @@ class PianoTuning : public Tuning {
   public:
     /**
      * Creates an instance of PianoTuning.
-     * @param sampleRate Self-explanatory.
+     * @param sampleRate This directly influences the memory usage: 44100Hz or 48000Hz will both allocate a buffer of 64KB (provided 32-bit floats are used).
      * @param [keysNum=61] Most pianos will have 61 keys.
      * @param [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
      * @param [pitchFork=440.0] A4 is 440 Hz by default.
