@@ -26,6 +26,13 @@ void help() {
   exit(EXIT_SUCCESS);
 }
 
+// C++17's <algorithm> header has this already
+number clamp(number d, number min, number max);
+number clamp(number d, number min, number max) {
+  const number t = d < min ? min : d;
+  return t > max ? max : t;
+}
+
 int main(int argc, char *argv[]) {
   size_t bufferSize = 256; // known to work on RPi3b
   int sampleRate = 44100;
@@ -87,9 +94,10 @@ int main(int argc, char *argv[]) {
         throw runtime_error("sdft.process() returned nothing");
 
       stringstream stream;
-      for (unsigned i = 0; i < sdft.bands; i++)
-        stream << setfill('0') << setw(2) << hex
-          << static_cast<unsigned>(std::round(output[i] * 255.));
+      for (unsigned i = 0; i < sdft.bands; i++) {
+        unsigned value = static_cast<unsigned>(std::round(255. * clamp(output[i], 0., 1.)));
+        stream << setfill('0') << setw(2) << hex << value;
+      }
       cout << stream.str() << endl;
     }
   } catch (exception const& e) {
