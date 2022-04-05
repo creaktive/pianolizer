@@ -47,7 +47,7 @@ class RingBuffer {
      * @memberof RingBuffer
      */
     RingBuffer(const unsigned requestedSize) {
-      const unsigned bits = ceil(log2(requestedSize));
+      const unsigned bits = std::ceil(std::log2(requestedSize));
       size = static_cast<unsigned>(1) << bits;
       mask = size - 1;
       buffer = std::make_unique<number[]>(size);
@@ -131,7 +131,7 @@ class DFTBin {
 
       const number q = 2. * M_PI * k / N;
       r = 2. / N;
-      coeff = std::complex<number>(cos(q), sin(q));
+      coeff = std::complex<number>(std::cos(q), std::sin(q));
     }
 
     /**
@@ -154,7 +154,7 @@ class DFTBin {
      * @memberof DFTBin
      */
     number rms() {
-      return sqrt(totalPower / N);
+      return std::sqrt(totalPower / N);
     }
 
     /**
@@ -164,7 +164,7 @@ class DFTBin {
      * @memberof DFTBin
      */
     number amplitudeSpectrum() {
-      return M_SQRT2 * sqrt(norm(dft)) / N;
+      return M_SQRT2 * std::sqrt(norm(dft)) / N;
     }
 
     /**
@@ -188,7 +188,7 @@ class DFTBin {
      * @memberof DFTBin
      */
     number logarithmicUnitDecibels() {
-      return 20. * log10(amplitudeSpectrum() / referenceAmplitude);
+      return 20. * std::log10(amplitudeSpectrum() / referenceAmplitude);
     }
 };
 
@@ -232,7 +232,7 @@ class MovingAverage {
      * @memberof MovingAverage
      */
     void averageWindowInSeconds(const number value) {
-      targetAverageWindow = round(value * sampleRate);
+      targetAverageWindow = std::round(value * sampleRate);
       if (averageWindow == -1)
         averageWindow = targetAverageWindow;
     }
@@ -405,14 +405,14 @@ class Tuning {
      * @memberof Tuning
      */
     const tuningValues frequencyAndBandwidthToKAndN(const number frequency, const number bandwidth) {
-      number N = floor(sampleRate / bandwidth);
-      const number k = floor(frequency / bandwidth);
+      number N = std::floor(sampleRate / bandwidth);
+      const number k = std::floor(frequency / bandwidth);
 
       // find such N that (sampleRate * (k / N)) is the closest to freq
       // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
-      number delta = abs(sampleRate * (k / N) - frequency);
+      number delta = std::fabs(sampleRate * (k / N) - frequency);
       for (unsigned i = N - 1; ; i--) {
-        const number tmpDelta = abs(sampleRate * (k / i) - frequency);
+        const number tmpDelta = std::fabs(sampleRate * (k / i) - frequency);
         if (tmpDelta < delta) {
           delta = tmpDelta;
           N = i;
@@ -472,7 +472,7 @@ class PianoTuning : public Tuning {
      * @memberof PianoTuning
      */
     number keyToFreq(const number key) {
-      return pitchFork * pow(2., (key - referenceKey) / 12.);
+      return pitchFork * std::pow(2., (key - referenceKey) / 12.);
     }
 
     /**
@@ -535,7 +535,7 @@ class SlidingDFT {
       unsigned maxN = 0;
       for (auto band : tuning->mapping()) {
         bins.push_back(std::make_shared<DFTBin>(band.k, band.N));
-        maxN = maxN > band.N ? maxN : band.N;
+        maxN = std::max(maxN, band.N);
       }
 
       ringBuffer = std::make_unique<RingBuffer>(maxN);
@@ -545,7 +545,7 @@ class SlidingDFT {
         movingAverage = std::make_shared<HeavyMovingAverage>(
           bands,
           sampleRate,
-          round(sampleRate * maxAverageWindowInSeconds)
+          std::round(sampleRate * maxAverageWindowInSeconds)
         );
       } else if (maxAverageWindowInSeconds < 0.) {
         movingAverage = std::make_shared<FastMovingAverage>(

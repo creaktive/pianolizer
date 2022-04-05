@@ -56,7 +56,7 @@ number oscillator(unsigned s, unsigned type);
 number oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
-      return sin(M_PI / 50. * s);
+      return std::sin(M_PI / 50. * s);
     case SAWTOOTH:
       return ((s % 100) / 50.) - 1.;
     case SQUARE:
@@ -162,7 +162,7 @@ TEST(SlidingDFT, IntegrationBenchmark) {
   }
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<number> elapsed = end - start;
-  cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
+  cerr << "# benchmark: " << static_cast<int>(std::round(i / elapsed.count())) << " samples per second" << endl;
 
   map<int,number> test = {
     { 21, .0000176867451955 },

@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
       stringstream stream;
       for (unsigned i = 0; i < sdft.bands; i++)
         stream << setfill('0') << setw(2) << hex
-          << static_cast<unsigned>(round(output[i] * 255.));
+          << static_cast<unsigned>(std::round(output[i] * 255.));
       cout << stream.str() << endl;
     }
   } catch (exception const& e) {
