@@ -8,6 +8,8 @@
 
 using namespace std;
 
+#define ABS_ERROR 1e-7
+
 TEST(RingBuffer, Tiny) {
   auto rb = RingBuffer(16);
 
@@ -80,9 +82,9 @@ void testDFT(unsigned type, number expNAS, number expRMS, number expLog) {
   }
 
   const string prefix = "oscillator #" + to_string(type) + "; ";
-  EXPECT_FLOAT_EQ(expNAS, bin.normalizedAmplitudeSpectrum()) << prefix + "normalized amplitude spectrum";
-  EXPECT_FLOAT_EQ(expRMS, bin.rms()) << prefix + "RMS";
-  EXPECT_FLOAT_EQ(expLog, bin.logarithmicUnitDecibels()) << prefix + "log dB";
+  EXPECT_NEAR(expNAS, bin.normalizedAmplitudeSpectrum(), ABS_ERROR) << prefix + "normalized amplitude spectrum";
+  EXPECT_NEAR(expRMS, bin.rms(), ABS_ERROR) << prefix + "RMS";
+  EXPECT_NEAR(expLog, bin.logarithmicUnitDecibels(), ABS_ERROR) << prefix + "log dB";
 }
 
 TEST(DFTBin, Oscillators) {
@@ -120,11 +122,11 @@ TEST(MovingAverage, FastAndHeavy) {
     hma->update(sample);
   }
 
-  EXPECT_FLOAT_EQ(fma->read(0), -.024506031) << "sine fast average";
-  EXPECT_FLOAT_EQ(fma->read(1), .01886483060529713) << "sawtooth fast average";
+  EXPECT_NEAR(fma->read(0), -.024506002326671227, ABS_ERROR) << "sine fast average";
+  EXPECT_NEAR(fma->read(1), .01886483060529713, ABS_ERROR) << "sawtooth fast average";
 
-  EXPECT_FLOAT_EQ(hma->read(0), -.06714661267338967) << "sine heavy average";
-  EXPECT_FLOAT_EQ(hma->read(1), .04485260926676986) << "sawtooth heavy average";
+  EXPECT_NEAR(hma->read(0), -.06714661267338967, ABS_ERROR) << "sine heavy average";
+  EXPECT_NEAR(hma->read(1), .04485260926676986, ABS_ERROR) << "sawtooth heavy average";
 }
 
 TEST(PianoTuning, DFTValues) {
@@ -169,7 +171,7 @@ TEST(SlidingDFT, IntegrationBenchmark) {
     { 57, .0384436845779418 }
   };
   for (auto kv : test) {
-    EXPECT_FLOAT_EQ(output[kv.first], test[kv.first]) << "sawtooth, key #" + to_string(kv.first);
+    EXPECT_NEAR(output[kv.first], test[kv.first], ABS_ERROR) << "sawtooth, key #" + to_string(kv.first);
     // char buf[20]; snprintf(buf, 20, "%.16f", output[kv.first]); cerr << buf << endl;
   }
 }
