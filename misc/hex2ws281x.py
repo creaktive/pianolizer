@@ -29,22 +29,22 @@ if __name__ == '__main__':
     try:
         for line in fileinput.input():
             match = validator.match(line)
-            if not match:
-                raise RuntimeError('bad input')
-
-            levels = [c / 255 for c in bytes.fromhex(match.group())]
-            leds = list(
-                map(
-                    lambda c: Color(c[0], c[1], c[2]),
-                    palette.getKeyColors(levels)
+            if match:
+                levels = [c / 255 for c in bytes.fromhex(match.group())]
+                leds = list(
+                    map(
+                        lambda c: Color(c[0], c[1], c[2]),
+                        palette.getKeyColors(levels)
+                    )
                 )
-            )
 
-            for key in range(len(leds)):
-                color = leds[key]
-                for i in range(LEDS_PER_KEY):
-                    strip.setPixelColor(LED_OFFSET + key * LEDS_PER_KEY + i, color)
-            strip.show()
+                for key in range(len(leds)):
+                    color = leds[key]
+                    for i in range(LEDS_PER_KEY):
+                        strip.setPixelColor(LED_OFFSET + key * LEDS_PER_KEY + i, color)
+                strip.show()
+            else:
+                print(f'bad input: {line.strip()}')
     except KeyboardInterrupt:
         print('')
     finally:
