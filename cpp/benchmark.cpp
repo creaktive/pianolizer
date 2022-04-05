@@ -22,8 +22,8 @@ int main(int argc, char *argv[]) {
 
   auto sdft = SlidingDFT(make_shared<PianoTuning>(sampleRate));
   const unsigned bufferSize = 128;
-  float input[bufferSize];
-  const float *output = nullptr;
+  number input[bufferSize];
+  const number *output = nullptr;
 
   auto start = chrono::high_resolution_clock::now();
   unsigned i;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
       output = sdft.process(input, bufferSize);
   }
   auto end = chrono::high_resolution_clock::now();
-  chrono::duration<double> elapsed = end - start;
+  chrono::duration<number> elapsed = end - start;
   cerr << "benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
 
   return EXIT_SUCCESS;

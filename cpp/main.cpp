@@ -29,8 +29,8 @@ void help() {
 int main(int argc, char *argv[]) {
   size_t bufferSize = 256; // known to work on RPi3b
   int sampleRate = 44100;
-  float pitchFork = 440.;
-  float averageWindow = 0.04;
+  number pitchFork = 440.;
+  number averageWindow = 0.04;
 
   for (;;) {
     switch (getopt(argc, argv, "b:s:p:a:h")) {
@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
       throw runtime_error(strerror(errno));
 
     size_t len;
-    auto input = make_unique<float[]>(bufferSize);
-    const float *output = nullptr;
+    auto input = make_unique<number[]>(bufferSize);
+    const number *output = nullptr;
 
     while ((len = fread(input.get(), sizeof(input[0]), bufferSize, stdin)) > 0) {
       if (ferror(stdin) && !feof(stdin))

@@ -51,8 +51,8 @@ const unsigned SQUARE = 2;
 const unsigned NOISE = 3;
 
 // 441Hz wave period is 100 samples when the sample rate is 44100Hz
-float oscillator(unsigned s, unsigned type);
-float oscillator(unsigned s, unsigned type = SINE) {
+number oscillator(unsigned s, unsigned type);
+number oscillator(unsigned s, unsigned type = SINE) {
   switch (type) {
     case SINE:
       return sin(M_PI / 50. * s);
@@ -68,16 +68,16 @@ float oscillator(unsigned s, unsigned type = SINE) {
   return 0.;
 }
 
-void testDFT(unsigned type, double expNAS, double expRMS, double expLog);
-void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
+void testDFT(unsigned type, number expNAS, number expRMS, number expLog);
+void testDFT(unsigned type, number expNAS, number expRMS, number expLog) {
   const unsigned N = 1700;
   auto bin = DFTBin(17, N);
   auto rb = RingBuffer(N);
   EXPECT_EQ(rb.size, static_cast<unsigned>(2048)) << "RingBuffer size correct";
   for (unsigned i = 0; i < 2000; i++) {
-    const double currentSample = oscillator(i, type);
+    const number currentSample = oscillator(i, type);
     rb.write(currentSample);
-    const double previousSample = rb.read(N);
+    const number previousSample = rb.read(N);
     bin.update(previousSample, currentSample);
   }
 
@@ -89,9 +89,24 @@ void testDFT(unsigned type, double expNAS, double expRMS, double expLog) {
 
 TEST(DFTBin, Oscillators) {
   // reference values from the JS implementation
-  testDFT(SINE, 1., .7071067809649849, -3.0102999593614452);
-  testDFT(SAWTOOTH, .60800554181617295, .5774080013883754, -6.93126867978036);
-  testDFT(SQUARE, .81083618845149907, 1., -0.9106687653789797);
+  testDFT(
+    SINE,
+    .99999994039535522,
+    .70710676908493042,
+    -3.0103001594543457
+  );
+  testDFT(
+    SAWTOOTH,
+    .60800313949584961,
+    .57740825414657593,
+    -6.931281566619873
+  );
+  testDFT(
+    SQUARE,
+    .81083619594573975,
+    .99999988079071045,
+    -.91066890954971313
+  );
 }
 
 TEST(MovingAverage, FastAndHeavy) {
@@ -102,7 +117,7 @@ TEST(MovingAverage, FastAndHeavy) {
   hma->averageWindowInSeconds(0.01);
 
   for (unsigned i = 0; i < 500; i++) {
-    vector<float> sample = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
+    vector<number> sample = { oscillator(i, SINE), oscillator(i, SAWTOOTH) };
     fma->update(sample);
     hma->update(sample);
   }
@@ -133,8 +148,8 @@ TEST(PianoTuning, DFTValues) {
 TEST(SlidingDFT, IntegrationBenchmark) {
   auto sdft = SlidingDFT(make_shared<PianoTuning>(SAMPLE_RATE), -1.);
   const unsigned bufferSize = 128;
-  float input[bufferSize];
-  const float *output = nullptr;
+  number input[bufferSize];
+  const number *output = nullptr;
 
   auto start = chrono::high_resolution_clock::now();
   unsigned i;
@@ -145,15 +160,15 @@ TEST(SlidingDFT, IntegrationBenchmark) {
       output = sdft.process(input, bufferSize, .05);
   }
   auto end = chrono::high_resolution_clock::now();
-  chrono::duration<double> elapsed = end - start;
+  chrono::duration<number> elapsed = end - start;
   cerr << "# benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
 
-  map<int,double> test = {
-    { 21, .0000176868834387 },
-    { 33, .6048020720481872 },
-    { 45, .1517260670661926 },
-    { 52, .0671683400869369 },
-    { 57, .0384454987943172 }
+  map<int,number> test = {
+    { 21, .0000176867451955 },
+    { 33, .6046842336654663 },
+    { 45, .1517202705144882 },
+    { 52, .0671638175845146 },
+    { 57, .0384436845779418 }
   };
   for (auto kv : test) {
     EXPECT_NEAR(output[kv.first], test[kv.first], ABS_ERROR) << "sawtooth, key #" + to_string(kv.first);

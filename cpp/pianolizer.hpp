@@ -12,6 +12,12 @@
 #include <memory>
 #include <vector>
 
+#ifdef ENABLE_DOUBLE_FLOAT
+typedef double number;
+#else
+typedef float number;
+#endif
+
 /**
  * Reasonably fast Ring Buffer implementation.
  * Caveat: the size of the allocated memory is always a power of two!
@@ -28,7 +34,7 @@ class RingBuffer {
   private:
     unsigned mask;
     unsigned index = 0;
-    std::unique_ptr<float[]> buffer;
+    std::unique_ptr<number[]> buffer;
 
   public:
     unsigned size;
@@ -42,7 +48,7 @@ class RingBuffer {
       const unsigned bits = ceil(log2(requestedSize));
       size = static_cast<unsigned>(1) << bits;
       mask = size - 1;
-      buffer = std::make_unique<float[]>(size);
+      buffer = std::make_unique<number[]>(size);
     }
 
     /**
@@ -51,7 +57,7 @@ class RingBuffer {
      * @param value Value to be stored.
      * @memberof RingBuffer
      */
-    void write(const float value) {
+    void write(const number value) {
       index &= mask;
       buffer[index++] = value;
     }
@@ -63,7 +69,7 @@ class RingBuffer {
      * @return The value at the position.
      * @memberof RingBuffer
      */
-    float read(const unsigned position) {
+    number read(const unsigned position) {
       return buffer[(index + (~position)) & mask];
     }
 };
@@ -78,10 +84,10 @@ class RingBuffer {
  * auto bin = DFTBin(17, N);
  * auto rb = RingBuffer(N);
  * for (unsigned i = 0; i < 2000; i++) {
- *   const double currentSample = sin(M_PI / 50 * i); // sine wave oscillator
+ *   const number currentSample = sin(M_PI / 50 * i); // sine wave oscillator
  *   rb.write(currentSample);
  *   // previousSample should be taken N samples before currentSample is taken
- *   const double previousSample = rb.read(N);
+ *   const number previousSample = rb.read(N);
  *   bin.update(previousSample, currentSample);
  * }
 
@@ -92,14 +98,14 @@ class RingBuffer {
  */
 class DFTBin {
   private:
-    double totalPower = 0.;
-    double r;
-    std::complex<double> coeff;
-    std::complex<double> dft = std::complex<double>(0., 0.);
+    number totalPower = 0.;
+    number r;
+    std::complex<number> coeff;
+    std::complex<number> dft = std::complex<number>(0., 0.);
 
   public:
-    double k, N;
-    double referenceAmplitude = 1.; // 0 dB level
+    number k, N;
+    number referenceAmplitude = 1.; // 0 dB level
 
     /**
      * Creates an instance of DFTBin.
@@ -121,9 +127,9 @@ class DFTBin {
       else if (N == 0)
         throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
 
-      const double q = 2. * M_PI * k / N;
+      const number q = 2. * M_PI * k / N;
       r = 2. / N;
-      coeff = std::complex<double>(cos(q), sin(q));
+      coeff = std::complex<number>(cos(q), sin(q));
     }
 
     /**
@@ -133,11 +139,11 @@ class DFTBin {
      * @param currentSample The latest sample.
      * @memberof DFTBin
      */
-    void update(const double previousSample, const double currentSample) {
+    void update(const number previousSample, const number currentSample) {
       totalPower += currentSample * currentSample;
       totalPower -= previousSample * previousSample;
 
-      dft = coeff * (dft - std::complex<double>(previousSample, 0.) + std::complex<double>(currentSample, 0.));
+      dft = coeff * (dft - std::complex<number>(previousSample, 0.) + std::complex<number>(currentSample, 0.));
     }
 
     /**
@@ -145,7 +151,7 @@ class DFTBin {
      *
      * @memberof DFTBin
      */
-    double rms() {
+    number rms() {
       return sqrt(totalPower / N);
     }
 
@@ -155,7 +161,7 @@ class DFTBin {
      * @see https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf
      * @memberof DFTBin
      */
-    double amplitudeSpectrum() {
+    number amplitudeSpectrum() {
       return M_SQRT2 * sqrt(norm(dft)) / N;
     }
 
@@ -166,7 +172,7 @@ class DFTBin {
      *
      * @memberof DFTBin
      */
-    double normalizedAmplitudeSpectrum() {
+    number normalizedAmplitudeSpectrum() {
       return totalPower > 0.
         // ? amplitudeSpectrum() / rms()
         ? r * norm(dft) / totalPower // same as the square of the above, but uses less FLOPs
@@ -179,7 +185,7 @@ class DFTBin {
      *
      * @memberof DFTBin
      */
-    double logarithmicUnitDecibels() {
+    number logarithmicUnitDecibels() {
       return 20. * log10(amplitudeSpectrum() / referenceAmplitude);
     }
 };
@@ -194,7 +200,7 @@ class MovingAverage {
     unsigned channels, sampleRate;
     int averageWindow = -1;
     int targetAverageWindow;
-    std::unique_ptr<float[]> sum;
+    std::unique_ptr<number[]> sum;
 
     /**
      * Creates an instance of MovingAverage.
@@ -204,7 +210,7 @@ class MovingAverage {
      */
     MovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
-      sum = std::make_unique<float[]>(channels);
+      sum = std::make_unique<number[]>(channels);
     }
 
     virtual ~MovingAverage() = default;
@@ -214,8 +220,8 @@ class MovingAverage {
      *
      * @memberof MovingAverage
      */
-    float averageWindowInSeconds() {
-      return averageWindow / static_cast<float>(sampleRate);
+    number averageWindowInSeconds() {
+      return averageWindow / static_cast<number>(sampleRate);
     }
 
     /**
@@ -223,7 +229,7 @@ class MovingAverage {
      *
      * @memberof MovingAverage
      */
-    void averageWindowInSeconds(const float value) {
+    void averageWindowInSeconds(const number value) {
       targetAverageWindow = round(value * sampleRate);
       if (averageWindow == -1)
         averageWindow = targetAverageWindow;
@@ -248,11 +254,11 @@ class MovingAverage {
      * @return Current moving average value for the specified channel.
      * @memberof MovingAverage
      */
-    float read(const unsigned n) {
+    number read(const unsigned n) {
       return sum[n] / averageWindow;
     }
 
-    virtual void update(const std::vector<float>& levels) = 0;
+    virtual void update(const std::vector<number>& levels) = 0;
 };
 
 /**
@@ -289,10 +295,10 @@ class FastMovingAverage : public MovingAverage {
      * @param levels Array of level values, one per channel.
      * @memberof FastMovingAverage
      */
-    void update(const std::vector<float>& levels) {
+    void update(const std::vector<number>& levels) {
       updateAverageWindow();
       for (unsigned n = 0; n < channels; n++) {
-        const float currentSum = sum[n];
+        const number currentSum = sum[n];
         sum[n] = averageWindow
           ? currentSum + levels[n] - currentSum / averageWindow
           : levels[n];
@@ -348,9 +354,9 @@ class HeavyMovingAverage : public MovingAverage {
      * @param levels Array of level values, one per channel.
      * @memberof HeavyMovingAverage
      */
-    void update(const std::vector<float>& levels) {
+    void update(const std::vector<number>& levels) {
       for (unsigned n = 0; n < channels; n++) {
-        const float value = levels[n];
+        const number value = levels[n];
         history[n]->write(value);
         sum[n] += value;
 
@@ -396,15 +402,15 @@ class Tuning {
      * @return tuningValues struct containing k & N that best approximate for the given frequency & bandwidth.
      * @memberof Tuning
      */
-    const tuningValues frequencyAndBandwidthToKAndN(const double frequency, const double bandwidth) {
-      double N = floor(sampleRate / bandwidth);
-      const double k = floor(frequency / bandwidth);
+    const tuningValues frequencyAndBandwidthToKAndN(const number frequency, const number bandwidth) {
+      number N = floor(sampleRate / bandwidth);
+      const number k = floor(frequency / bandwidth);
 
       // find such N that (sampleRate * (k / N)) is the closest to freq
       // (sacrifices the bandwidth precision; bands will be *wider*, and, therefore, will overlap a bit!)
-      double delta = abs(sampleRate * (k / N) - frequency);
+      number delta = abs(sampleRate * (k / N) - frequency);
       for (unsigned i = N - 1; ; i--) {
-        const double tmpDelta = abs(sampleRate * (k / i) - frequency);
+        const number tmpDelta = abs(sampleRate * (k / i) - frequency);
         if (tmpDelta < delta) {
           delta = tmpDelta;
           N = i;
@@ -440,7 +446,7 @@ class Tuning {
 class PianoTuning : public Tuning {
   private:
     unsigned referenceKey;
-    double pitchFork;
+    number pitchFork;
 
   public:
     /**
@@ -451,7 +457,7 @@ class PianoTuning : public Tuning {
      * @param [pitchFork=440.0] A4 is 440 Hz by default.
      * @memberof PianoTuning
      */
-    PianoTuning(const unsigned sampleRate_, const double pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33)
+    PianoTuning(const unsigned sampleRate_, const number pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33)
       : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_)
     {}
 
@@ -463,7 +469,7 @@ class PianoTuning : public Tuning {
      * @return frequency
      * @memberof PianoTuning
      */
-    double keyToFreq(const double key) {
+    number keyToFreq(const number key) {
       return pitchFork * pow(2., (key - referenceKey) / 12.);
     }
 
@@ -476,8 +482,8 @@ class PianoTuning : public Tuning {
       std::vector<tuningValues> output;
       output.reserve(bands);
       for (unsigned key = 0; key < bands; key++) {
-        const double frequency = keyToFreq(key);
-        const double bandwidth = 2. * (keyToFreq(key + .5) - frequency);
+        const number frequency = keyToFreq(key);
+        const number bandwidth = 2. * (keyToFreq(key + .5) - frequency);
         output.push_back(frequencyAndBandwidthToKAndN(frequency, bandwidth));
       }
       return output;
@@ -494,16 +500,16 @@ class PianoTuning : public Tuning {
  * auto tuning = PianoTuning(44100);
  * // no moving average
  * auto slidingDFT = SlidingDFT(tuning);
- * auto input = make_unique<float[]>(128);
+ * auto input = make_unique<number[]>(128);
  * // fill the input buffer with the samples
- * float *output = nullptr;
+ * number *output = nullptr;
  * // just process; no moving average
  * output = slidingDFT.process(input);
  */
 class SlidingDFT {
   private:
     std::vector<std::shared_ptr<DFTBin>> bins;
-    std::vector<float> levels;
+    std::vector<number> levels;
     std::unique_ptr<RingBuffer> ringBuffer;
 #ifndef DISABLE_MOVING_AVERAGE
     std::shared_ptr<MovingAverage> movingAverage;
@@ -518,7 +524,7 @@ class SlidingDFT {
      * @param [maxAverageWindowInSeconds=0] Positive values are passed to MovingAverage implementation; negative values trigger FastMovingAverage implementation. Zero disables averaging.
      * @memberof SlidingDFT
      */
-    SlidingDFT(const std::shared_ptr<Tuning> tuning, const double maxAverageWindowInSeconds = 0.) {
+    SlidingDFT(const std::shared_ptr<Tuning> tuning, const number maxAverageWindowInSeconds = 0.) {
       sampleRate = tuning->sampleRate;
       bands = tuning->bands;
       bins.reserve(bands);
@@ -558,7 +564,7 @@ class SlidingDFT {
      * @return Snapshot of the *squared* levels after processing all the samples. Value range is between 0.0 and 1.0. Depending on the application, you might need sqrt() of the level values (for visualization purposes it is actually better as is).
      * @memberof SlidingDFT
      */
-    const float* process(const float samples[], const size_t samplesLength, const double averageWindowInSeconds = 0.) {
+    const number* process(const number samples[], const size_t samplesLength, const number averageWindowInSeconds = 0.) {
 #ifndef DISABLE_MOVING_AVERAGE
       if (movingAverage != nullptr)
         movingAverage->averageWindowInSeconds(averageWindowInSeconds);
@@ -568,12 +574,12 @@ class SlidingDFT {
 
       // store in the ring buffer & process
       for (unsigned i = 0; i < samplesLength; i++) {
-        const float currentSample = samples[i];
+        const number currentSample = samples[i];
         ringBuffer->write(currentSample);
 
         unsigned band = 0;
         for (auto bin : bins) {
-          const float previousSample = ringBuffer->read(bin->N);
+          const number previousSample = ringBuffer->read(bin->N);
           bin->update(previousSample, currentSample);
           levels[band] = bin->normalizedAmplitudeSpectrum();
           // levels[band] = bin->logarithmicUnitDecibels();
