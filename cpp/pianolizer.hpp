@@ -12,8 +12,10 @@
 #include <memory>
 #include <vector>
 
-#ifndef number
-#define number float
+#ifdef ENABLE_DOUBLE_FLOAT
+typedef double number;
+#else
+typedef float number;
 #endif
 
 /**

@@ -17,7 +17,7 @@ clean:
 	@rm -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
 
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
-	@emcc $(CFLAGS) \
+	@emcc $(CFLAGS) $(DEFS) \
 		-O3 \
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
@@ -29,7 +29,7 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 		cpp/pianolizer.cpp
 
 test: cpp/test.cpp cpp/pianolizer.hpp
-	@g++ $(CFLAGS) \
+	@g++ $(CFLAGS) $(DEFS) \
 		-Ofast \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp \
@@ -37,7 +37,7 @@ test: cpp/test.cpp cpp/pianolizer.hpp
 	@$(TEST_BINARY)
 
 pianolizer: cpp/main.cpp cpp/pianolizer.hpp
-	@g++ $(CFLAGS) \
+	@g++ $(CFLAGS) $(DEFS) \
 		-Ofast \
 		-o $(NATIVE_BINARY) \
 		cpp/main.cpp
