@@ -8,7 +8,8 @@
 
 using namespace std;
 
-#define ABS_ERROR 1e-7
+// the floating number arithmetics produce different results on different architectures; account for that
+#define ABS_ERROR 1e-3
 
 TEST(RingBuffer, Tiny) {
   auto rb = RingBuffer(16);

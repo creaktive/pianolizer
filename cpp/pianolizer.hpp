@@ -12,6 +12,8 @@
 #include <memory>
 #include <vector>
 
+// 32-bit float is faster, even on a 64-bit architectures!
+// Also, enabling 64-bit float will break lots of stuff, including tests.
 #ifdef ENABLE_DOUBLE_FLOAT
 typedef double number;
 #else
