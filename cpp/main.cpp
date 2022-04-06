@@ -27,17 +27,17 @@ void help() {
 }
 
 // C++17's <algorithm> header has this already
-number clamp(number d, number min, number max);
-number clamp(number d, number min, number max) {
-  const number t = d < min ? min : d;
+double clamp(double d, double min, double max);
+double clamp(double d, double min, double max) {
+  const double t = d < min ? min : d;
   return t > max ? max : t;
 }
 
 int main(int argc, char *argv[]) {
   size_t bufferSize = 256; // known to work on RPi3b
   int sampleRate = 44100;
-  number pitchFork = 440.;
-  number averageWindow = 0.04;
+  float pitchFork = 440.;
+  float averageWindow = 0.04;
 
   for (;;) {
     switch (getopt(argc, argv, "b:s:p:a:h")) {
@@ -83,8 +83,8 @@ int main(int argc, char *argv[]) {
       throw runtime_error(strerror(errno));
 
     size_t len;
-    auto input = make_unique<number[]>(bufferSize);
-    const number *output = nullptr;
+    auto input = make_unique<float[]>(bufferSize);
+    const float *output = nullptr;
 
     while ((len = fread(input.get(), sizeof(input[0]), bufferSize, stdin)) > 0) {
       if (ferror(stdin) && !feof(stdin))
