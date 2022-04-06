@@ -27,7 +27,7 @@ cpupower frequency-set -g performance
 sleep 2
 
 # a reasonable microphone setting for seeed-voicecard
-amixer sset 'ADC PCM' -- '-18dB'
+amixer sset 'ADC PCM' 100%
 
 # start pianolizer
 SAMPLE_RATE=48000
