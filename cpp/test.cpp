@@ -9,7 +9,7 @@
 using namespace std;
 
 // the floating number arithmetics produce different results on different architectures; account for that
-#define ABS_ERROR 1e-3
+#define ABS_ERROR 1e-4
 
 TEST(RingBuffer, Tiny) {
   auto rb = RingBuffer(16);
@@ -164,7 +164,7 @@ TEST(SlidingDFT, IntegrationBenchmark) {
   chrono::duration<double> elapsed = end - start;
   cerr << "# benchmark: " << static_cast<int>(std::round(i / elapsed.count())) << " samples per second" << endl;
 
-  map<int,double> test = {
+  map<int,float> test = {
     { 21, .0000176868834387 },
     { 33, .6048020720481872 },
     { 45, .1517260670661926 },
