@@ -16,6 +16,7 @@ all: $(WASM_TARGET) pianolizer
 clean:
 	@rm -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
 
+emscripten: $(WASM_TARGET)
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 	@emcc $(CFLAGS) $(DEFS) \
 		-O3 \

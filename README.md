@@ -5,6 +5,38 @@
 - [Pianolizer app](https://sysd.org/pianolizer/) - runs directly in the browser. Also, mobile browser. Chrome is recommended for the best experience.
 - [Algorithm benchmark](https://sysd.org/pianolizer/benchmark.html) - test the speed of the core algorithm, in the browser. WASM results closely match what is expected from the native binary performance, on the same machine. 44100 samples per second is enough for realtime performance.
 
+## Building
+
+To compile only to the native binary (as a CLI utility):
+
+```
+make pianolizer
+```
+
+To test the [C++ implementation](cpp/pianolizer.hpp) (depends on [GoogleTest](https://github.com/google/googletest/)):
+
+```
+make test
+```
+
+To compile only to [WebAssembly](https://webassembly.org/):
+
+```
+make emscripten
+```
+
+To compile to both the native binary _and_ WebAssembly:
+
+```
+make
+```
+
+To delete all the compiled files:
+
+```
+make clean
+```
+
 ## References
 
 - [Piano key frequencies](https://en.wikipedia.org/wiki/Piano_key_frequencies) - Wikipedia article.
