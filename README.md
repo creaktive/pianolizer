@@ -37,6 +37,12 @@ To delete all the compiled files:
 make clean
 ```
 
+## Influenced & inspired by
+- [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
+- [Rousseau](https://www.youtube.com/c/Rousseau) - YouTube channel.
+- [Piano LED Visualizer](https://github.com/onlaj/Piano-LED-Visualizer) - GitHub repository.
+- [Music Transcription with Convolutional Neural Networks (Jun 2016)](https://www.lunaverus.com/cnn) - the method used by AnthemScore (the automatic music transcription app).
+
 ## References
 
 - [Piano key frequencies](https://en.wikipedia.org/wiki/Piano_key_frequencies) - Wikipedia article.
