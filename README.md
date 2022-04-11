@@ -7,31 +7,35 @@
 
 ## Building
 
-To compile only to the native binary (AKA the `pianolizer` CLI utility):
+The [C++ implementation](cpp/pianolizer.hpp) should compile just fine on any platform that supports C++14, there are no dependencies as the code uses C++14 standard data types. 
+It is known to compile & run successfully with [Clang](https://clang.llvm.org), [GCC](https://gcc.gnu.org) and [Emscripten](https://emscripten.org).
+The target platform should support `double float` operations efficiently (in other words, hardware FPU is rather mandatory).
 
-```
-make pianolizer
-```
-
-To test the [C++ implementation](cpp/pianolizer.hpp) (depends on [GoogleTest](https://github.com/google/googletest/)):
-
-```
-make test
-```
-
-To compile only to [WebAssembly](https://webassembly.org/):
-
-```
-make emscripten
-```
-
-To compile to both the native binary _and_ WebAssembly:
+Compile the [native binary](cpp/main.cpp) (AKA the `pianolizer` CLI utility) _and_ to [WebAssembly](https://webassembly.org/):
 
 ```
 make
 ```
 
-To delete all the compiled files:
+Compile only the [native binary](cpp/main.cpp):
+
+```
+make pianolizer
+```
+
+To compile only to WebAssembly:
+
+```
+make emscripten
+```
+
+[Test and benchmark](cpp/test.cpp) the [C++ implementation](cpp/pianolizer.hpp) (**optional**; depends on [GoogleTest](https://github.com/google/googletest/)):
+
+```
+make test
+```
+
+Delete all the compiled files:
 
 ```
 make clean
