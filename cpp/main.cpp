@@ -23,6 +23,8 @@ void help() {
   cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)" << endl;
   cout << endl;
   cout << "Description:" << endl;
+  cout << "Consumes an audio stream (1 channel, 32-bit float PCM)" << endl;
+  cout << "and emits the volume levels of 61 notes (from C2 to C7) as a hex string." << endl;
   exit(EXIT_SUCCESS);
 }
 
