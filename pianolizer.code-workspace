@@ -3,5 +3,24 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"cSpell.words": [
+			"coeff",
+			"Convolutional",
+			"DTMF",
+			"efloat",
+			"Emscripten",
+			"flac",
+			"HEAPF",
+			"Microcontrollers",
+			"pianolizer",
+			"Pianotomy",
+			"purejs",
+			"Pusep",
+			"sdft",
+			"Stanislaw",
+			"traw"
+		]
+	}
 }

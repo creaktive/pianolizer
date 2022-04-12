@@ -119,7 +119,7 @@ class DFTBin {
       if (k == 0)
         throw std::invalid_argument("k=0 (DC) not implemented");
       else if (N == 0)
-        throw std::invalid_argument("N=0 is soooo not supported (Y THO?)");
+        throw std::invalid_argument("N=0 is so not supported (Y THO?)");
 
       const double q = 2. * M_PI * k / N;
       r = 2. / N;

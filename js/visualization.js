@@ -149,7 +149,7 @@ export class PianoKeyboard {
 
   update (keyColors) {
     for (let key = 0; key < this.keysNum; key++) {
-      const bgrInteger = keyColors[key] // #killme
+      const bgrInteger = keyColors[key] // #kill me
       const rgbInteger =
         ((bgrInteger & 0x0000ff) << 16) |
         ((bgrInteger & 0x00ff00)) |
