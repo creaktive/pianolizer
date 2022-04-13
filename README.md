@@ -99,6 +99,27 @@ With that, it should be trivial to convert the `pianolizer` output into a static
 
 This included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)).
 
+## Using the library
+
+The main purpose of Pianolizer is _music visualization_.
+Because of this, the volume level values are squared (more contrast, less CPU usage) and averaged (otherwise the output is unpleasant and potentially harmful to look at, due to flickering).
+However, the library is modular by design, so you can shuffle things around and implement other stuff like [DTMF decoder](https://en.wikipedia.org/wiki/Dual-tone_multi-frequency_signaling) or even a [vocoder](https://en.wikipedia.org/wiki/Vocoder) (YMMV!).
+
+### C++
+
+Standard: C++14
+
+- Include [pianolizer.hpp](cpp/pianolizer.hpp) in your project. It is reasonably well commented and documented and relevant examples are provided inline.
+- [benchmark.cpp](cpp/benchmark.cpp) is a good starting point.
+
+### JavaScript & WebAssembly
+
+Standard: ECMAScript 6
+
+- Include [pianolizer.js](js/pianolizer.js) in your project. It is reasonably well commented and documented and relevant examples are provided inline.
+- [benchmark.js](js/benchmark.js) is a good starting point. It runs directly via [Node.js](https://nodejs.org/). Also check [benchmark.html](benchmark.html), it works in the browser.
+- [AudioWorkletProcessor](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor) compatibility layer can be found in [pianolizer-worklet.js](js/pianolizer-worklet.js). Worklet is set up in [index.html](index.html).
+
 ## Influenced & inspired by
 - [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
 - [Rousseau](https://www.youtube.com/c/Rousseau) - YouTube channel.
