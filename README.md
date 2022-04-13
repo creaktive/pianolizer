@@ -107,6 +107,7 @@ This included [Python script](misc/hex2ws281x.py) consumes the hexadecimal outpu
 
 ## References
 
+- [Chopin Mazurka in F minor, op. 68 no. 4](https://youtu.be/kfFyITaBpac) - music used in the demo; performance by [Pianotomy](https://www.youtube.com/channel/UCRS3ZdjDQZJ8p24MZjy_T_g).
 - [Piano key frequencies](https://en.wikipedia.org/wiki/Piano_key_frequencies) - Wikipedia article.
 - [The Fundamentals of FFT-Based Signal Analysis and Measurement](https://www.sjsu.edu/people/burford.furman/docs/me120/FFT_tutorial_NI.pdf) - tutorial by National Instruments.
 - [Sliding DFT](https://en.wikipedia.org/wiki/Sliding_DFT) - Wikipedia article.
