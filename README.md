@@ -97,7 +97,11 @@ With that, it should be trivial to convert the `pianolizer` output into a static
 
 ### Raspberry Pi specific
 
-This included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)).
+The included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)). 
+Conveniently, 1m LED strip with _144 diodes/meter_ matches precisely the standard piano keyboard dimensions and is enough to cover 61 keys.
+
+Raspberry Pi has no audio input hardware at the time of writing, therefore an expansion board is required.
+I am using [ReSpeaker 2-Mics Pi HAT by Seeed](https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html).
 
 ## Using the library
 
