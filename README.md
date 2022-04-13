@@ -48,6 +48,8 @@ make clean
 
 ## Using the CLI utility
 
+### General instructions
+
 ```
 $ ./pianolizer -h
 Usage:
@@ -91,9 +93,11 @@ A new string is emitted every 256 samples (adjustable with `-b` option); that am
 [sox](http://sox.sourceforge.net) is recommended to provide the input for `pianolizer`.
 When using a microphone source, `sox` will insert tiny delays between the samples, so that the audio stream is synchronized with the sample rate.
 When decoding an audio file, `sox` spits out the data as fast as possible.
+With that, it should be trivial to convert the `pianolizer` output into a static spectrogram image.
 
-This included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (only tested on a Raspberry Pi; depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)).
-It should be trivial to convert the `pianolizer` output into a static spectrogram image.
+### Raspberry Pi specific
+
+This included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)).
 
 ## Influenced & inspired by
 - [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
