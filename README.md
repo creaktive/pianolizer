@@ -8,7 +8,7 @@ Examples for browser and Raspberry Pi are provided.
 ## tl;dr
 
 - [Pianolizer app](https://sysd.org/pianolizer/) - runs directly in the browser. Also, mobile browser. Chrome is recommended for the best experience.
-- [Algorithm benchmark](https://sysd.org/pianolizer/benchmark.html) - test the speed of the core algorithm, in the browser. WASM results closely match what is expected from the native binary performance, on the same machine. 44100 samples per second is enough for realtime performance. As a matter of fact, one can get decent results with as little as 4000 samples per second (saving both CPU & RAM resources!); however the resampling algorithm implementation is left as an exercise to the reader (that is, for the JS/browser; the `pianolizer` CLI utility is meant to be paired with [sox](http://sox.sourceforge.net)).
+- [Algorithm benchmark](https://sysd.org/pianolizer/benchmark.html) - test the speed of the core algorithm, in the browser. WASM results closely match what is expected from the native binary performance, on the same machine. 44100 samples per second is enough for realtime performance. As a matter of fact, one can get decent results with as little as 8000 samples per second (saving both CPU & RAM resources!); however the resampling algorithm implementation is left as an exercise to the reader (that is, for the JS/browser; the `pianolizer` CLI utility is meant to be paired with [sox](http://sox.sourceforge.net)).
 
 ## Building
 
@@ -115,6 +115,7 @@ Standard: C++14
 
 - Include [pianolizer.hpp](cpp/pianolizer.hpp) in your project. It is reasonably well commented and documented and relevant examples are provided inline.
 - [benchmark.cpp](cpp/benchmark.cpp) is a good starting point.
+- [test.cpp](cpp/test.cpp) describes the expected behavior of the library.
 
 ### JavaScript & WebAssembly
 
