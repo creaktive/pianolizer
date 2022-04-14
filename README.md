@@ -109,8 +109,16 @@ You will probably need to adjust the sample rate and volume in this script, and 
 ## Using the library
 
 The main purpose of Pianolizer is _music visualization_.
-Because of this, the volume level values are squared (more contrast, less CPU usage) and averaged (otherwise the output is unpleasant and potentially harmful to look at, due to flickering).
+Because of this, the volume level values are squared (more contrast, less CPU usage) and averaged (effectively, a low-pass filter of the output, otherwise it is unpleasant and potentially harmful to look at, due to flickering).
 However, the library is modular by design, so you can shuffle things around and implement other stuff like [DTMF decoder](https://en.wikipedia.org/wiki/Dual-tone_multi-frequency_signaling) or even a [vocoder](https://en.wikipedia.org/wiki/Vocoder) (YMMV!).
+
+In a nutshell, first you need to create an instance of `SlidingDFT` class, which takes an instance of `PianoTuning` class as a parameter. `PianoTuning` requires the sample rate parameter. Sample rate should be at least 8kHz.
+By default, `PianoTuning` defines 61 keys (from C2 to C7), with A4 tuned to 440Hz.
+Why not 88 keys, like most of the acoustic pianos?
+Essentially, it is because the frequencies below C2 (65.4Hz) would require some extra processing to be visualized properly.
+
+Once you have an instance of `SlidingDFT`, you can start pumping the audio samples into the `process` method (I recommend doing it in chunks of 128 samples, or more).
+`process` then returns an array of 61 values (or whatever you defined instantiating `PianoTuning`) ranging from 0.0 to 1.0, each value being the squared amplitude of the fundamental frequency component for that key.
 
 ### C++
 
@@ -145,6 +153,7 @@ Standard: ECMAScript 6
 - [Sliding Discrete Fourier Transform](http://dream.cs.bath.ac.uk/SDFT/) - Development & Research in Electro-Acoustic Media page.
 - [Constant-Q transform](https://en.wikipedia.org/wiki/Constant-Q_transform) - Wikipedia article.
 - [Computationally Efficient Moving Average for Microcontrollers](https://www.daycounter.com/LabBook/Moving-Average.phtml) - fast approximation of moving average.
+- [Efficiently detecting a frequency using a Goertzel filter](https://netwerkt.wordpress.com/2011/08/25/goertzel-filter/) - a related technique.
 
 ## Copyright
 
