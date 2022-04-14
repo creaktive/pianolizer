@@ -4,3 +4,4 @@ VERSION
 test
 pianolizer
 *.pyc
+cpp/benchmark
