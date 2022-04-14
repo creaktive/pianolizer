@@ -3,13 +3,18 @@
  */
 #include <chrono>
 #include <iostream>
+#include <map>
 #include <stdlib.h>
 
 #include "pianolizer.hpp"
 
 using namespace std;
 
+// the floating number arithmetics produce different results on different architectures; account for that
+#define ABS_ERROR 1e-4
+
 int main(int argc, char *argv[]) {
+  // changing sampleRate affects the memory allocation
   unsigned sampleRate = 44100;
   if (argc == 2) {
     sampleRate = atoi(argv[1]);
@@ -35,7 +40,31 @@ int main(int argc, char *argv[]) {
   }
   auto end = chrono::high_resolution_clock::now();
   chrono::duration<double> elapsed = end - start;
-  cerr << "benchmark: " << static_cast<int>(round(i / elapsed.count())) << " samples per second" << endl;
+  cout << "benchmark: " << static_cast<int>(round(i / elapsed.count()))
+    << " samples per second" << endl;
+
+  // making a *good* oscillator is hard...
+  if (sampleRate == 44100) {
+    unsigned errors = 0;
+    map<int,float> test = {
+      { 21, .000041 },
+      { 33, .605242 },
+      { 45, .152685 },
+      { 52, .069327 },
+      { 57, .036673 }
+    };
+    for (auto kv : test) {
+      if (std::fabs(output[kv.first] - test[kv.first]) > ABS_ERROR) {
+        errors++;
+        cerr << "output for key #" << to_string(kv.first)
+          << " is " << to_string(output[kv.first])
+          << "; expected " << to_string(kv.second)
+          << endl;
+      }
+    }
+    if (errors)
+      return EXIT_FAILURE;      
+  }
 
   return EXIT_SUCCESS;
 }

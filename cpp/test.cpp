@@ -172,7 +172,7 @@ TEST(SlidingDFT, IntegrationBenchmark) {
     { 57, .0384454987943172 }
   };
   for (auto kv : test) {
-    EXPECT_NEAR(output[kv.first], test[kv.first], ABS_ERROR) << "sawtooth, key #" + to_string(kv.first);
+    EXPECT_NEAR(output[kv.first], test[kv.first], ABS_ERROR) << "sawtooth, key #" << to_string(kv.first);
     // char buf[20]; snprintf(buf, 20, "%.16f", output[kv.first]); cerr << buf << endl;
   }
 }
