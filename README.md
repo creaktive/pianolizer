@@ -137,6 +137,16 @@ Standard: ECMAScript 6
 - [AudioWorkletProcessor](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor) compatibility layer can be found in [pianolizer-worklet.js](js/pianolizer-worklet.js). Worklet is set up in [index.html](index.html).
 - [visualization.js](js/visualization.js) is what draws the keyboard and the spectrogram.
 
+## Theory
+
+Why/how does this work?
+
+![Discrete Fourier transform definition](https://wikimedia.org/api/rest_v1/media/math/render/svg/18b0e4c82f095e3789e51ad8c2c6685306b5662b)
+
+> It is the cross correlation of the input sequence, _xₙ_, and a complex sinusoid at frequency _k / N_. Thus it acts like a matched filter for that frequency.
+
+(source: [Wikipedia](https://en.wikipedia.org/wiki/Discrete_Fourier_transform))
+
 ## Influenced & inspired by
 - [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
 - [Rousseau](https://www.youtube.com/c/Rousseau) - YouTube channel.
