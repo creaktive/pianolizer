@@ -133,7 +133,7 @@ Standard: C++14
 Standard: ECMAScript 6
 
 - Include [pianolizer.js](js/pianolizer.js) in your project. It is reasonably well commented and documented and relevant examples are provided inline.
-- [benchmark.js](js/benchmark.js) is a good starting point. It runs directly via [Node.js](https://nodejs.org/). Also check [benchmark.html](benchmark.html), it works in the browser.
+- [benchmark.js](js/benchmark.js) is a good starting point. It runs directly via [Node.js](https://nodejs.org/) (try `node js/benchmark.js`). Also check [benchmark.html](benchmark.html), which works in the browser.
 - [AudioWorkletProcessor](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor) compatibility layer can be found in [pianolizer-worklet.js](js/pianolizer-worklet.js). Worklet is set up in [index.html](index.html).
 
 ## Influenced & inspired by
