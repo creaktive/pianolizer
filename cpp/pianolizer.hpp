@@ -123,7 +123,7 @@ class DFTBin {
 
       const double q = 2. * M_PI * k / N;
       r = 2. / N;
-      coeff = std::complex<double>(cos(q), sin(q));
+      coeff = std::complex<double>(cos(q), -sin(q));
     }
 
     /**

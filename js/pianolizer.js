@@ -237,7 +237,7 @@ export class DFTBin {
     this.N = N
     const q = 2 * Math.PI * k / N
     this.r = 2 / N
-    this.coeff = new Complex(Math.cos(q), Math.sin(q))
+    this.coeff = new Complex(Math.cos(q), -Math.sin(q))
     this.dft = new Complex()
     this.totalPower = 0.0
     this.referenceAmplitude = 1.0 // 0 dB level
