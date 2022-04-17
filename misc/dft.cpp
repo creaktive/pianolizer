@@ -1,15 +1,20 @@
+/*
+ * g++ -o dft dft.cpp
+ */
 #define _USE_MATH_DEFINES
+#include <cassert>
 #include <cmath>
 #include <complex>
-#include <iostream>
 #include <vector>
 
 using namespace std;
 
 const complex<double> discreteFourierTransform (
   const vector<complex<double>>& x,
-  const double k, const double N
+  const double k, const unsigned N
 ) {
+  if (x.size() < N)
+    throw invalid_argument("x vector should have at least N samples");
   const double q = 2. * M_PI * k / N;
   complex<double> Xk = complex<double>(0., 0.);
   for (unsigned n = 0; n < N; n++)
