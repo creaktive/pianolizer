@@ -10,7 +10,7 @@
 using namespace std;
 
 const complex<double> discreteFourierTransform (
-  const vector<complex<double>>& x,
+  const vector<complex<double> >& x,
   const double k, const unsigned N
 ) {
   if (x.size() < N)
@@ -23,7 +23,7 @@ const complex<double> discreteFourierTransform (
 }
 
 int main() {
-  vector<complex<double>> signal;
+  vector<complex<double> > signal;
   for (unsigned i = 0; i < 3000; i++)
     signal.push_back(complex<double>(
       sin(M_PI / 50. * i),    // sine wave, 441Hz
@@ -36,7 +36,7 @@ int main() {
 
   const double k = frequency / bandwidth;
   const double N = sampleRate / bandwidth;
-  auto dft = discreteFourierTransform(signal, k, N);
+  complex<double> dft = discreteFourierTransform(signal, k, N);
   const double magnitude = sqrt(norm(dft));
 
   assert(k == 21);
