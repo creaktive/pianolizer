@@ -19,23 +19,25 @@ const complex<double> discreteFourierTransform (
 
 int main() {
   vector<complex<double>> signal;
-  for (unsigned i = 0; i < 2000; i++)
+  for (unsigned i = 0; i < 3000; i++)
     signal.push_back(complex<double>(
       sin(M_PI / 50. * i),    // sine wave, 441Hz
       0.
     ));
 
-  const double sampleRate = 44100.;
-  const double frequency = 441.;
-  const double bandwidth = 26.;
+  const double sampleRate = 44100;
+  const double frequency = 441;
+  const double bandwidth = 21;
 
   const double k = frequency / bandwidth;
   const double N = sampleRate / bandwidth;
-  const double magnitude = sqrt(norm(discreteFourierTransform(signal, k, N)));
+  auto dft = discreteFourierTransform(signal, k, N);
+  const double magnitude = sqrt(norm(dft));
 
-  cout << k << endl;          // 16.9615 
-  cout << N << endl;          // 1696.15
-  cout << magnitude << endl;  // 849.945
+  assert(k == 21);
+  assert(N == 2100);
+  assert(round(dft.imag()) == -1050);
+  assert(round(magnitude) == 1050);
 
   return EXIT_SUCCESS;
 }
