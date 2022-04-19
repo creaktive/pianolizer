@@ -156,7 +156,7 @@ Therefore, regardless of our cultural background, _musical sounds_ follow a loga
 
 This effectively voids the computational advantage of using FFT for this specific application.
 Fortunately, the Fourier transform does not need to be a _fast_ one.
-Let's revisit the basics of the **Discrete Fourier Transform**:
+Let's revisit the basics of the **Discrete Fourier Transform** (DFT):
 
 ![Discrete Fourier transform definition](https://wikimedia.org/api/rest_v1/media/math/render/svg/18b0e4c82f095e3789e51ad8c2c6685306b5662b)
 
@@ -229,7 +229,18 @@ Provided that the _sample rate_ is 44100Hz, this is what we have now ([source](m
 | A5        | 880.000000     | 879.929577          | 51.571936      | 51.760563           | -0.136552      | 17 | 852  |
 
 Effective frequency & bandwidth are the ones derived from the integer _k_ and _N_ values.
-Error in cents is the deviation from the original values (0 means "no error"; 100 means "so off that it is literally the next note").
+Error in cents is the deviation from the original values (0 means "no error"; 100 means "so off that it is literally the **next** note"; -100 means "so of that it is literally the **previous** note").
+
+To summarize: for every musical note frequency we want to isolate, for a given sample rate, all we need is the pair of numbers _k_ and _N_.
+We plug the pair, along with the data points/samples themselves, into the `discreteFourierTransform()` function described above.
+And this is where it gets (computationally) complicated: the sum implicit in the DFT is re-done for every frequency!
+
+Fortunately, there is another mathematical shortcut, albeit far less known than the FFT: the **Sliding DFT**!
+The Sliding DFT uses it's own previous output as the input for the next iteration.
+It's mechanism is somewhat related to that of the moving sum/average: for each iteration, add the value of the most recent sample, while subtracting the value of the oldest sample (and this is why _k_ must be an integer, lest the output starts drifting out of phase!).
+
+There's plenty of links related to the details of the Sliding DFT in the [references](#references); plus the [source code](#using-the-library) of this very project.
+Enjoy, and do let me know of your cool projects making the use of this algorithm!
 
 ## Influenced & inspired by
 - [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
