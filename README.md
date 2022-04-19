@@ -141,13 +141,69 @@ Standard: ECMAScript 6
 
 ## Theory
 
-Why/how does this work?
+How/why does this algorithm work?
+First of all: it is **not** based on the [Fast Fourier Transform (FFT)](https://en.wikipedia.org/wiki/Fast_Fourier_transform).
+FFT is awesome, and is indeed the first option for almost anything spectral analysis related.
+In a nutshell, FFT takes _N_ data points of some signal, and twists them into _N_ frequency bands.
+Works the best when _N_ is a power of two.
+FFT uses a brilliant mathematical shortcut which makes this operation go very efficiently.
+And on top of that, nowadays we have [extremely efficient and portable implementations of this algorithm](http://fftw.org).
+
+But... It is not very suitable for recognizing the **musical** pitches.
+Here's why: all the frequency bands from the output of FFT have exactly the same _bandwidth_.
+On the other hand, our ears and brains evolved in such a way that 65Hz sounds distinctively different from 98Hz; however 4186Hz sounds barely distinguishable from 4219Hz.
+Therefore, regardless of our cultural background, _musical sounds_ follow a logarithmic distribution, with the _bandwidth_ of the subsequent notes gradually increasing.
+
+This effectively voids the computational advantage of using FFT for this specific application.
+Fortunately, the Fourier transform does not need to be a _fast_ one.
+Let's revisit the basics of the **Discrete Fourier Transform**:
 
 ![Discrete Fourier transform definition](https://wikimedia.org/api/rest_v1/media/math/render/svg/18b0e4c82f095e3789e51ad8c2c6685306b5662b)
 
-> It is the cross correlation of the input sequence, _xₙ_, and a complex sinusoid at frequency _k / N_. Thus it acts like a matched filter for that frequency.
+The interpretation most relevant for our purposes would be:
 
+> It is the cross correlation of the input sequence, _xₙ_, and a complex sinusoid at frequency _k / N_. Thus it acts like a matched filter for that frequency.
 (source: [Wikipedia](https://en.wikipedia.org/wiki/Discrete_Fourier_transform))
+
+Unpacking the above formula to C++ code (JavaScript has no native complex number type):
+
+```C++
+const complex<double> discreteFourierTransform (
+  const vector<complex<double> >& x,
+  const double k, const unsigned N
+) {
+  if (x.size() < N)
+    throw invalid_argument("x vector should have at least N samples");
+  const double q = 2. * M_PI * k / N;
+  complex<double> Xk = complex<double>(0., 0.);
+  for (unsigned n = 0; n < N; n++)
+    Xk += x[n] * complex<double>(cos(q * n), -sin(q * n));
+  return Xk;
+}
+```
+(check the [full example](misc/dft.cpp))
+
+A somewhat free interpretation of what's going on here is: the code generates a _template signal_ and checks it's similarity with the _input signal_.
+This _template_, when plotted, looks exactly like a corkscrew spiral:
+
+![Complex sinusoid](https://i.stack.imgur.com/eCpbp.gif)
+
+It has the length of _N_ data points.
+The pitch of the corkscrew, which determines the frequency of the template signal, is derived from the _k / N_ ratio.
+More specifically, this is the relationship between _k_, _N_, _frequency_, _bandwidth_ and the _sample rate_:
+
+```C++
+// in Hertz
+const double sampleRate = 44100;
+const double frequency = 441;
+const double bandwidth = 21;
+
+const double k = frequency / bandwidth;
+const double N = sampleRate / bandwidth;
+
+assert(k == 21);
+assert(N == 2100);
+```
 
 ## Influenced & inspired by
 - [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
