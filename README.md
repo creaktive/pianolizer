@@ -5,6 +5,8 @@
 A simple and efficient algorithm for spectral analysis of music.
 Examples for browser and Raspberry Pi are provided.
 
+[![See the music with Pianolizer](images/pianolizer-youtube.jpg)](https://youtu.be/UVvdstcv4IY "See the music with Pianolizer")
+
 ## tl;dr
 
 - [Pianolizer app](https://sysd.org/pianolizer/) - runs directly in the browser. Also, mobile browser. Chrome is recommended for the best experience.
