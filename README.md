@@ -158,7 +158,7 @@ This effectively voids the computational advantage of using FFT for this specifi
 Fortunately, the Fourier transform does not need to be a _fast_ one.
 Let's revisit the basics of the **Discrete Fourier Transform** (DFT):
 
-![Discrete Fourier transform definition](https://wikimedia.org/api/rest_v1/media/math/render/svg/18b0e4c82f095e3789e51ad8c2c6685306b5662b)
+![Discrete Fourier transform definition](images/dft-formula.png)
 
 The interpretation most relevant for our purposes would be:
 
@@ -186,7 +186,7 @@ const complex<double> discreteFourierTransform (
 A somewhat free interpretation of what's going on here is: the code generates a _template signal_ and checks it's similarity with the _input signal_.
 This _template_, when plotted, looks exactly like a corkscrew spiral:
 
-![Complex sinusoid](https://i.stack.imgur.com/eCpbp.gif)
+![Complex sinusoid](images/complex-sinusoid.png)
 
 It has the length of _N_ data points.
 The pitch of the corkscrew, which determines the frequency of the template signal, is derived from the _k / N_ ratio.
