@@ -229,7 +229,7 @@ Provided that the _sample rate_ is 44100Hz, this is what we have now ([source](m
 | A5        | 880.000000     | 879.929577          | 51.571936      | 51.760563           | -0.136552      | 17 | 852  |
 
 Effective frequency & bandwidth are the ones derived from the integer _k_ and _N_ values.
-Error in cents is the deviation from the original values (0 means "no error"; 100 means "so off that it is literally the **next** note"; -100 means "so of that it is literally the **previous** note").
+Error in cents is the deviation from the original values (0 means _"no error"_; 100 means _"so off that it is literally the **next** note"_; -100 means _"so off that it is literally the **previous** note"_).
 
 To summarize: for every musical note frequency we want to isolate, for a given sample rate, all we need is the pair of numbers _k_ and _N_.
 We plug the pair, along with the data points/samples themselves, into the `discreteFourierTransform()` function described above.
