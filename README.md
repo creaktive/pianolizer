@@ -205,6 +205,32 @@ assert(k == 21);
 assert(N == 2100);
 ```
 
+With this, we can establish that what we need is to find such pairs of _k_ and _N_ that closely match the frequencies and the bandwidths of the [piano notes](https://en.wikipedia.org/wiki/Piano_key_frequencies).
+I say "closely" because both _k_ and _N_ have to be integers for our specific application case.
+For the general case, only _N_ has to be an integer (because it represents the amount of the _discrete_ samples) and _k_ can be any number.
+However, there is a cool computational shortcut that only works for integer values of _k_; more on this later.
+
+Provided that the _sample rate_ is 44100Hz, this is what we have now ([source](misc/bins.pl)):
+
+| Note name | Note frequency | Effective frequency | Note bandwidth | Effective bandwidth | Error in cents | k  | N    |
+| --------- | -------------- | ------------------- | -------------- | ------------------- | -------------- | -- | ---- |
+| A4        | 440.000000     | 439.964789          | 25.785968      | 25.880282           | -0.136552      | 17 | 1704 |
+| A#4       | 466.163762     | 466.231343          | 27.319282      | 27.425373           | 0.247378       | 17 | 1608 |
+| B4        | 493.883301     | 493.873518          | 28.943771      | 29.051383           | -0.033802      | 17 | 1518 |
+| C5        | 523.251131     | 523.168179          | 30.664857      | 30.774599           | -0.270511      | 17 | 1433 |
+| C#5       | 554.365262     | 554.511834          | 32.488284      | 32.618343           | 0.451155       | 17 | 1352 |
+| D5        | 587.329536     | 587.539185          | 34.420138      | 34.561129           | 0.609089       | 17 | 1276 |
+| D#5       | 622.253967     | 622.157676          | 36.466866      | 36.597510           | -0.264051      | 17 | 1205 |
+| E5        | 659.255114     | 659.366755          | 38.635299      | 38.786280           | 0.288961       | 17 | 1137 |
+| F5        | 698.456463     | 698.695247          | 40.932673      | 41.099720           | 0.583358       | 17 | 1073 |
+| F#5       | 739.988845     | 740.078973          | 43.366657      | 43.534057           | 0.207828       | 17 | 1013 |
+| G5        | 783.990872     | 784.205021          | 45.945372      | 46.129707           | 0.466095       | 17 | 956  |
+| G#5       | 830.609395     | 830.232558          | 48.677426      | 48.837209           | -0.774151      | 17 | 903  |
+| A5        | 880.000000     | 879.929577          | 51.571936      | 51.760563           | -0.136552      | 17 | 852  |
+
+Effective frequency & bandwidth are the ones derived from the integer _k_ and _N_ values.
+Error in cents is the deviation from the original values (0 means "no error"; 100 means "so off that it is literally the next note").
+
 ## Influenced & inspired by
 - [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
 - [Rousseau](https://www.youtube.com/c/Rousseau) - YouTube channel.
