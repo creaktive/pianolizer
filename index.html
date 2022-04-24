@@ -211,6 +211,7 @@
         audioElement.src = URL.createObjectURL(fileData)
       }
 
+      document.getElementById('source').selectedIndex = 2 // Mazurka
       document.getElementById('source').onchange = event => {
         audioElement.pause()
         playToggle.innerText = 'Play'
