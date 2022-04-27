@@ -17,7 +17,8 @@ void help() {
   cout << endl;
   cout << "Options:" << endl;
   cout << "\t-h\tthis" << endl;
-  cout << "\t-b\tbuffer size; default: 256" << endl;
+  cout << "\t-b\tbuffer size; default: 256 (samples)" << endl;
+  cout << "\t-c\tnumber of channels; default: 1" << endl;
   cout << "\t-s\tsample rate; default: 44100 (Hz)" << endl;
   cout << "\t-p\tA4 reference frequency; default: 440 (Hz)" << endl;
   cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)" << endl;
@@ -36,17 +37,21 @@ double clamp(double d, double min, double max) {
 }
 
 int main(int argc, char *argv[]) {
-  size_t bufferSize = 256; // known to work on RPi3b
+  size_t samples = 256; // known to work on RPi3b
+  size_t channels = 1;
   int sampleRate = 44100;
   float pitchFork = 440.;
   float averageWindow = 0.04;
 
   for (;;) {
-    switch (getopt(argc, argv, "b:s:p:a:h")) {
+    switch (getopt(argc, argv, "b:c:s:p:a:h")) {
       case -1:
         break;
       case 'b':
-        if (optarg) bufferSize = static_cast<size_t>(atoi(optarg));
+        if (optarg) samples = static_cast<size_t>(atoi(optarg));
+        continue;
+      case 'c':
+        if (optarg) channels = static_cast<size_t>(atoi(optarg));
         continue;
       case 's':
         if (optarg) sampleRate = atoi(optarg);
@@ -69,13 +74,6 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  /*
-  cerr << "bufferSize=" << bufferSize << endl;
-  cerr << "sampleRate=" << sampleRate << endl;
-  cerr << "pitchFork=" << pitchFork << endl;
-  cerr << "averageWindow=" << averageWindow << endl;
-  */
-
   auto tuning = make_shared<PianoTuning>(sampleRate, pitchFork);
   auto sdft = SlidingDFT(tuning, -1.);
 
@@ -85,14 +83,20 @@ int main(int argc, char *argv[]) {
       throw runtime_error(strerror(errno));
 
     size_t len;
-    auto input = make_unique<float[]>(bufferSize);
+    size_t bufferSize = samples * channels;
+    auto buffer = make_unique<float[]>(bufferSize);
+    auto input = make_unique<float[]>(samples);
     const float *output = nullptr;
 
-    while ((len = fread(input.get(), sizeof(input[0]), bufferSize, stdin)) > 0) {
+    while ((len = fread(buffer.get(), sizeof(buffer[0]), bufferSize, stdin)) > 0) {
       if (ferror(stdin) && !feof(stdin))
         throw runtime_error(strerror(errno));
 
-      if ((output = sdft.process(input.get(), len, averageWindow)) == nullptr)
+      memset(input.get(), 0, sizeof(input[0]) * samples);
+      for (unsigned i = 0; i < len; i++)
+        input[i / channels] += buffer[i];
+
+      if ((output = sdft.process(input.get(), samples, averageWindow)) == nullptr)
         throw runtime_error("sdft.process() returned nothing");
 
       stringstream stream;
