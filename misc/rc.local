@@ -23,15 +23,19 @@ iwconfig wlan0 power off
 # disable CPU throttling
 cpupower frequency-set -g performance
 
+# This configuration is specific to seeed-voicecard
+# https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html
+
 # wait for seeed-voicecard to initialize
-#sleep 2
+sleep 1
 
 # a reasonable microphone setting for seeed-voicecard
-#amixer sset 'ADC PCM' 100%
+amixer sset 'ADC PCM' 100%
 
 # start pianolizer
+CAPTURE_DEVICE=plughw:0
 SAMPLE_RATE=48000
 cd /home/pi/pianolizer
-nohup nice -n -20 sh -c "sox -d -traw -r${SAMPLE_RATE} -b32 -c1 -efloat - | ./pianolizer -s ${SAMPLE_RATE} | misc/hex2ws281x.py" > /dev/null &
+nohup nice -n -19 sh -c "arecord --buffer-size=1024 -c 2 -D ${CAPTURE_DEVICE} -f FLOAT_LE -r ${SAMPLE_RATE} -t raw | ./pianolizer -c 2 -s ${SAMPLE_RATE} | misc/hex2ws281x.py" > /dev/null &
 
 exit 0
