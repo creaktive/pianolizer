@@ -68,13 +68,14 @@ export class PianoKeyboard {
     this.whiteTone = [1, 3, 5, 6, 8, 10, 12]
     this.blackKeys = [14, 14, 14, 14, 14, 13, 14, 13, 14, 13, 14, 13].map(x => x * scale)
     this.blackTone = [0, 2, 0, 4, 0, 0, 7, 0, 9, 0, 11, 0]
-    this.neutralColor = 0x60
+    this.neutralColor = 0x55
 
     this.ns = 'http://www.w3.org/2000/svg'
     this.keySlices = null
 
     this.keysNum = 61
     this.keys = new Array(this.keysNum)
+    this.labels = new Array(this.keysNum)
     this.blackOffset = 0
     this.whiteOffset = 0
     this.whiteIndex = 0 // C2
@@ -94,6 +95,16 @@ export class PianoKeyboard {
     group.appendChild(keyElement)
   }
 
+  drawLabel (index, offset, note, octave, group) {
+    const labelElement = document.createElementNS(this.ns, 'text')
+    labelElement.setAttribute('x', offset + 5 * this.scale)
+    labelElement.setAttribute('y', this.whiteHeight - 6 * this.scale)
+    labelElement.classList.add('piano-key-label')
+    labelElement.textContent = String.fromCharCode(note + (note < 5 ? 67 : 60)) + octave
+    this.labels[index] = labelElement
+    group.appendChild(labelElement)
+  }
+
   // Inspired by https://github.com/davidgilbertson/sight-reader/blob/master/app/client/Piano.js
   drawKeyboard () {
     const whiteKeyGroup = document.createElementNS(this.ns, 'g')
@@ -109,23 +120,19 @@ export class PianoKeyboard {
       // black
       const blackIndex = i % this.blackKeys.length
       const blackWidth = this.blackKeys[blackIndex]
+      const index = i - this.startFrom
       keySlices.push(blackWidth)
       blackSum += blackWidth
       if (this.blackTone[blackIndex]) {
-        this.drawKey(i - this.startFrom, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
+        this.drawKey(index, blackOffset, blackWidth, this.blackHeight, blackKeyGroup)
       } else {
         // white
         const note = whiteIndex % this.whiteKeys.length
-        const octave = 0 | whiteIndex / this.whiteKeys.length + this.startOctave
         const whiteWidth = this.whiteKeys[note]
-        this.drawKey(i - this.startFrom, whiteOffset, whiteWidth, this.whiteHeight, whiteKeyGroup)
+        this.drawKey(index, whiteOffset, whiteWidth, this.whiteHeight, whiteKeyGroup)
 
-        const labelElement = document.createElementNS(this.ns, 'text')
-        labelElement.setAttribute('x', whiteOffset + 5 * this.scale)
-        labelElement.setAttribute('y', this.whiteHeight - 6 * this.scale)
-        labelElement.classList.add('piano-key-label')
-        labelElement.textContent = String.fromCharCode(note + (note < 5 ? 67 : 60)) + octave
-        whiteKeyGroup.appendChild(labelElement)
+        const octave = 0 | whiteIndex / this.whiteKeys.length + this.startOctave
+        this.drawLabel(index, whiteOffset, note, octave, whiteKeyGroup)
 
         whiteIndex++
         whiteOffset += whiteWidth
@@ -159,7 +166,12 @@ export class PianoKeyboard {
   update (audioColors, midiColors) {
     for (let key = 0; key < this.keysNum; key++) {
       this.keys[key].style.fill = this.bgrIntegerToHex(audioColors[key])
-      this.keys[key].style.stroke = this.bgrIntegerToHex(midiColors[key], this.neutralColor)
+
+      const midiColor = this.bgrIntegerToHex(midiColors[key], this.neutralColor)
+      this.keys[key].style.stroke = midiColor
+      if (this.labels[key] !== undefined) {
+        this.labels[key].style.fill = midiColor
+      }
     }
   }
 }
