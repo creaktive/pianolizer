@@ -11,7 +11,6 @@ export class Palette {
    */
   constructor (palette) {
     this.palette = palette
-    this.keyColors = null
     this.startOffset = 0
   }
 
@@ -42,19 +41,17 @@ export class Palette {
    */
   getKeyColors (levels) {
     const levelsNum = levels.length
-    if (this.keyColors === null || this.keyColors.length !== levelsNum) {
-      this.keyColors = new Uint32Array(levelsNum)
-    }
+    const keyColors = new Uint32Array(levelsNum)
 
     const paletteLength = this.palette.length
     for (let key = 0; key < levelsNum; key++) {
       const index = this.startOffset + key // start from C
       const rgbArray = this.palette[index % paletteLength]
         .map(value => Math.round(levels[key] * value) | 0)
-      this.keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
+      keyColors[key] = (rgbArray[2] << 16) | (rgbArray[1] << 8) | rgbArray[0]
     }
 
-    return this.keyColors
+    return keyColors
   }
 }
 
@@ -147,9 +144,9 @@ export class PianoKeyboard {
     this.svgElement.setAttribute('height', this.whiteHeight)
   }
 
-  update (keyColors) {
+  update (audioColors, midiColors) {
     for (let key = 0; key < this.keysNum; key++) {
-      const bgrInteger = keyColors[key] // #kill me
+      const bgrInteger = audioColors[key] // #kill me
       const rgbInteger =
         ((bgrInteger & 0x0000ff) << 16) |
         ((bgrInteger & 0x00ff00)) |
@@ -182,6 +179,7 @@ export class Spectrogram {
   constructor (canvasElement, keySlices, height) {
     this.canvasElement = canvasElement
     this.keySlices = keySlices
+    this.midiBand = 1
 
     this.width = keySlices.reduce((a, b) => a + b)
     this.height = height
@@ -197,7 +195,7 @@ export class Spectrogram {
     this.buf32 = new Uint32Array(this.bufArray)
   }
 
-  update (keyColors) {
+  update (audioColors, midiColors) {
     // shift the whole buffer 1 line upwards
     const lastLine = this.width * (this.height - 1)
     for (let i = 0; i < lastLine; i++) {
@@ -205,12 +203,15 @@ export class Spectrogram {
     }
 
     // fill in the bottom line
-    const keyColorsNum = keyColors.length
+    const keyColorsNum = audioColors.length
     for (let key = 0, j = lastLine; key < keyColorsNum; key++) {
-      const color = 0xff000000 | keyColors[key]
+      const audioColor = 0xff000000 | audioColors[key]
+      const midiColor = 0xff000000 | midiColors[key]
       const slice = this.keySlices[key]
-      for (let i = 0; i < slice; i++) {
-        this.buf32[j++] = color
+      for (let i = 0; i < slice; i++, j++) {
+        this.buf32[j] = i < this.midiBand || i >= slice - this.midiBand
+          ? midiColor
+          : audioColor
       }
     }
 

@@ -126,7 +126,7 @@
         600
       )
 
-      const midi = new Float32Array(61)
+      const midi = new Float32Array(pianoKeyboard.keysNum)
       if (navigator.requestMIDIAccess) {
         console.log('This browser supports WebMIDI!')
         navigator.requestMIDIAccess().then(
@@ -135,16 +135,16 @@
             // connecting MIDI to input function
             for (const input of midiAccess.inputs.values()) {
               input.onmidimessage = message => {
+                const firstNoteIndex = 36
                 const [command, note, velocity] = message.data
                 switch (command) {
                   case 0x90:
-                    midi[note - 36] = velocity / 0x7f
+                    midi[note - firstNoteIndex] = velocity / 0x7f
                     break
                   case 0x80:
-                    midi[note - 36] = 0
+                    midi[note - firstNoteIndex] = 0
                     break
                 }
-                console.log(midi)
               }
             }
           },
@@ -161,9 +161,10 @@
           palette !== undefined &&
           currentTimestamp !== lastTimestamp
         ) {
-          const keyColors = palette.getKeyColors(levels)
-          pianoKeyboard.update(keyColors)
-          spectrogram.update(keyColors)
+          const audioColors = palette.getKeyColors(levels)
+          const midiColors = palette.getKeyColors(midi)
+          pianoKeyboard.update(audioColors, midiColors)
+          spectrogram.update(audioColors, midiColors)
           lastTimestamp = currentTimestamp
         }
       }
