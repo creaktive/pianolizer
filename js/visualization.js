@@ -68,6 +68,7 @@ export class PianoKeyboard {
     this.whiteTone = [1, 3, 5, 6, 8, 10, 12]
     this.blackKeys = [14, 14, 14, 14, 14, 13, 14, 13, 14, 13, 14, 13].map(x => x * scale)
     this.blackTone = [0, 2, 0, 4, 0, 0, 7, 0, 9, 0, 11, 0]
+    this.neutralColor = 0x60
 
     this.ns = 'http://www.w3.org/2000/svg'
     this.keySlices = null
@@ -86,7 +87,7 @@ export class PianoKeyboard {
     keyElement.setAttribute('x', offset)
     keyElement.setAttribute('y', 0)
     keyElement.setAttribute('rx', this.roundCorners)
-    keyElement.setAttribute('width', width)
+    keyElement.setAttribute('width', width - 1)
     keyElement.setAttribute('height', height)
     keyElement.classList.add('piano-key')
     this.keys[index] = keyElement
@@ -144,17 +145,21 @@ export class PianoKeyboard {
     this.svgElement.setAttribute('height', this.whiteHeight)
   }
 
+  bgrIntegerToHex (bgrInteger, start = 0) {
+    // #kill me
+    const range = (0xff - start) / 0xff
+    const rgbArray = [
+      (bgrInteger & 0x0000ff),
+      (bgrInteger & 0x00ff00) >> 8,
+      (bgrInteger & 0xff0000) >> 16
+    ].map(c => Math.round(start + c * range) | 0)
+    return '#' + rgbArray.map(c => c.toString(16).padStart(2, '0')).join('')
+  }
+
   update (audioColors, midiColors) {
     for (let key = 0; key < this.keysNum; key++) {
-      const bgrInteger = audioColors[key] // #kill me
-      const rgbInteger =
-        ((bgrInteger & 0x0000ff) << 16) |
-        ((bgrInteger & 0x00ff00)) |
-        ((bgrInteger & 0xff0000) >> 16)
-      const rgbString = rgbInteger
-        .toString(16)
-        .padStart(6, '0')
-      this.keys[key].style.fill = '#' + rgbString
+      this.keys[key].style.fill = this.bgrIntegerToHex(audioColors[key])
+      this.keys[key].style.stroke = this.bgrIntegerToHex(midiColors[key], this.neutralColor)
     }
   }
 }
