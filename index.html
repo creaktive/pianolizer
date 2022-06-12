@@ -63,7 +63,6 @@
       <label>
         Source:
         <select id="source">
-          <option value="*">🎙 Microphone</option>
           <option value="/">Load local audio file</option>
           <option value="audio/mazurka.mp3" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
           <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
@@ -117,6 +116,7 @@
       const audioElement = document.getElementById('input')
       const playToggle = document.getElementById('play-toggle')
       const playRestart = document.getElementById('play-restart')
+      const sourceSelect = document.getElementById('source')
 
       const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
       pianoKeyboard.drawKeyboard()
@@ -207,16 +207,24 @@
         pianolizer.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
       }
 
-      async function setupMicrophone () {
+      async function setupMicrophone (deviceId) {
         await setupAudio()
         audioSource.disconnect(audioContext.destination)
 
         if (microphoneSource === undefined) {
           await navigator.mediaDevices.getUserMedia(
-            { audio: { deviceId: 'default' }, video: false }
+            { audio: { deviceId }, video: false }
           ).then(stream => {
             microphoneSource = audioContext.createMediaStreamSource(stream)
             microphoneSource.connect(pianolizer)
+
+            // for whatever reason, once selected, the input can't be switched
+            const selectedLabel = '*' + deviceId
+            for (const option of sourceSelect.options) {
+              if (option.value.charAt(0) === '*' && option.value !== selectedLabel) {
+                option.disabled = true
+              }
+            }
           }).catch(error => window.alert('Microphone access denied: ' + error))
         } else {
           microphoneSource.connect(pianolizer)
@@ -240,17 +248,29 @@
         audioElement.src = URL.createObjectURL(fileData)
       }
 
-      document.getElementById('source').selectedIndex = 2 // Mazurka
-      document.getElementById('source').onchange = event => {
+      async function listInputDevices () {
+        (await navigator.mediaDevices.enumerateDevices())
+          .filter(device => device.kind === 'audioinput')
+          .reverse()
+          .forEach(device => {
+            sourceSelect.add(
+              new Option('Input: ' + device.label, '*' + device.deviceId),
+              0
+            )
+          })
+      }
+
+      listInputDevices()
+      sourceSelect.onchange = event => {
         audioElement.pause()
         playToggle.innerText = 'Play'
 
         const selectedValue = event.target.value
-        if (selectedValue === '*') {
+        if (selectedValue.charAt(0) === '*') {
           // microphone source
           playToggle.disabled = true
           playRestart.disabled = true
-          setupMicrophone()
+          setupMicrophone(selectedValue.substring(1))
         } else {
           // <audio> element source
           playToggle.disabled = false
