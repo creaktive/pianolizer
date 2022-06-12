@@ -213,7 +213,7 @@
 
         if (microphoneSource === undefined) {
           await navigator.mediaDevices.getUserMedia(
-            { audio: true, video: false }
+            { audio: { deviceId: 'default' }, video: false }
           ).then(stream => {
             microphoneSource = audioContext.createMediaStreamSource(stream)
             microphoneSource.connect(pianolizer)
