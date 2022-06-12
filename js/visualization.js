@@ -196,7 +196,7 @@ export class Spectrogram {
   constructor (canvasElement, keySlices, height) {
     this.canvasElement = canvasElement
     this.keySlices = keySlices
-    this.midiBand = 1
+    this.lastMidiColors = new Uint32Array(keySlices.length)
 
     this.width = keySlices.reduce((a, b) => a + b)
     this.height = height
@@ -220,15 +220,23 @@ export class Spectrogram {
     }
 
     // fill in the bottom line
-    const keyColorsNum = audioColors.length
-    for (let key = 0, j = lastLine; key < keyColorsNum; key++) {
-      const audioColor = 0xff000000 | audioColors[key]
-      const midiColor = 0xff000000 | midiColors[key]
+    const keysNum = this.keySlices.length
+    const alphaOpaque = 0xff000000
+    for (let key = 0, j = lastLine; key < keysNum; key++) {
       const slice = this.keySlices[key]
-      for (let i = 0; i < slice; i++, j++) {
-        this.buf32[j] = i < this.midiBand || i >= slice - this.midiBand
-          ? midiColor
-          : audioColor
+      if (this.lastMidiColors[key] !== midiColors[key]) {
+        for (let i = 0; i < slice; i++, j++) {
+          const bgrInteger = midiColors[key] || this.lastMidiColors[key]
+          this.buf32[j] = alphaOpaque | bgrInteger
+        }
+        this.lastMidiColors[key] = midiColors[key]
+      } else {
+        for (let i = 0; i < slice; i++, j++) {
+          const bgrInteger = i < 1 || i >= slice - 1
+            ? midiColors[key]
+            : audioColors[key]
+          this.buf32[j] = alphaOpaque | bgrInteger
+        }
       }
     }
 
