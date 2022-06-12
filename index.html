@@ -63,7 +63,6 @@
       <label>
         Source:
         <select id="source">
-          <option value="/">Load local audio file</option>
           <option value="audio/mazurka.mp3" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
           <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
           <option value="audio/sin.flac">Sine wave, 440 Hz</option>
@@ -128,30 +127,25 @@
 
       const midi = new Float32Array(pianoKeyboard.keysNum)
       if (navigator.requestMIDIAccess) {
-        console.log('This browser supports WebMIDI!')
-        navigator.requestMIDIAccess().then(
-          midiAccess => {
-            console.log('onMIDISuccess, got MIDI: ', midiAccess)
-            // connecting MIDI to input function
-            for (const input of midiAccess.inputs.values()) {
-              input.onmidimessage = message => {
-                const firstNoteIndex = 36
-                const [command, note, velocity] = message.data
-                switch (command) {
-                  case 0x90:
-                    midi[note - firstNoteIndex] = velocity / 0x7f
-                    break
-                  case 0x80:
-                    midi[note - firstNoteIndex] = 0
-                    break
+        navigator.requestMIDIAccess()
+          .then(
+            midiAccess => {
+              // connecting MIDI to input function
+              for (const input of midiAccess.inputs.values()) {
+                input.onmidimessage = message => {
+                  const firstNoteIndex = 36
+                  const [command, note, velocity] = message.data
+                  switch (command) {
+                    case 0x90:
+                      midi[note - firstNoteIndex] = velocity / 0x7f
+                      break
+                    case 0x80:
+                      midi[note - firstNoteIndex] = 0
+                      break
+                  }
                 }
               }
-            }
-          },
-          () => console.log('Could not access your MIDI devices.')
-        )
-      } else {
-        console.log('WebMIDI is not supported in this browser.')
+            })
       }
 
       function draw (currentTimestamp) {
@@ -212,20 +206,20 @@
         audioSource.disconnect(audioContext.destination)
 
         if (microphoneSource === undefined) {
-          await navigator.mediaDevices.getUserMedia(
-            { audio: { deviceId }, video: false }
-          ).then(stream => {
-            microphoneSource = audioContext.createMediaStreamSource(stream)
-            microphoneSource.connect(pianolizer)
+          await navigator.mediaDevices.getUserMedia({ audio: { deviceId }, video: false })
+            .then(stream => {
+              microphoneSource = audioContext.createMediaStreamSource(stream)
+              microphoneSource.connect(pianolizer)
 
-            // for whatever reason, once selected, the input can't be switched
-            const selectedLabel = '*' + deviceId
-            for (const option of sourceSelect.options) {
-              if (option.value.charAt(0) === '*' && option.value !== selectedLabel) {
-                option.disabled = true
+              // for whatever reason, once selected, the input can't be switched
+              const selectedLabel = '*' + deviceId
+              for (const option of sourceSelect.options) {
+                if (option.value.charAt(0) === '*' && option.value !== selectedLabel) {
+                  option.disabled = true
+                }
               }
-            }
-          }).catch(error => window.alert('Microphone access denied: ' + error))
+            })
+            .catch(error => window.alert('Audio input access denied: ' + error))
         } else {
           microphoneSource.connect(pianolizer)
         }
@@ -248,19 +242,6 @@
         audioElement.src = URL.createObjectURL(fileData)
       }
 
-      async function listInputDevices () {
-        (await navigator.mediaDevices.enumerateDevices())
-          .filter(device => device.kind === 'audioinput')
-          .reverse()
-          .forEach(device => {
-            sourceSelect.add(
-              new Option('Input: ' + device.label, '*' + device.deviceId),
-              0
-            )
-          })
-      }
-
-      listInputDevices()
       sourceSelect.onchange = event => {
         audioElement.pause()
         playToggle.innerText = 'Play'
@@ -326,10 +307,27 @@
         implementationSwitch.innerText = 'Pure JS'
       }
 
-      // FIXME: Safari only works when microphone access is set up
-      if (navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1) {
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      if (window.showOpenFilePicker !== undefined) {
+        sourceSelect.add(
+          new Option('Load local audio file', '/'),
+          0
+        )
       }
+
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(() => {
+          navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+              devices.filter(device => device.kind === 'audioinput')
+                .reverse()
+                .forEach(device => {
+                  sourceSelect.add(
+                    new Option('Input: ' + device.label, '*' + device.deviceId),
+                    0
+                  )
+                })
+            })
+        })
     </script>
   </body>
 </html>
