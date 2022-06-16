@@ -146,6 +146,8 @@
                   }
                 }
               }
+
+              sourceSelect.add(new Option('MIDI input only', '#'))
             })
       }
 
@@ -260,6 +262,11 @@
           if (selectedValue === '/') {
             // only Chrome & Opera can do this at the time of writing
             loadLocalFile()
+          } else if (selectedValue === '#') {
+            // "MIDI solo" mode
+            playToggle.disabled = true
+            playRestart.disabled = true
+            levels = new Float32Array(pianoKeyboard.keysNum)
           } else {
             audioElement.src = `${selectedValue}?_=${Date.now()}` // never cache
           }
