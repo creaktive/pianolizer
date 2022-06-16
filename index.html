@@ -107,7 +107,7 @@
       import { PianoKeyboard, Spectrogram, Palette } from './js/visualization.js'
 
       let audioContext, audioSource, microphoneSource, pianolizer
-      let levels, lastTimestamp, palette
+      let levels, palette
 
       fetch('palette.json')
         .then(response => response.json())
@@ -151,17 +151,16 @@
 
       function draw (currentTimestamp) {
         if (
-          (playToggle.disabled === true || !audioElement.paused) &&
+          (playToggle.disabled || !audioElement.paused) &&
           levels !== undefined &&
-          palette !== undefined &&
-          currentTimestamp !== lastTimestamp
+          palette !== undefined
         ) {
           const audioColors = palette.getKeyColors(levels)
           const midiColors = palette.getKeyColors(midi)
           pianoKeyboard.update(audioColors, midiColors)
           spectrogram.update(audioColors, midiColors)
-          lastTimestamp = currentTimestamp
         }
+        window.requestAnimationFrame(draw)
       }
 
       function isPureJS () {
@@ -191,7 +190,6 @@
           pianolizer.port.onmessage = event => {
             // TODO: use SharedArrayBuffer for syncing levels
             levels = event.data
-            window.requestAnimationFrame(draw)
           }
 
           audioSource = audioContext.createMediaElementSource(audioElement)
@@ -329,6 +327,8 @@
                 })
             })
         })
+
+      window.requestAnimationFrame(draw)
     </script>
   </body>
 </html>
