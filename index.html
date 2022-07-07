@@ -70,6 +70,7 @@
       <label>
         Source:
         <select id="source">
+          <option value="?" disabled id="drop-label">Drag&amp;Drop file</option>
           <option value="audio/mazurka.mp3" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
           <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
           <option value="audio/sin.flac">Sine wave, 440 Hz</option>
@@ -123,6 +124,7 @@
       const playToggle = document.getElementById('play-toggle')
       const playRestart = document.getElementById('play-restart')
       const sourceSelect = document.getElementById('source')
+      const pianolizerUI = document.getElementById('pianolizer')
 
       const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
       pianoKeyboard.drawKeyboard()
@@ -238,7 +240,7 @@
             {
               description: 'Audio',
               accept: {
-                'audio/*': ['.mp3', '.flac', '.ogg', '.webm', '.wav']
+                'audio/*': ['.mp3', '.flac', '.ogg', '.wav']
               }
             }
           ],
@@ -324,6 +326,31 @@
           new Option('Load local audio file', '/'),
           0
         )
+      }
+
+      pianolizerUI.ondragover = event => {
+        event.preventDefault()
+      }
+      pianolizerUI.ondrop = event => {
+        event.preventDefault()
+        if (event.dataTransfer.items) {
+          for (const item of event.dataTransfer.items) {
+            if (item.kind === 'file' && item.type.match('^audio/(flac|mpeg|ogg|x-wav)$')) {
+              audioElement.pause()
+              playToggle.innerText = 'Play'
+
+              const fileData = item.getAsFile()
+              audioElement.src = URL.createObjectURL(fileData)
+
+              sourceSelect.value = '?'
+              document.getElementById('drop-label').innerText = fileData.name
+              break
+            }
+          }
+          event.dataTransfer.items.clear()
+        } else {
+          console.warn('DataTransferItemList interface unavailable')
+        }
       }
 
       navigator.mediaDevices.getUserMedia({ audio: true, video: false })
