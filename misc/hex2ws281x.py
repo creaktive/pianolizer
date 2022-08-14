@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pipe pixel colors to a LED strip')
     parser.add_argument('--keys', default=61, type=int, help='How many keys on the piano keyboard')
     parser.add_argument('--leds-per-key', default=2, type=int, help='How many LEDs per key')
-    parser.add_argument('--skip', default=2, type=int, help='Skip first N LED addresses')
+    parser.add_argument('--skip', default=0, type=int, help='Skip first N LED addresses')
     parser.add_argument('--gpio', default=12, type=int, help='GPIO pin connected to the LED strip')
     parser.add_argument('--brightness', default=255, type=int, help='Set to 0 for darkest and 255 for brightest')
     args = parser.parse_args()

@@ -37,7 +37,13 @@ amixer sset 'ADC PCM' 100%
 # start pianolizer
 CAPTURE_DEVICE=plughw:0
 SAMPLE_RATE=48000
+CHANNELS=2
+BUFFER_SIZE=256
+KEYS=61
+SKIP=2
+
 cd /home/pi/pianolizer
-nohup nice -n -19 sh -c "arecord --buffer-size=1024 -c 2 -D ${CAPTURE_DEVICE} -f FLOAT_LE -r ${SAMPLE_RATE} -t raw | ./pianolizer -c 2 -s ${SAMPLE_RATE} | misc/hex2ws281x.py" > /dev/null &
+renice -n -19 $$
+arecord -c ${CHANNELS} -D ${CAPTURE_DEVICE} -f FLOAT_LE -r ${SAMPLE_RATE} -t raw | ./pianolizer -b ${BUFFER_SIZE} -c ${CHANNELS} -k ${KEYS} -s ${SAMPLE_RATE} | misc/hex2ws281x.py --keys ${KEYS} --skip=${SKIP}
 
 exit 0
