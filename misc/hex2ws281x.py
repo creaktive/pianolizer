@@ -1,21 +1,30 @@
 #!/usr/bin/env python3
+import argparse
 import fileinput
 import re
+import sys
 
 from rpi_ws281x import PixelStrip, Color
 
 from palette import Palette
 
-KEYS = 61
-LEDS_PER_KEY = 2
-LED_OFFSET = 2
-
-# LED strip configuration:
-LED_COUNT = KEYS * LEDS_PER_KEY + LED_OFFSET
-LED_PIN = 12          # GPIO pin connected to the pixels
-LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
-
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Pipe pixel colors to a LED strip')
+    parser.add_argument('--keys', default=61, type=int, help='How many keys on the piano keyboard')
+    parser.add_argument('--leds-per-key', default=2, type=int, help='How many LEDs per key')
+    parser.add_argument('--skip', default=2, type=int, help='Skip first N LED addresses')
+    parser.add_argument('--gpio', default=12, type=int, help='GPIO pin connected to the LED strip')
+    parser.add_argument('--brightness', default=255, type=int, help='Set to 0 for darkest and 255 for brightest')
+    args = parser.parse_args()
+    sys.argv = []
+
+    KEYS = args.keys
+    LEDS_PER_KEY = args.leds_per_key
+    LED_OFFSET = args.skip
+    LED_PIN = args.gpio
+    LED_BRIGHTNESS = args.brightness
+    LED_COUNT = KEYS * LEDS_PER_KEY + LED_OFFSET
+
     strip = PixelStrip(
         LED_COUNT,
         LED_PIN,
