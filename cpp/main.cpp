@@ -21,6 +21,8 @@ void help() {
   cout << "\t-c\tnumber of channels; default: 1" << endl;
   cout << "\t-s\tsample rate; default: 44100 (Hz)" << endl;
   cout << "\t-p\tA4 reference frequency; default: 440 (Hz)" << endl;
+  cout << "\t-k\tnumber of keys on the piano keyboard; default: 61" << endl;
+  cout << "\t-r\treference key index (A4); default: 33" << endl;
   cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)" << endl;
   cout << endl;
   cout << "Description:" << endl;
@@ -42,9 +44,11 @@ int main(int argc, char *argv[]) {
   int sampleRate = 44100;
   float pitchFork = 440.;
   float averageWindow = 0.04;
+  int keys = 61;
+  int refKey = 33;
 
   for (;;) {
-    switch (getopt(argc, argv, "b:c:s:p:a:h")) {
+    switch (getopt(argc, argv, "b:c:s:p:k:r:a:h")) {
       case -1:
         break;
       case 'b':
@@ -58,6 +62,12 @@ int main(int argc, char *argv[]) {
         continue;
       case 'p':
         if (optarg) pitchFork = atof(optarg);
+        continue;
+      case 'k':
+        if (optarg) keys = atoi(optarg);
+        continue;
+      case 'r':
+        if (optarg) refKey = atoi(optarg);
         continue;
       case 'a':
         if (optarg) averageWindow = atof(optarg);
@@ -74,7 +84,7 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  auto tuning = make_shared<PianoTuning>(sampleRate, pitchFork);
+  auto tuning = make_shared<PianoTuning>(sampleRate, pitchFork, keys, refKey);
   auto sdft = SlidingDFT(tuning, -1.);
 
   try {
