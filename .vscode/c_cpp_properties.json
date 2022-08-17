@@ -4,14 +4,14 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/Cellar/emscripten/3.1.17/libexec/system/include",
+                "/usr/local/Cellar/emscripten/3.1.18/libexec/system/include",
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk/usr/include",
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk/usr/include/c++/v1",
                 "/usr/local/include"
             ],
             "defines": [],
             "macFrameworkPath": [],
-            "compilerPath": "/usr/local/bin/gcc-11",
+            "compilerPath": "/usr/local/bin/gcc-12",
             "cStandard": "gnu17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "macos-gcc-x64"

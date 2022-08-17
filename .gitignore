@@ -5,3 +5,4 @@ test
 pianolizer
 *.pyc
 cpp/benchmark
+.vscode/*.log
