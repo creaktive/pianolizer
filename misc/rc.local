@@ -36,11 +36,11 @@ amixer sset 'ADC PCM' 100%
 
 # start pianolizer
 CAPTURE_DEVICE=plughw:0
-SAMPLE_RATE=48000
+SAMPLE_RATE=24000
 CHANNELS=2
-BUFFER_SIZE=256
-KEYS=61
-SKIP=2
+BUFFER_SIZE=240
+KEYS=72
+SKIP=0
 
 cd /home/pi/pianolizer
 renice -n -19 $$
