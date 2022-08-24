@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 #
 # rc.local
 #
@@ -16,6 +16,8 @@ _IP=$(hostname -I) || true
 if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
+
+set -euxo pipefail
 
 # disable WiFi power management
 iwconfig wlan0 power off
