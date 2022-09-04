@@ -1,0 +1,65 @@
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: "Arial", Times, serif;
+  font-size: 12px;
+}
+
+.label {
+  font-weight: bold;
+  text-align: right;
+}
+
+a {
+  color: #fff;
+}
+
+button {
+  width: 5rem;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  border-radius: 10px;
+  height: 10px;
+  width: 8rem;
+}
+
+#controls {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#smoothing-value, #threshold-value {
+  font-family: monospace;
+}
+
+#pianolizer {
+  position: relative;
+  text-align: center;
+}
+
+#help {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  right: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.piano-key {
+  stroke: #555555; /* also defined in js/visualization.js! */
+  fill: #000;
+}
+
+.piano-key-label {
+  fill: #555555; /* also defined in js/visualization.js! */
+  font-family: monospace;
+  font-size: 12px;
+}
+
+#footer {
+  text-align: center;
+}
