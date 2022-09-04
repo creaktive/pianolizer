@@ -36,6 +36,12 @@ class PianolizerWorklet extends AudioWorkletProcessor {
       minValue: 0,
       maxValue: 0.25,
       automationRate: 'k-rate'
+    }, {
+      name: 'threshold',
+      defaultValue: 0,
+      minValue: 0,
+      maxValue: 1.0,
+      automationRate: 'k-rate'
     }]
   }
 
@@ -90,6 +96,11 @@ class PianolizerWorklet extends AudioWorkletProcessor {
     // update and sync the levels property with the main thread.
     if (this.nextUpdateFrame <= currentTime) {
       this.nextUpdateFrame = currentTime + this.updateInterval
+      for (let i = 0; i < levels.length; i++) {
+        if (levels[i] < parameters.threshold[0]) {
+          levels[i] = 0.0
+        }
+      }
       this.port.postMessage(levels)
     }
 
