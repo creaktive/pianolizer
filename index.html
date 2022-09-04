@@ -17,8 +17,9 @@
         font-family: "Arial", Times, serif;
         font-size: 12px;
       }
-      label {
+      .label {
         font-weight: bold;
+        text-align: right;
       }
       a {
         color: #fff;
@@ -30,12 +31,13 @@
         -webkit-appearance: none;
         border-radius: 10px;
         height: 10px;
-        width: 5rem;
+        width: 8rem;
       }
       #controls {
-        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
       }
-      #smoothing-value {
+      #smoothing-value, #threshold-value {
         font-family: monospace;
       }
       #pianolizer {
@@ -66,34 +68,48 @@
     </style>
   </head>
   <body>
-    <div id="controls">
-      <label>
-        Source:
-        <select id="source">
-          <option value="?" disabled id="drop-label">Drag&amp;Drop file</option>
-          <option value="audio/mazurka.mp3" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
-          <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
-          <option value="audio/sin.flac">Sine wave, 440 Hz</option>
-          <option value="audio/saw.flac">Sawtooth wave, 440 Hz</option>
-          <option value="audio/squ.flac">Square wave, 440 Hz</option>
-          <option value="audio/noise.flac">Pink noise</option>
-        </select>
-      </label>
-      <audio id="input" src="audio/mazurka.mp3" loop></audio>
-      <button id="play-toggle">Play</button>
-      <button id="play-restart">Restart</button>
-      <label>
-        Palette rotation:
-        <input id="rotation" type="range" min="0" max="11" step="1" value="0"/>
-      </label>
-      <label>
-        Smoothing:
-        <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.04"/>
-        (<span id="smoothing-value">0.040</span>s)
-      </label>
-      |
-      Switch to <a id="implementation"></a>
-    </div>
+    <audio id="input" src="audio/mazurka.mp3" loop></audio>
+    <table id="controls">
+      <tr>
+        <td class="label">Source:</td>
+        <td colspan="3">
+          <select id="source">
+            <option value="?" disabled id="drop-label">Drag&amp;Drop file</option>
+            <option value="audio/mazurka.mp3" selected="selected">Chopin Mazurka in F minor, op. 68 no. 4 (by Pianotomy)</option>
+            <option value="audio/chromatic.mp3">Chromatic scale on a piano, ascending</option>
+            <option value="audio/sin.flac">Sine wave, 440 Hz</option>
+            <option value="audio/saw.flac">Sawtooth wave, 440 Hz</option>
+            <option value="audio/squ.flac">Square wave, 440 Hz</option>
+            <option value="audio/noise.flac">Pink noise</option>
+          </select>
+          <button id="play-toggle">Play</button>
+          <button id="play-restart">Restart</button>
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Palette rotation:</td>
+        <td><input id="rotation" type="range" min="0" max="11" step="1" value="0"/></td>
+        <td class="label">Smoothing:</td>
+        <td>
+          <input id="smoothing" type="range" min="0" max="0.25" step="any" value="0.04"/>
+          (<span id="smoothing-value">0.040</span>s)
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Threshold:</td>
+        <td>
+          <input id="threshold" type="range" min="0" max="1" step="any" value="0"/>
+          (<span id="threshold-value">0.000</span>)
+        </td>
+        <td class="label">Implementation:</td>
+        <td>
+          <input type="radio" name="implementation" id="implementation-wasm" value="wasm">
+          <label for="implementation-wasm">WASM</label>
+          <input type="radio" name="implementation" id="implementation-purejs" value="purejs">
+          <label for="implementation-purejs">PureJS</label>
+        </td>
+      </tr>
+    </table>
     <div id="pianolizer">
       <div id="help">
         <h1>Drop audio file here or select the Source from the menu and press Play.</h1>
@@ -207,6 +223,7 @@
 
         audioSource.connect(audioContext.destination)
         pianolizer.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
+        pianolizer.parameters.get('threshold').value = parseFloat(document.getElementById('threshold').value)
       }
 
       async function setupMicrophone (deviceId) {
@@ -310,14 +327,27 @@
         }
       }
 
-      const implementationSwitch = document.getElementById('implementation')
+      document.getElementById('threshold').oninput = event => {
+        const value = parseFloat(event.target.value)
+        document.getElementById('threshold-value').innerText = value.toFixed(3)
+        if (pianolizer !== undefined) {
+          pianolizer.parameters.get('threshold').value = value
+        }
+      }
+
       const myURL = window.location.href.replace(/\?.*/, '')
+      const implementationWASM = document.getElementById('implementation-wasm')
+      implementationWASM.onclick = () => {
+        window.location.href = myURL
+      }
+      const implementationPureJS = document.getElementById('implementation-purejs')
+      implementationPureJS.onclick = () => {
+        window.location.href = myURL + '?purejs'
+      }
       if (isPureJS()) {
-        implementationSwitch.href = myURL
-        implementationSwitch.innerText = 'WASM'
+        implementationPureJS.checked = true
       } else {
-        implementationSwitch.href = myURL + '?purejs'
-        implementationSwitch.innerText = 'Pure JS'
+        implementationWASM.checked = true
       }
 
       if (window.showOpenFilePicker !== undefined) {
