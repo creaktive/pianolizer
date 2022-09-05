@@ -24,6 +24,7 @@ void help() {
   cout << "\t-k\tnumber of keys on the piano keyboard; default: 61" << endl;
   cout << "\t-r\treference key index (A4); default: 33" << endl;
   cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)" << endl;
+  cout << "\t-t\tnoise gate threshold, from 0 to 1; default: 0" << endl;
   cout << endl;
   cout << "Description:" << endl;
   cout << "Consumes an audio stream (1 channel, 32-bit float PCM)" << endl;
@@ -46,9 +47,10 @@ int main(int argc, char *argv[]) {
   float averageWindow = 0.04;
   int keys = 61;
   int refKey = 33;
+  float threshold = 0.;
 
   for (;;) {
-    switch (getopt(argc, argv, "b:c:s:p:k:r:a:h")) {
+    switch (getopt(argc, argv, "b:c:s:p:k:r:a:t:h")) {
       case -1:
         break;
       case 'b':
@@ -71,6 +73,9 @@ int main(int argc, char *argv[]) {
         continue;
       case 'a':
         if (optarg) averageWindow = atof(optarg);
+        continue;
+      case 't':
+        if (optarg) threshold = atof(optarg);
         continue;
       case 'h':
       default:
@@ -111,8 +116,9 @@ int main(int argc, char *argv[]) {
 
       stringstream stream;
       for (unsigned i = 0; i < sdft.bands; i++) {
-        unsigned value = static_cast<unsigned>(std::round(255. * clamp(output[i], 0., 1.)));
-        stream << setfill('0') << setw(2) << hex << value;
+        const float value = output[i] > threshold ? output[i] : 0.;
+        unsigned valueInt = static_cast<unsigned>(std::round(255. * clamp(value, 0., 1.)));
+        stream << setfill('0') << setw(2) << hex << valueInt;
       }
       cout << stream.str() << endl;
     }

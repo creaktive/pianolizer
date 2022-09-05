@@ -37,6 +37,7 @@ CAPTURE_DEVICE=seeed2micvoicec
 SAMPLE_RATE=24000
 CHANNELS=2
 BUFFER_SIZE=240
+THRESHOLD=0.05
 KEYS=72
 SKIP=0
 
@@ -46,6 +47,8 @@ amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
 # start pianolizer
 cd /home/pi/pianolizer
 renice -n -19 $$
-arecord -c ${CHANNELS} -D "plughw:${CAPTURE_DEVICE}" -f FLOAT_LE -r ${SAMPLE_RATE} -t raw | ./pianolizer -b ${BUFFER_SIZE} -c ${CHANNELS} -k ${KEYS} -s ${SAMPLE_RATE} | misc/hex2ws281x.py --keys ${KEYS} --skip=${SKIP}
+arecord -c ${CHANNELS} -D "plughw:${CAPTURE_DEVICE}" -f FLOAT_LE -r ${SAMPLE_RATE} -t raw \
+    | ./pianolizer -b ${BUFFER_SIZE} -c ${CHANNELS} -k ${KEYS} -s ${SAMPLE_RATE} -t ${THRESHOLD} \
+    | misc/hex2ws281x.py --keys ${KEYS} --skip ${SKIP}
 
 exit 0
