@@ -16,6 +16,11 @@ a {
 
 button {
   width: 5rem;
+  font-size: 12px;
+}
+
+#source {
+  font-size: 12px;
 }
 
 input[type=range] {
@@ -32,6 +37,7 @@ input[type=range] {
 
 #smoothing-value, #threshold-value {
   font-family: monospace;
+  color: #888888;
 }
 
 #pianolizer {

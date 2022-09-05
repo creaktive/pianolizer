@@ -193,7 +193,7 @@ document.getElementById('rotation').oninput = event => {
 
 document.getElementById('smoothing').oninput = event => {
   const value = parseFloat(event.target.value)
-  document.getElementById('smoothing-value').innerText = value.toFixed(3)
+  document.getElementById('smoothing-value').innerText = `${value.toFixed(3)}s`
   if (pianolizer !== undefined) {
     pianolizer.parameters.get('smooth').value = value
   }
