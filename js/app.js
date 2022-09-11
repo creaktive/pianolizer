@@ -17,21 +17,6 @@ function isPureJS () {
 }
 
 function loadSettings (reset = false) {
-  const myURL = window.location.href.replace(/\?.*/, '')
-  const implementationWASM = document.getElementById('implementation-wasm')
-  implementationWASM.onclick = () => {
-    window.location.href = myURL
-  }
-  const implementationPureJS = document.getElementById('implementation-purejs')
-  implementationPureJS.onclick = () => {
-    window.location.href = myURL + '?purejs'
-  }
-  if (isPureJS()) {
-    implementationPureJS.checked = true
-  } else {
-    implementationWASM.checked = true
-  }
-
   if (reset === true) {
     localStorage.clear()
   }
@@ -265,6 +250,21 @@ function setupUI (keysNum) {
       new Option('Load local audio file', '/'),
       0
     )
+  }
+
+  const myURL = window.location.href.replace(/\?.*/, '')
+  const implementationWASM = document.getElementById('implementation-wasm')
+  implementationWASM.onclick = () => {
+    window.location.href = myURL
+  }
+  const implementationPureJS = document.getElementById('implementation-purejs')
+  implementationPureJS.onclick = () => {
+    window.location.href = myURL + '?purejs'
+  }
+  if (isPureJS()) {
+    implementationPureJS.checked = true
+  } else {
+    implementationWASM.checked = true
   }
 }
 
