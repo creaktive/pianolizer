@@ -274,13 +274,23 @@ navigator.mediaDevices.getUserMedia({ audio: true, video: false })
       })
   })
 
-rotationInput.value = localStorage.getItem('rotation') || 0
-rotationInput.dispatchEvent(new Event('input'))
+function loadSettings (reset = false) {
+  if (reset === true) {
+    localStorage.clear()
+  }
 
-smoothingInput.value = localStorage.getItem('smoothing') || 0.040
-smoothingInput.dispatchEvent(new Event('input'))
+  const inputEvent = new Event('input')
 
-thresholdInput.value = localStorage.getItem('threshold') || 0.050
-thresholdInput.dispatchEvent(new Event('input'))
+  rotationInput.value = localStorage.getItem('rotation') || 0
+  rotationInput.dispatchEvent(inputEvent)
+
+  smoothingInput.value = localStorage.getItem('smoothing') || 0.040
+  smoothingInput.dispatchEvent(inputEvent)
+
+  thresholdInput.value = localStorage.getItem('threshold') || 0.050
+  thresholdInput.dispatchEvent(inputEvent)
+}
+
+loadSettings()
 
 window.requestAnimationFrame(draw)
