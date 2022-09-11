@@ -1,7 +1,7 @@
 import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
 let audioContext, audioSource, microphoneSource, pianolizer
-let levels, palette, paletteRotation
+let levels, palette
 
 const audioElement = document.getElementById('input')
 const playToggle = document.getElementById('play-toggle')
@@ -182,8 +182,9 @@ function setupUI (keysNum) {
   }
 
   rotationInput.oninput = event => {
-    paletteRotation = parseInt(event.target.value)
-    localStorage.setItem('rotation', paletteRotation)
+    const value = parseInt(event.target.value)
+    localStorage.setItem('rotation', value)
+    palette.rotation = value
   }
 
   smoothingInput.oninput = event => {
@@ -268,14 +269,13 @@ function setupUI (keysNum) {
   }
 }
 
-function app () {
+async function app () {
   function draw (currentTimestamp) {
     if (
       (playToggle.disabled || !audioElement.paused) &&
     levels !== undefined &&
     palette !== undefined
     ) {
-      palette.rotation = paletteRotation
       const audioColors = palette.getKeyColors(levels)
       const midiColors = palette.getKeyColors(midi)
       pianoKeyboard.update(audioColors, midiColors)
@@ -284,9 +284,8 @@ function app () {
     window.requestAnimationFrame(draw)
   }
 
-  fetch('palette.json')
-    .then(response => response.json())
-    .then(data => { palette = new Palette(data) })
+  const paletteData = await fetch('palette.json').then(response => response.json())
+  palette = new Palette(paletteData)
 
   const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
   pianoKeyboard.drawKeyboard()
