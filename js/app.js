@@ -1,7 +1,7 @@
 import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
 let audioContext, audioSource, microphoneSource, pianolizer
-let levels, palette
+let levels, palette, paletteRotation
 
 fetch('palette.json')
   .then(response => response.json())
@@ -12,6 +12,9 @@ const playToggle = document.getElementById('play-toggle')
 const playRestart = document.getElementById('play-restart')
 const sourceSelect = document.getElementById('source')
 const pianolizerUI = document.getElementById('pianolizer')
+const rotationInput = document.getElementById('rotation')
+const smoothingInput = document.getElementById('smoothing')
+const thresholdInput = document.getElementById('threshold')
 
 const pianoKeyboard = new PianoKeyboard(document.getElementById('keyboard'))
 pianoKeyboard.drawKeyboard()
@@ -52,6 +55,7 @@ function draw (currentTimestamp) {
     levels !== undefined &&
     palette !== undefined
   ) {
+    palette.rotation = paletteRotation
     const audioColors = palette.getKeyColors(levels)
     const midiColors = palette.getKeyColors(midi)
     pianoKeyboard.update(audioColors, midiColors)
@@ -94,8 +98,8 @@ async function setupAudio () {
   }
 
   audioSource.connect(audioContext.destination)
-  pianolizer.parameters.get('smooth').value = parseFloat(document.getElementById('smoothing').value)
-  pianolizer.parameters.get('threshold').value = parseFloat(document.getElementById('threshold').value)
+  pianolizer.parameters.get('smooth').value = parseFloat(smoothingInput.value)
+  pianolizer.parameters.get('threshold').value = parseFloat(thresholdInput.value)
 }
 
 async function setupMicrophone (deviceId) {
@@ -185,22 +189,23 @@ playRestart.onclick = event => {
   playToggle.innerText = 'Play'
 }
 
-document.getElementById('rotation').oninput = event => {
-  if (palette !== undefined) {
-    palette.rotation = event.target.value
-  }
+rotationInput.oninput = event => {
+  paletteRotation = parseInt(event.target.value)
+  localStorage.setItem('rotation', paletteRotation)
 }
 
-document.getElementById('smoothing').oninput = event => {
+smoothingInput.oninput = event => {
   const value = parseFloat(event.target.value)
+  localStorage.setItem('smoothing', value)
   document.getElementById('smoothing-value').innerText = `${value.toFixed(3)}s`
   if (pianolizer !== undefined) {
     pianolizer.parameters.get('smooth').value = value
   }
 }
 
-document.getElementById('threshold').oninput = event => {
+thresholdInput.oninput = event => {
   const value = parseFloat(event.target.value)
+  localStorage.setItem('threshold', value)
   document.getElementById('threshold-value').innerText = value.toFixed(3)
   if (pianolizer !== undefined) {
     pianolizer.parameters.get('threshold').value = value
@@ -268,5 +273,14 @@ navigator.mediaDevices.getUserMedia({ audio: true, video: false })
           })
       })
   })
+
+rotationInput.value = localStorage.getItem('rotation') || 0
+rotationInput.dispatchEvent(new Event('input'))
+
+smoothingInput.value = localStorage.getItem('smoothing') || 0.040
+smoothingInput.dispatchEvent(new Event('input'))
+
+thresholdInput.value = localStorage.getItem('threshold') || 0.050
+thresholdInput.dispatchEvent(new Event('input'))
 
 window.requestAnimationFrame(draw)
