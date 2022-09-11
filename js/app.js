@@ -5,9 +5,7 @@ let levels, palette
 
 const audioElement = document.getElementById('input')
 const playToggle = document.getElementById('play-toggle')
-const playRestart = document.getElementById('play-restart')
 const sourceSelect = document.getElementById('source')
-const pianolizerUI = document.getElementById('pianolizer')
 const rotationInput = document.getElementById('rotation')
 const smoothingInput = document.getElementById('smoothing')
 const thresholdInput = document.getElementById('threshold')
@@ -109,32 +107,37 @@ async function setupMicrophone (deviceId) {
 }
 
 function setupMIDI (midi) {
-  if (navigator.requestMIDIAccess) {
-    navigator.requestMIDIAccess()
-      .then(
-        midiAccess => {
-          // connecting MIDI to input function
-          for (const input of midiAccess.inputs.values()) {
-            input.onmidimessage = message => {
-              const firstNoteIndex = 36
-              const [command, note, velocity] = message.data
-              switch (command) {
-                case 0x90:
-                  midi[note - firstNoteIndex] = velocity / 0x7f
-                  break
-                case 0x80:
-                  midi[note - firstNoteIndex] = 0
-                  break
-              }
+  if (navigator.requestMIDIAccess === undefined) {
+    return
+  }
+
+  navigator.requestMIDIAccess()
+    .then(
+      midiAccess => {
+        // connecting MIDI to input function
+        for (const input of midiAccess.inputs.values()) {
+          input.onmidimessage = message => {
+            const firstNoteIndex = 36
+            const [command, note, velocity] = message.data
+            switch (command) {
+              case 0x90:
+                midi[note - firstNoteIndex] = velocity / 0x7f
+                break
+              case 0x80:
+                midi[note - firstNoteIndex] = 0
+                break
             }
           }
+        }
 
-          sourceSelect.add(new Option('MIDI input only', '#'))
-        })
-  }
+        sourceSelect.add(new Option('MIDI input only', '#'))
+      })
 }
 
 function setupUI (keysNum) {
+  const playRestart = document.getElementById('play-restart')
+  const pianolizerUI = document.getElementById('pianolizer')
+
   sourceSelect.onchange = event => {
     audioElement.pause()
     playToggle.innerText = 'Play'
