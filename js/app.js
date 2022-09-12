@@ -1,7 +1,7 @@
 import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
 let audioContext, audioSource, microphoneSource, pianolizer
-let levels, palette
+let levels, midi, palette
 
 const audioElement = document.getElementById('input')
 const playToggle = document.getElementById('play-toggle')
@@ -70,7 +70,7 @@ async function setupAudio () {
     pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet')
     pianolizer.port.onmessage = event => {
       // TODO: use SharedArrayBuffer for syncing levels
-      levels = event.data
+      levels.set(event.data)
     }
 
     audioSource = audioContext.createMediaElementSource(audioElement)
@@ -106,7 +106,7 @@ async function setupMicrophone (deviceId) {
   }
 }
 
-function setupMIDI (midi) {
+function setupMIDI () {
   if (navigator.requestMIDIAccess === undefined) {
     return
   }
@@ -134,7 +134,7 @@ function setupMIDI (midi) {
       })
 }
 
-function setupUI (keysNum) {
+function setupUI () {
   const playRestart = document.getElementById('play-restart')
   const pianolizerUI = document.getElementById('pianolizer')
 
@@ -161,7 +161,7 @@ function setupUI (keysNum) {
         // "MIDI solo" mode
         playToggle.disabled = true
         playRestart.disabled = true
-        levels = new Float32Array(keysNum)
+        levels.fill(0.0)
       } else {
         audioElement.src = `${selectedValue}?_=${Date.now()}` // never cache
       }
@@ -274,11 +274,7 @@ function setupUI (keysNum) {
 
 async function app () {
   function draw (currentTimestamp) {
-    if (
-      (playToggle.disabled || !audioElement.paused) &&
-    levels !== undefined &&
-    palette !== undefined
-    ) {
+    if (playToggle.disabled || !audioElement.paused) {
       const audioColors = palette.getKeyColors(levels)
       const midiColors = palette.getKeyColors(midi)
       pianoKeyboard.update(audioColors, midiColors)
@@ -298,10 +294,11 @@ async function app () {
     600
   )
 
-  const midi = new Float32Array(pianoKeyboard.keysNum)
+  levels = new Float32Array(pianoKeyboard.keysNum)
+  midi = new Float32Array(pianoKeyboard.keysNum)
 
-  setupMIDI(midi)
-  setupUI(midi.length)
+  setupMIDI()
+  setupUI()
   loadSettings()
 
   window.requestAnimationFrame(draw)
