@@ -5,7 +5,7 @@
  * @extends {AudioWorkletProcessor}
  */
 class PianolizerWorklet extends AudioWorkletProcessor {
-  /* global currentTime, sampleRate, Pianolizer */
+  /* global sampleRate, Pianolizer */
 
   /**
    * Creates an instance of PianolizerWorklet.
@@ -16,9 +16,6 @@ class PianolizerWorklet extends AudioWorkletProcessor {
 
     this.samples = null // allocated according to the input length
     this.pianolizer = new Pianolizer(sampleRate)
-
-    this.updateInterval = 1.0 / 60 // to be rendered at 60fps
-    this.nextUpdateFrame = 0
   }
 
   /**
@@ -93,16 +90,12 @@ class PianolizerWorklet extends AudioWorkletProcessor {
     // DO IT!!!
     const levels = this.pianolizer.process(this.samples, parameters.smooth[0])
 
-    // update and sync the levels property with the main thread.
-    if (this.nextUpdateFrame <= currentTime) {
-      this.nextUpdateFrame = currentTime + this.updateInterval
-      for (let i = 0; i < levels.length; i++) {
-        if (levels[i] < parameters.threshold[0]) {
-          levels[i] = 0.0
-        }
+    for (let i = 0; i < levels.length; i++) {
+      if (levels[i] < parameters.threshold[0]) {
+        levels[i] = 0
       }
-      this.port.postMessage(levels)
     }
+    this.port.postMessage(levels)
 
     return true
   }
