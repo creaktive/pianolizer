@@ -67,7 +67,6 @@ class PianolizerWorklet extends AudioWorkletProcessor {
     }
 
     // mix down the inputs into single array
-    let count = 0
     const inputPortCount = input.length
     for (let portIndex = 0; portIndex < inputPortCount; portIndex++) {
       const channelCount = input[portIndex].length
@@ -76,21 +75,15 @@ class PianolizerWorklet extends AudioWorkletProcessor {
           const sample = input[portIndex][channelIndex][sampleIndex]
           // output[portIndex][channelIndex][sampleIndex] = sample
           this.samples[sampleIndex] += sample
-          count++
         }
       }
-    }
-
-    // normalize so that each sample is within the range [0.0, 1.0]
-    const n = count / windowSize
-    for (let i = 0; i < windowSize; i++) {
-      this.samples[i] /= n
     }
 
     // DO IT!!!
     const levels = this.pianolizer.process(this.samples, parameters.smooth[0])
 
-    for (let i = 0; i < levels.length; i++) {
+    const bands = levels.length
+    for (let i = 0; i < bands; i++) {
       if (levels[i] < parameters.threshold[0]) {
         levels[i] = 0
       }
