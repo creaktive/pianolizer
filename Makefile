@@ -1,3 +1,8 @@
+CPP=g++
+EMCC=emcc
+RM=rm
+STRIP=strip
+
 WASM_TARGET=js/pianolizer-wasm.js
 TEST_BINARY=./test
 NATIVE_BINARY=./pianolizer
@@ -11,14 +16,14 @@ CFLAGS=-ffast-math -flto -std=c++14 \
 	#-fsanitize=address
 	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wundef
 
-all: $(WASM_TARGET) pianolizer
+all: $(NATIVE_BINARY) $(WASM_TARGET)
 
 clean:
-	@rm -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
+	$(RM) -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
 
 emscripten: $(WASM_TARGET)
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
-	@emcc $(CFLAGS) $(DEFS) \
+	$(EMCC) $(CFLAGS) $(DEFS) \
 		-O3 \
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
@@ -30,15 +35,17 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 		cpp/pianolizer.cpp
 
 test: cpp/test.cpp cpp/pianolizer.hpp
-	@g++ $(CFLAGS) $(DEFS) \
+	$(CPP) $(CFLAGS) $(DEFS) \
 		-Ofast \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp \
 		-lgtest -lgtest_main
-	@$(TEST_BINARY)
+	$(STRIP) $(TEST_BINARY)
+	$(TEST_BINARY)
 
-pianolizer: cpp/main.cpp cpp/pianolizer.hpp
-	@g++ $(CFLAGS) $(DEFS) \
+$(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
+	$(CPP) $(CFLAGS) $(DEFS) \
 		-Ofast \
 		-o $(NATIVE_BINARY) \
 		cpp/main.cpp
+	$(STRIP) $(NATIVE_BINARY)
