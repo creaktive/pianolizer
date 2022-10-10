@@ -33,22 +33,24 @@ echo 1 | tee /sys/devices/system/cpu/cpu*/cpufreq/stats/reset
 # wait for seeed-voicecard to initialize
 sleep 1
 
-CAPTURE_DEVICE=seeed2micvoicec
+# CAPTURE_DEVICE=seeed2micvoicec
+CAPTURE_DEVICE=0
 SAMPLE_RATE=24000
 CHANNELS=2
 BUFFER_SIZE=240
 THRESHOLD=0.05
 KEYS=72
 SKIP=0
+GPIO=12
 
 # a reasonable microphone setting for seeed-voicecard
-amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
+# amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
 
 # start pianolizer
 cd /home/pi/pianolizer
 renice -n -19 $$
 arecord -c ${CHANNELS} -D "plughw:${CAPTURE_DEVICE}" -f FLOAT_LE -r ${SAMPLE_RATE} -t raw \
     | ./pianolizer -b ${BUFFER_SIZE} -c ${CHANNELS} -k ${KEYS} -s ${SAMPLE_RATE} -t ${THRESHOLD} \
-    | misc/hex2ws281x.py --keys ${KEYS} --skip ${SKIP}
+    | misc/hex2ws281x.py --keys ${KEYS} --skip ${SKIP} --gpio ${GPIO}
 
 exit 0
