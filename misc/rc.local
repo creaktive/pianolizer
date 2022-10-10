@@ -33,8 +33,7 @@ echo 1 | tee /sys/devices/system/cpu/cpu*/cpufreq/stats/reset
 # wait for seeed-voicecard to initialize
 sleep 1
 
-# CAPTURE_DEVICE=seeed2micvoicec
-CAPTURE_DEVICE=0
+CAPTURE_DEVICE=$( arecord -l | perl -nE '/^card\s+\d+:\s+(\S+)/ && do { say $1; exit }' )
 SAMPLE_RATE=24000
 CHANNELS=2
 BUFFER_SIZE=240
@@ -44,7 +43,9 @@ SKIP=0
 GPIO=12
 
 # a reasonable microphone setting for seeed-voicecard
-# amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
+if [ "${CAPTURE_DEVICE}" = "seeed2micvoicec" ]; then
+    amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
+fi
 
 # start pianolizer
 cd /home/pi/pianolizer
