@@ -4,8 +4,8 @@ RM=rm
 STRIP=strip
 
 WASM_TARGET=js/pianolizer-wasm.js
-TEST_BINARY=./test
-NATIVE_BINARY=./pianolizer
+TEST_BINARY=test
+NATIVE_BINARY=pianolizer
 
 # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
 CFLAGS=-ffast-math -flto -std=c++14 \
@@ -34,14 +34,14 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 		-o $(WASM_TARGET) \
 		cpp/pianolizer.cpp
 
-test: cpp/test.cpp cpp/pianolizer.hpp
+$(TEST_BINARY): cpp/test.cpp cpp/pianolizer.hpp
 	$(CPP) $(CFLAGS) $(DEFS) \
 		-Ofast \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp \
 		-lgtest -lgtest_main
 	$(STRIP) $(TEST_BINARY)
-	$(TEST_BINARY)
+	./$(TEST_BINARY)
 
 $(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
 	$(CPP) $(CFLAGS) $(DEFS) \
