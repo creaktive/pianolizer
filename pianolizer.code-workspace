@@ -6,6 +6,7 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"ALSA",
 			"coeff",
 			"Convolutional",
 			"creaktive",
@@ -16,6 +17,7 @@
 			"flac",
 			"Goertzel",
 			"HEAPF",
+			"Imager",
 			"Microcontrollers",
 			"Ofast",
 			"onmidimessage",
@@ -23,6 +25,7 @@
 			"Pianotomy",
 			"purejs",
 			"Pusep",
+			"raspios",
 			"sdft",
 			"Seeed",
 			"Stanislaw",

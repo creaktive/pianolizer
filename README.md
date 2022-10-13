@@ -12,7 +12,27 @@ Examples for browser and Raspberry Pi are provided.
 - [Pianolizer app](https://sysd.org/pianolizer/) - runs directly in the browser. Also, mobile browser. Chrome is recommended for the best experience.
 - [Algorithm benchmark](https://sysd.org/pianolizer/benchmark.html) - test the speed of the core algorithm, in the browser. WASM results closely match what is expected from the native binary performance, on the same machine. 44100 samples per second is enough for realtime performance. As a matter of fact, one can get decent results with as little as 8000 samples per second (saving both CPU & RAM resources!); however the resampling algorithm implementation is left as an exercise to the reader (that is, for the JS/browser; the `pianolizer` CLI utility is meant to be paired with [sox](http://sox.sourceforge.net)).
 
-## Building
+## Building the hardware
+
+### Parts list
+
+0. Any [Raspberry Pi](https://rpilocator.com/) or a compatible device.
+0. [ReSpeaker 2-Mics Pi hat by Seeed](https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html). Any ALSA-compatible audio input device should work (also the external USB ones), but YMMV.
+0. WS2812B RGB LED strip, 1m-long with 144 LEDs/m. I used [this specific one](https://www.amazon.de/-/en/gp/product/B08DJCBTS3/ref=ppx_yo_dt_b_asin_title_o00_s00?th=1).
+0. A cable with a connector compatible with [this one](https://www.seeedstudio.com/Grove-4-pin-Male-Jumper-to-Grove-4-pin-Conversion-Cable-5-PCs-per-Pack.html), for connecting the LED strip to the ReSpeaker device.
+0. An SD card with at least 4GB capacity.
+0. A power source for the Raspberry Pi.
+
+### Assembly instructions
+
+0. Connect the ReSpeaker hat to the Raspberry Pi.
+0. Connect the LED strip to the **GP12** port of the ReSpeaker hat. Connect _GND_ of the strip to _pin 4_; _+5V_ to _pin 3_ & _DATA_ to _pin 1_ (this standard is called [Grove System](https://wiki.seeedstudio.com/Grove_System/)).
+0. Download & extract the [pianolizer-2022-10-11.img](https://sysd.org/pianolizer/pianolizer-2022-10-11.img.xz) image file (it is based on [2022-09-22-raspios-bullseye-arm64-lite.img](https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2022-09-26/2022-09-22-raspios-bullseye-arm64-lite.img.xz), BTW).
+0. Write the image to the SD card. I recommend the [Raspberry Pi Imager](https://www.raspberrypi.com/software/), since it works with any OS and has a GUI to conveniently setup WiFi/SSH *before* booting.
+0. Customize the [pianolizer.txt](https://github.com/creaktive/pianolizer/blob/master/misc/pianolizer.txt) file on the initialized SD card (or leave it as-is when using the same parts as listed above).
+0. Power up! After the boot completes, the LEDs start blinking when you talk to the microphone :)
+
+## Building the software
 
 The [C++ implementation](cpp/pianolizer.hpp) should compile just fine on any platform that supports C++14, there are no dependencies as the code uses C++14 standard data types. 
 It is known to compile & run successfully with [Clang](https://clang.llvm.org), [GCC](https://gcc.gnu.org) and [Emscripten](https://emscripten.org).
