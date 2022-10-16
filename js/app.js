@@ -68,7 +68,14 @@ async function setupAudio () {
     const blob = new Blob(modules, { type: 'application/javascript' })
     await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
 
-    pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet', { outputChannelCount: [32] })
+    pianolizer = new AudioWorkletNode(
+      audioContext,
+      'pianolizer-worklet',
+      {
+        numberOfOutputs: 1,
+        outputChannelCount: [32]
+      }
+    )
     pianolizer.port.onmessage = event => {
       // TODO: use SharedArrayBuffer for syncing levels
       levels.set(event.data)
@@ -82,7 +89,7 @@ async function setupAudio () {
     for (let i = 0; i < 32; i++) {
       const oscillatorNode = audioContext.createOscillator()
       oscillatorNode.frequency.value = 440 * Math.pow(2, (i - 19) / 12)
-      oscillatorNode.type = 'sine'
+      oscillatorNode.type = 'triangle'
 
       const gainNode = audioContext.createGain()
       gainNode.gain.value = 0
@@ -102,7 +109,7 @@ async function setupAudio () {
 
 async function setupMicrophone (deviceId) {
   await setupAudio()
-  audioSource.disconnect(audioContext.destination)
+  // audioSource.disconnect(audioContext.destination)
 
   if (microphoneSource === undefined) {
     await navigator.mediaDevices.getUserMedia({ audio: { deviceId }, video: false })
