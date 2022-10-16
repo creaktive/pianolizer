@@ -68,7 +68,7 @@ async function setupAudio () {
     const blob = new Blob(modules, { type: 'application/javascript' })
     await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
 
-    pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet')
+    pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet', { outputChannelCount: [32] })
     pianolizer.port.onmessage = event => {
       // TODO: use SharedArrayBuffer for syncing levels
       levels.set(event.data)
@@ -76,9 +76,26 @@ async function setupAudio () {
 
     audioSource = audioContext.createMediaElementSource(audioElement)
     audioSource.connect(pianolizer)
+
+    const splitterNode = audioContext.createChannelSplitter(32)
+    pianolizer.connect(splitterNode)
+    for (let i = 0; i < 32; i++) {
+      const oscillatorNode = audioContext.createOscillator()
+      oscillatorNode.frequency.value = 440 * Math.pow(2, (i - 19) / 12)
+      oscillatorNode.type = 'sine'
+
+      const gainNode = audioContext.createGain()
+      gainNode.gain.value = 0
+
+      oscillatorNode.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      splitterNode.connect(gainNode.gain, i)
+      oscillatorNode.start()
+    }
   }
 
-  audioSource.connect(audioContext.destination)
+  // audioSource.connect(audioContext.destination)
   pianolizer.parameters.get('smooth').value = Math.pow(parseFloat(smoothingInput.value), 3)
   pianolizer.parameters.get('threshold').value = Math.pow(parseFloat(thresholdInput.value), 3)
 }

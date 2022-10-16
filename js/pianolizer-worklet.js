@@ -87,6 +87,13 @@ class PianolizerWorklet extends AudioWorkletProcessor {
       if (levels[i] < parameters.threshold[0]) {
         levels[i] = 0
       }
+
+      const b = 14
+      if (i >= b && i < b + 32) {
+        for (let j = 0; j < windowSize; j++) {
+          output[0][i - b][j] = levels[i]
+        }
+      }
     }
     this.port.postMessage(levels)
 
