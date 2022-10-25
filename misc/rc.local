@@ -30,7 +30,13 @@ echo 1 | tee /sys/devices/system/cpu/cpu*/cpufreq/stats/reset
 # wait for audio to initialize
 sleep 2
 
-CAPTURE_DEVICE=$( arecord -l | perl -nE '/^card\s+\d+:\s+(\S+)/ && do { say $1; exit }' )
+for card in /proc/asound/*/pcm?c/info; do
+    card=$(echo "${card}" | cut -d / -f 4)
+    if [[ "${card}" != card* ]]; then
+        CAPTURE_DEVICE="${card}"
+    fi
+done
+
 SAMPLE_RATE=24000
 CHANNELS=2
 BUFFER_SIZE=240
