@@ -24,10 +24,10 @@ function loadSettings (reset = false) {
   rotationInput.value = localStorage.getItem('rotation') || 0
   rotationInput.dispatchEvent(inputEvent)
 
-  smoothingInput.value = localStorage.getItem('smoothing') || 0.040
+  smoothingInput.value = Math.pow(localStorage.getItem('smoothing') || 0.040, 1 / 3)
   smoothingInput.dispatchEvent(inputEvent)
 
-  thresholdInput.value = localStorage.getItem('threshold') || 0.050
+  thresholdInput.value = Math.pow(localStorage.getItem('threshold') || 0.050, 1 / 3)
   thresholdInput.dispatchEvent(inputEvent)
 }
 
@@ -78,8 +78,8 @@ async function setupAudio () {
   }
 
   audioSource.connect(audioContext.destination)
-  pianolizer.parameters.get('smooth').value = parseFloat(smoothingInput.value)
-  pianolizer.parameters.get('threshold').value = parseFloat(thresholdInput.value)
+  pianolizer.parameters.get('smooth').value = Math.pow(parseFloat(smoothingInput.value), 3)
+  pianolizer.parameters.get('threshold').value = Math.pow(parseFloat(thresholdInput.value), 3)
 }
 
 async function setupMicrophone (deviceId) {
@@ -191,7 +191,7 @@ function setupUI () {
   }
 
   smoothingInput.oninput = event => {
-    const value = parseFloat(event.target.value)
+    const value = Math.pow(parseFloat(event.target.value), 3)
     localStorage.setItem('smoothing', value)
     document.getElementById('smoothing-value').innerText = `${value.toFixed(3)}s`
     if (pianolizer !== undefined) {
@@ -200,7 +200,7 @@ function setupUI () {
   }
 
   thresholdInput.oninput = event => {
-    const value = parseFloat(event.target.value)
+    const value = Math.pow(parseFloat(event.target.value), 3)
     localStorage.setItem('threshold', value)
     document.getElementById('threshold-value').innerText = value.toFixed(3)
     if (pianolizer !== undefined) {
