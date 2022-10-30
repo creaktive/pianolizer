@@ -5,6 +5,10 @@ body {
   font-size: 12px;
 }
 
+#spectrogram:hover {
+  cursor: pointer;
+}
+
 .label {
   font-weight: bold;
   text-align: right;

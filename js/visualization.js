@@ -210,6 +210,14 @@ export class Spectrogram {
     this.bufArray = new ArrayBuffer(this.width * this.height * 4)
     this.buf8 = new Uint8Array(this.bufArray)
     this.buf32 = new Uint32Array(this.bufArray)
+
+    canvasElement.onclick = event => {
+      event.preventDefault()
+      const a = document.createElement('a')
+      a.href = canvasElement.toDataURL('image/png')
+      a.download = 'pianolizer.png'
+      a.click()
+    }
   }
 
   update (audioColors, midiColors) {
