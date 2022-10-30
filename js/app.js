@@ -1,6 +1,7 @@
 import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
-const PURE_JS = 'purejs'
+const HEIGHT = 'height'
+const PUREJS = 'purejs'
 
 let audioContext, audioSource, microphoneSource, pianolizer
 let levels, midi, palette
@@ -57,7 +58,7 @@ async function setupAudio () {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1636121
     // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
     const fetchText = url => fetch(url).then(response => response.text())
-    const pianolizerImplementation = searchParams.has(PURE_JS)
+    const pianolizerImplementation = searchParams.has(PUREJS)
       ? 'js/pianolizer.js'
       : 'js/pianolizer-wasm.js'
     const modules = await Promise.all([
@@ -258,15 +259,15 @@ function setupUI () {
 
   const implementationWASM = document.getElementById('implementation-wasm')
   implementationWASM.onclick = () => {
-    searchParams.delete(PURE_JS)
+    searchParams.delete(PUREJS)
     window.location.search = searchParams.toString()
   }
   const implementationPureJS = document.getElementById('implementation-purejs')
   implementationPureJS.onclick = () => {
-    searchParams.set(PURE_JS, true)
+    searchParams.set(PUREJS, true)
     window.location.search = searchParams.toString()
   }
-  if (searchParams.has(PURE_JS)) {
+  if (searchParams.has(PUREJS)) {
     implementationPureJS.checked = true
   } else {
     implementationWASM.checked = true
@@ -292,7 +293,7 @@ async function app () {
   const spectrogram = new Spectrogram(
     document.getElementById('spectrogram'),
     pianoKeyboard.keySlices,
-    600
+    parseInt(searchParams.get(HEIGHT)) || 600
   )
 
   levels = new Float32Array(pianoKeyboard.keysNum)
