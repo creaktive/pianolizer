@@ -1,5 +1,7 @@
 import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
+const PURE_JS = 'purejs'
+
 let audioContext, audioSource, microphoneSource, pianolizer
 let levels, midi, palette
 
@@ -10,9 +12,7 @@ const rotationInput = document.getElementById('rotation')
 const smoothingInput = document.getElementById('smoothing')
 const thresholdInput = document.getElementById('threshold')
 
-function isPureJS () {
-  return window.location.search.toLowerCase() === '?purejs'
-}
+const searchParams = new URLSearchParams(window.location.search)
 
 function loadSettings (reset = false) {
   if (reset === true) {
@@ -57,7 +57,7 @@ async function setupAudio () {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1636121
     // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
     const fetchText = url => fetch(url).then(response => response.text())
-    const pianolizerImplementation = isPureJS()
+    const pianolizerImplementation = searchParams.has(PURE_JS)
       ? 'js/pianolizer.js'
       : 'js/pianolizer-wasm.js'
     const modules = await Promise.all([
@@ -256,16 +256,17 @@ function setupUI () {
     )
   }
 
-  const myURL = window.location.href.replace(/\?.*/, '')
   const implementationWASM = document.getElementById('implementation-wasm')
   implementationWASM.onclick = () => {
-    window.location.href = myURL
+    searchParams.delete(PURE_JS)
+    window.location.search = searchParams.toString()
   }
   const implementationPureJS = document.getElementById('implementation-purejs')
   implementationPureJS.onclick = () => {
-    window.location.href = myURL + '?purejs'
+    searchParams.set(PURE_JS, true)
+    window.location.search = searchParams.toString()
   }
-  if (isPureJS()) {
+  if (searchParams.has(PURE_JS)) {
     implementationPureJS.checked = true
   } else {
     implementationWASM.checked = true
