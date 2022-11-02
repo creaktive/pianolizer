@@ -2,6 +2,7 @@ import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
 const HEIGHT = 'height'
 const PUREJS = 'purejs'
+const SYNTH = 'synth'
 
 let audioContext, audioSource, microphoneSource, pianolizer
 let levels, midi, palette
@@ -86,10 +87,11 @@ async function setupAudio () {
 
     const splitterNode = audioContext.createChannelSplitter(32)
     pianolizer.connect(splitterNode)
+    const synthType = searchParams.get(SYNTH) || 'triangle'
     for (let i = 0; i < 32; i++) {
       const oscillatorNode = audioContext.createOscillator()
       oscillatorNode.frequency.value = 440 * Math.pow(2, (i - 19) / 12)
-      oscillatorNode.type = 'triangle'
+      oscillatorNode.type = synthType
 
       const gainNode = audioContext.createGain()
       gainNode.gain.value = 0
