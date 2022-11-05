@@ -91,7 +91,7 @@ class PianolizerWorklet extends AudioWorkletProcessor {
       const b = 14
       if (i >= b && i < b + 32) {
         for (let j = 0; j < windowSize; j++) {
-          output[0][i - b][j] = levels[i]
+          output[0][i - b][j] = Math.sqrt(levels[i])
         }
       }
     }
