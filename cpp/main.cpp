@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
   auto sdft = SlidingDFT(tuning, -1.);
 
   try {
-    freopen(nullptr, "rb", stdin);
-    if (ferror(stdin))
+    auto stdin_handle = freopen(nullptr, "rb", stdin);
+    if (ferror(stdin_handle))
       throw runtime_error(strerror(errno));
 
     size_t len;
