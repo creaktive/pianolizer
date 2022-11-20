@@ -1,20 +1,26 @@
 #!/usr/bin/env perl
-use 5.020;
-use experimental qw( signatures );
-use warnings qw( all );
-no warnings qw( experimental::signatures );
+use 5.036;
 
+use Getopt::Long ();
 use POSIX ();
 
-sub key2freq ( $n ) {
-    return 440 * ( 2 ** ( ( $n - 33 ) / 12 ) );
+sub key2freq ( $n, $s ) {
+    state $r = { 61 => 33, 88 => 48 };
+    my $o = $n - ( $r->{$s} || die "don't know manuals with $s keys\n" );
+    return 440 * ( 2 ** ( $o / 12 ) );
 }
 
-my $sample_rate = $ARGV[0] || 44100;
+Getopt::Long::GetOptions(
+    'sample_rate=i'     => \my $sample_rate,
+    'keyboard_size=i'   => \my $keyboard_size,
+);
+$sample_rate ||= 44100;
+$keyboard_size ||= 61;
 
-for my $key ( 0 .. 60 ) {
-    my $old_freq = key2freq( $key );
-    my $bandwidth = 2 * ( key2freq( $key + 0.5 ) - $old_freq );
+my $rms = 0;
+for my $key ( 0 .. $keyboard_size - 1 ) {
+    my $old_freq = key2freq( $key, $keyboard_size );
+    my $bandwidth = 2 * ( key2freq( $key + 0.5, $keyboard_size ) - $old_freq );
     my $N = POSIX::floor( $sample_rate / $bandwidth );
     my $k = POSIX::floor( $old_freq / $bandwidth );
 
@@ -31,14 +37,19 @@ for my $key ( 0 .. 60 ) {
     my $new_freq = $sample_rate * ( $k / $N );
     my $new_bandwidth = $sample_rate / $N;
 
+    my $error = ( $new_freq - $old_freq ) / $bandwidth;
+    $rms += $error * $error;
     printf "%d\t%f\t%f\t%f\t%f\t%f\t%d/%d\n",
         $key,
         $old_freq,
         $new_freq,
         $bandwidth,
         $new_bandwidth,
-        100 * ( $new_freq - $old_freq ) / $bandwidth,
+        100 * $error,
         $k,
         $N,
     ;
 }
+
+say STDERR join "\t", $sample_rate, $keyboard_size, sqrt($rms / $keyboard_size);
+exit;
