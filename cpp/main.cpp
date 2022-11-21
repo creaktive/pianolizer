@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
     auto input = make_unique<float[]>(samples);
     const float *output = nullptr;
 
-    while ((len = fread(buffer.get(), sizeof(buffer[0]), bufferSize, stdin)) > 0) {
-      if (ferror(stdin) && !feof(stdin))
+    while ((len = fread(buffer.get(), sizeof(buffer[0]), bufferSize, stdin_handle)) > 0) {
+      if (ferror(stdin_handle) && !feof(stdin_handle))
         throw runtime_error(strerror(errno));
 
       memset(input.get(), 0, sizeof(input[0]) * samples);
