@@ -2,6 +2,7 @@
 use 5.036;
 
 use Getopt::Long ();
+use List::Util ();
 use POSIX ();
 
 sub key2freq ( $n, $s ) {
@@ -17,7 +18,7 @@ Getopt::Long::GetOptions(
 $sample_rate ||= 44100;
 $keyboard_size ||= 61;
 
-my $rms = 0;
+my $highest_error = 0;
 for my $key ( 0 .. $keyboard_size - 1 ) {
     my $old_freq = key2freq( $key, $keyboard_size );
     my $bandwidth = 2 * ( key2freq( $key + 0.5, $keyboard_size ) - $old_freq );
@@ -37,19 +38,19 @@ for my $key ( 0 .. $keyboard_size - 1 ) {
     my $new_freq = $sample_rate * ( $k / $N );
     my $new_bandwidth = $sample_rate / $N;
 
-    my $error = ( $new_freq - $old_freq ) / $bandwidth;
-    $rms += $error * $error;
+    my $error = 100 * ( $new_freq - $old_freq ) / $bandwidth;
+    $highest_error = List::Util::max( $highest_error, abs( $error ) );
     printf "%d\t%f\t%f\t%f\t%f\t%f\t%d/%d\n",
         $key,
         $old_freq,
         $new_freq,
         $bandwidth,
         $new_bandwidth,
-        100 * $error,
+        $error,
         $k,
         $N,
     ;
 }
 
-say STDERR join "\t", $sample_rate, $keyboard_size, sqrt($rms / $keyboard_size);
+say STDERR join "\t", $sample_rate, $keyboard_size, $highest_error;
 exit;
