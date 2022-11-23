@@ -441,6 +441,7 @@ class PianoTuning : public Tuning {
   private:
     unsigned referenceKey;
     double pitchFork;
+    double tolerance;
 
   public:
     /**
@@ -449,10 +450,11 @@ class PianoTuning : public Tuning {
      * @param [keysNum=61] Most pianos will have 61 keys.
      * @param [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
      * @param [pitchFork=440.0] A4 is 440 Hz by default.
+     * @param [tolerance=1.0] frequency tolerance, range (0.0, 1.0].
      * @memberof PianoTuning
      */
-    PianoTuning(const unsigned sampleRate_, const double pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33)
-      : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_)
+    PianoTuning(const unsigned sampleRate_, const double pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33, const double tolerance_ = 1.)
+      : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_), tolerance(tolerance_)
     {}
 
     /**
@@ -477,7 +479,7 @@ class PianoTuning : public Tuning {
       output.reserve(bands);
       for (unsigned key = 0; key < bands; key++) {
         const double frequency = keyToFreq(key);
-        const double bandwidth = 2. * (keyToFreq(key + .5) - frequency);
+        const double bandwidth = 2. * (keyToFreq(key + .5 * tolerance) - frequency);
         output.push_back(frequencyAndBandwidthToKAndN(frequency, bandwidth));
       }
       return output;

@@ -558,12 +558,14 @@ export class PianoTuning extends Tuning {
    * @param {Number} [keysNum=61] Most pianos will have 61 keys.
    * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
    * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
+   * @param {Number} [tolerance=1.0] frequency tolerance, range (0.0, 1.0].
    * @memberof PianoTuning
    */
-  constructor (sampleRate, keysNum = 61, referenceKey = 33, pitchFork = 440.0) {
+  constructor (sampleRate, keysNum = 61, referenceKey = 33, pitchFork = 440.0, tolerance = 1.0) {
     super(sampleRate, keysNum)
     this.pitchFork = pitchFork
     this.referenceKey = referenceKey
+    this.tolerance = tolerance
   }
 
   /**
@@ -588,7 +590,7 @@ export class PianoTuning extends Tuning {
     const output = []
     for (let key = 0; key < this.bands; key++) {
       const frequency = this.keyToFreq(key)
-      const bandwidth = 2 * (this.keyToFreq(key + 0.5) - frequency)
+      const bandwidth = 2 * (this.keyToFreq(key + 0.5 * this.tolerance) - frequency)
       output.push(this.frequencyAndBandwidthToKAndN(frequency, bandwidth))
     }
     return output
