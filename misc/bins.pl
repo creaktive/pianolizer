@@ -14,14 +14,16 @@ sub key2freq ( $n, $s ) {
 Getopt::Long::GetOptions(
     'sample_rate=i'     => \my $sample_rate,
     'keyboard_size=i'   => \my $keyboard_size,
+    'tolerance=f'       => \my $tolerance,
 );
 $sample_rate ||= 44100;
 $keyboard_size ||= 61;
+$tolerance ||= 1;
 
 my $highest_error = 0;
 for my $key ( 0 .. $keyboard_size - 1 ) {
     my $old_freq = key2freq( $key, $keyboard_size );
-    my $bandwidth = 2 * ( key2freq( $key + 0.5, $keyboard_size ) - $old_freq );
+    my $bandwidth = 2 * ( key2freq( $key + 0.5 * $tolerance, $keyboard_size ) - $old_freq );
     my $N = POSIX::floor( $sample_rate / $bandwidth );
     my $k = POSIX::floor( $old_freq / $bandwidth );
 
