@@ -9,8 +9,20 @@ class Pianolizer {
     std::unique_ptr<SlidingDFT> slidingDFT;
 
   public:
-    Pianolizer(unsigned sampleRate) {
-      tuning = std::make_shared<PianoTuning>(sampleRate);
+    Pianolizer(
+      const unsigned sampleRate,
+      const unsigned keysNum = 61,
+      const unsigned referenceKey = 33,
+      const double pitchFork = 440.0,
+      const double tolerance = 1.
+    ) {
+      tuning = std::make_shared<PianoTuning>(
+        sampleRate,
+        keysNum,
+        referenceKey,
+        pitchFork,
+        tolerance
+      );
       slidingDFT = std::make_unique<SlidingDFT>(tuning, -1.);
     }
 
@@ -23,6 +35,12 @@ class Pianolizer {
 
 EMSCRIPTEN_BINDINGS(CLASS_Pianolizer) {
   class_<Pianolizer>("Pianolizer")
-      .constructor<unsigned>()
+      .constructor<
+        const unsigned,
+        const unsigned,
+        const unsigned,
+        const double,
+        const double
+      >()
       .function("process", &Pianolizer::process, allow_raw_pointers());
 }

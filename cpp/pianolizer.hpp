@@ -453,8 +453,13 @@ class PianoTuning : public Tuning {
      * @param [tolerance=1.0] frequency tolerance, range (0.0, 1.0].
      * @memberof PianoTuning
      */
-    PianoTuning(const unsigned sampleRate_, const double pitchFork_ = 440.0, const unsigned keysNum = 61, const unsigned referenceKey_ = 33, const double tolerance_ = 1.)
-      : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_), tolerance(tolerance_)
+    PianoTuning(
+      const unsigned sampleRate_,
+      const unsigned keysNum = 61,
+      const unsigned referenceKey_ = 33,
+      const double pitchFork_ = 440.0,
+      const double tolerance_ = 1.
+    ) : Tuning{ sampleRate_, keysNum }, referenceKey(referenceKey_), pitchFork(pitchFork_), tolerance(tolerance_)
     {}
 
     /**

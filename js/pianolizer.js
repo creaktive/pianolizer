@@ -23,12 +23,28 @@
 export default class Pianolizer {
   /**
    * Creates an instance of Pianolizer.
-   * @param {Number} sampleRate in Hz. This directly influences the memory usage: 44100Hz or 48000Hz will both allocate a buffer of 64KB (provided 32-bit floats are used).
+   * @param {Number} sampleRate This directly influences the memory usage: 44100Hz or 48000Hz will both allocate a buffer of 64KB (provided 32-bit floats are used).
+   * @param {Number} [keysNum=61] Most pianos will have 61 keys.
+   * @param {Number} [referenceKey=33] Key index for the pitchFork reference (A4 is the default).
+   * @param {Number} [pitchFork=440.0] A4 is 440 Hz by default.
+   * @param {Number} [tolerance=1.0] frequency tolerance, range (0.0, 1.0].
    * @memberof Pianolizer
    */
-  constructor (sampleRate) {
+  constructor (
+    sampleRate,
+    keysNum = 61,
+    referenceKey = 33,
+    pitchFork = 440.0,
+    tolerance = 1.0
+  ) {
     this.slidingDFT = new SlidingDFT(
-      new PianoTuning(sampleRate),
+      new PianoTuning(
+        sampleRate,
+        keysNum,
+        referenceKey,
+        pitchFork,
+        tolerance
+      ),
       -1
     )
   }
@@ -561,7 +577,13 @@ export class PianoTuning extends Tuning {
    * @param {Number} [tolerance=1.0] frequency tolerance, range (0.0, 1.0].
    * @memberof PianoTuning
    */
-  constructor (sampleRate, keysNum = 61, referenceKey = 33, pitchFork = 440.0, tolerance = 1.0) {
+  constructor (
+    sampleRate,
+    keysNum = 61,
+    referenceKey = 33,
+    pitchFork = 440.0,
+    tolerance = 1.0
+  ) {
     super(sampleRate, keysNum)
     this.pitchFork = pitchFork
     this.referenceKey = referenceKey

@@ -25,6 +25,7 @@ void help() {
   cout << "\t-r\treference key index (A4); default: 33" << endl;
   cout << "\t-a\taverage window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)" << endl;
   cout << "\t-t\tnoise gate threshold, from 0 to 1; default: 0" << endl;
+  cout << "\t-x\tfrequency tolerance, range (0.0, 1.0]; default: 1" << endl;
   cout << endl;
   cout << "Description:" << endl;
   cout << "Consumes an audio stream (1 channel, 32-bit float PCM)" << endl;
@@ -48,9 +49,10 @@ int main(int argc, char *argv[]) {
   int keys = 61;
   int refKey = 33;
   float threshold = 0.;
+  double tolerance = 1.;
 
   for (;;) {
-    switch (getopt(argc, argv, "b:c:s:p:k:r:a:t:h")) {
+    switch (getopt(argc, argv, "b:c:s:p:k:r:a:t:x:h")) {
       case -1:
         break;
       case 'b':
@@ -77,6 +79,9 @@ int main(int argc, char *argv[]) {
       case 't':
         if (optarg) threshold = atof(optarg);
         continue;
+      case 'x':
+        if (optarg) tolerance = atof(optarg);
+        continue;
       case 'h':
       default:
         help();
@@ -89,7 +94,18 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  auto tuning = make_shared<PianoTuning>(sampleRate, pitchFork, keys, refKey);
+  if (tolerance < 0.01 || tolerance > 1.) {
+    cerr << "tolerance must be between 0.01 and 1.0" << endl;
+    return EXIT_FAILURE;
+  }
+
+  auto tuning = make_shared<PianoTuning>(
+    sampleRate,
+    keys,
+    refKey,
+    pitchFork,
+    tolerance
+  );
   auto sdft = SlidingDFT(tuning, -1.);
 
   try {

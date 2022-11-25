@@ -1,8 +1,20 @@
 // eslint-disable-next-line no-unused-vars
 class Pianolizer {
   /* global Module */
-  constructor (sampleRate) {
-    this.pianolizer = new Module.Pianolizer(sampleRate)
+  constructor (
+    sampleRate,
+    keysNum = 61,
+    referenceKey = 33,
+    pitchFork = 440.0,
+    tolerance = 1.0
+  ) {
+    this.pianolizer = new Module.Pianolizer(
+      sampleRate,
+      keysNum,
+      referenceKey,
+      pitchFork,
+      tolerance
+    )
   }
 
   adjustSamplesBuffer (requestedSamplesBufferSize) {
