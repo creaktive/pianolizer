@@ -11,11 +11,25 @@ class PianolizerWorklet extends AudioWorkletProcessor {
    * Creates an instance of PianolizerWorklet.
    * @memberof PianolizerWorklet
    */
-  constructor () {
+  constructor (options) {
     super()
 
     this.samples = null // allocated according to the input length
-    this.pianolizer = new Pianolizer(sampleRate)
+
+    const {
+      keysNum = 61,
+      referenceKey = 33,
+      pitchFork = 440.0,
+      tolerance = 1.0
+    } = options.processorOptions
+
+    this.pianolizer = new Pianolizer(
+      sampleRate,
+      keysNum,
+      referenceKey,
+      pitchFork,
+      tolerance
+    )
   }
 
   /**

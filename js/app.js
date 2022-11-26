@@ -2,6 +2,8 @@ import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
 const HEIGHT = 'height'
 const PUREJS = 'purejs'
+const PITCHFORK = 'pitchfork'
+const TOLERANCE = 'tolerance'
 
 let audioContext, audioSource, microphoneSource, pianolizer
 let levels, midi, palette
@@ -68,7 +70,11 @@ async function setupAudio () {
     const blob = new Blob(modules, { type: 'application/javascript' })
     await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
 
-    pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet')
+    const processorOptions = {
+      pitchFork: parseFloat(searchParams.get(PITCHFORK)) || 440.0,
+      tolerance: parseFloat(searchParams.get(TOLERANCE)) || 1.0
+    }
+    pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet', { processorOptions })
     pianolizer.port.onmessage = event => {
       // TODO: use SharedArrayBuffer for syncing levels
       levels.set(event.data)
