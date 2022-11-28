@@ -14,11 +14,19 @@ package TransientDetector {
     use Moo;
     use Types::Standard qw(ArrayRef Int Num Object);
 
-    has count       => (is => 'rw', isa => Int, default => sub { 0 });
-    has events      => (is => 'ro', isa => ArrayRef[Object], default => sub { [] });
     has key         => (is => 'ro', isa => Int, required => 1);
-    has last        => (is => 'rw', isa => Num, default => sub { 0 });
+
+    has midi_ch     => (is => 'ro', isa => Int, default => sub { 1 });
+    has buffer_size => (is => 'ro', isa => Int, default => sub { 554 });
+    has division    => (is => 'ro', isa => Int, default => sub { 96 });
+    has sample_rate => (is => 'ro', isa => Int, default => sub { 46536 });
+    has tempo       => (is => 'ro', isa => Int, default => sub { 500_000 });
+
+    has events      => (is => 'ro', isa => ArrayRef[Object], default => sub { [] });
     has messages    => (is => 'rw', isa => ArrayRef[ArrayRef]);
+
+    has count       => (is => 'rw', isa => Int, default => sub { 0 });
+    has last        => (is => 'rw', isa => Num, default => sub { 0 });
     has start       => (is => 'rw', isa => Int);
     has sum         => (is => 'rw', isa => Num, default => sub { 0 });
     has total       => (is => 'rw', isa => Int, default => sub { 0 });
@@ -45,19 +53,23 @@ package TransientDetector {
         $self->generate_event if $self->count;
 
         sub round($n) { return 0 + sprintf('%.0f', $n) }
+
+        my $pcm_factor = $self->buffer_size / $self->sample_rate;
+        my $midi_factor = $self->tempo / $self->division / 1_000_000;
+
         my @messages;
         for my $event ($self->events->@*) {
             push @messages => [
-                1,
-                $event->start,
+                $self->midi_ch,
+                round(($pcm_factor * $event->start) / $midi_factor),
                 'Note_on_c',
                 0,
                 21 + $self->key,
-                round($event->velocity * 100),
+                round($event->velocity * 127),
             ];
             push @messages => [
-                1,
-                $event->finish,
+                $self->midi_ch,
+                round(($pcm_factor * $event->finish) / $midi_factor),
                 'Note_off_c',
                 0,
                 21 + $self->key,
