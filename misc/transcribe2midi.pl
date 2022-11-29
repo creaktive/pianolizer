@@ -16,7 +16,7 @@ package TransientDetector {
 
     has key         => (is => 'ro', isa => Int, required => 1);
 
-    has midi_ch     => (is => 'ro', isa => Int, default => sub { 1 });
+    has channel     => (is => 'ro', isa => Int, default => sub { 1 });
     has buffer_size => (is => 'ro', isa => Int, default => sub { 554 });
     has division    => (is => 'ro', isa => Int, default => sub { 96 });
     has sample_rate => (is => 'ro', isa => Int, default => sub { 46536 });
@@ -49,10 +49,10 @@ package TransientDetector {
         return;
     }
 
+    sub _round($n) { return 0 + sprintf('%.0f', $n) }
+
     sub finalize($self) {
         $self->generate_event if $self->count;
-
-        sub round($n) { return 0 + sprintf('%.0f', $n) }
 
         my $pcm_factor = $self->buffer_size / $self->sample_rate;
         my $midi_factor = $self->tempo / $self->division / 1_000_000;
@@ -60,23 +60,23 @@ package TransientDetector {
         my @messages;
         for my $event ($self->events->@*) {
             push @messages => [
-                $self->midi_ch,
-                round(($pcm_factor * $event->start) / $midi_factor),
+                $self->channel,
+                _round(($pcm_factor * $event->start) / $midi_factor),
                 'Note_on_c',
                 0,
                 21 + $self->key,
-                round($event->velocity * 127),
+                _round($event->velocity * 127),
             ];
             push @messages => [
-                $self->midi_ch,
-                round(($pcm_factor * $event->finish) / $midi_factor),
+                $self->channel,
+                _round(($pcm_factor * $event->finish) / $midi_factor),
                 'Note_off_c',
                 0,
                 21 + $self->key,
                 64,
             ];
         }
-        $self->messages([sort { $a->[1] <=> $b->[1] } @messages]);
+        $self->messages(\@messages);
 
         return;
     }
@@ -93,12 +93,18 @@ package TransientDetector {
 }
 
 package main {
-    use Data::Printer;
-
     sub main(@argv) {
         my $KEYS = 88;
+        my $CHANNEL = 1;
+        my $DIVISION = 96;
 
-        my @detectors = map { TransientDetector->new(key => $_) } 0 .. ($KEYS - 1);
+        my @detectors = map {
+            TransientDetector->new(
+                key         => $_,
+                channel     => $CHANNEL,
+                division    => $DIVISION,
+            )
+        } 0 .. ($KEYS - 1);
         while (my $line = <>) {
             chomp $line;
             my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
@@ -108,7 +114,26 @@ package main {
         }
         $_->finalize for @detectors;
 
-        p $_->messages for @detectors;
+        my @header = (
+            [0, 0, 'Header', 0, 1, $DIVISION],
+            [$CHANNEL, 0, 'Start_track'],
+            # [$CHANNEL, 0, 'Title_t', '"\000"'],
+            # [$CHANNEL, 0, 'Time_signature', 4, 2, 36, 8],
+       );
+
+        my @midi = sort {
+            ($a->[1] <=> $b->[1]) ||
+            ($a->[4] <=> $b->[4])
+        } map {
+            $_->messages->@*
+        } @detectors;
+
+       my @footer = (
+            [$CHANNEL, $midi[-1]->[1], 'End_track'],
+            [0, 0, 'End_of_file'],
+        );
+
+        say join ',', @$_ for @header, @midi, @footer;
 
         return 0;
     }
