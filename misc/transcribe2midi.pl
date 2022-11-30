@@ -106,6 +106,7 @@ package main {
     use FindBin qw($RealBin);
     use Getopt::Long qw(GetOptions);
     use IPC::Run qw(run);
+    use Term::ProgressBar ();
 
     sub main() {
         my $BUFFER_SIZE = 554;
@@ -146,7 +147,7 @@ package main {
 
         my @ffmpeg = (
             $FFMPEG,
-            '-loglevel' => 'quiet',
+            '-loglevel' => 'info',
             '-i'        => $INPUT,
             '-ac'       => 1,
             '-af'       => $FILTERS,
@@ -164,7 +165,7 @@ package main {
             '-s'        => $SAMPLE_RATE,
             '-t'        => $THRESHOLD,
         );
-        run \@ffmpeg => '|' => \@pianolizer => \my $buffer;
+        run \@ffmpeg => '|' => \@pianolizer => \my $buffer, '2>' => \&progress;
 
         my @detectors = map {
             TransientDetector->new(
@@ -176,13 +177,26 @@ package main {
             )
         } 0 .. ($KEYS - 1);
 
-        for my $line (split m{\n}x, $buffer) {
+        my @buffer = split m{\n}x, $buffer;
+        undef $buffer;
+
+        my $progress = Term::ProgressBar->new({
+            count   => $#buffer,
+            name    => 'Process',
+            remove  => 1,
+        });
+
+        my $n = 0;
+        for my $line (@buffer) {
             my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
             die "WTF\n" if $KEYS != scalar @levels;
 
             $detectors[$_]->process($levels[$_]) for 0 .. ($KEYS - 1);
+
+            $progress->update($n) if $n++ % 100 == 0;
         }
-        undef $buffer;
+        $progress->update($#buffer);
+        @buffer = ();
         $_->finalize for @detectors;
 
         my @header = (
@@ -192,6 +206,7 @@ package main {
             # [$CHANNEL, 0, 'Time_signature', 4, 2, 36, 8],
         );
         my @midi = generate_midi(\@detectors);
+        @detectors = ();
         my @footer = (
             [$CHANNEL, $midi[-1]->[1], 'End_track'],
             [0, 0, 'End_of_file'],
@@ -215,6 +230,21 @@ package main {
         } map {
             $_->events->@*
         } @$detectors;
+    }
+
+    sub progress ($line) {
+        state $progress;
+        my $timestamp = qr{ (\d{2,}) : (\d{2}) : (\d{2}) \. (\d{2}) }x;
+        if ($line =~ m{ \b Duration: \s+ $timestamp \b }x) {
+            $progress = Term::ProgressBar->new({
+                count   => $1 * 3600 + $2 * 60 + $3 + $4 / 100,
+                name    => 'Preprocess',
+                remove  => 1,
+            });
+        } elsif ($progress && $line =~ m{ \b time = $timestamp \b }x) {
+            $progress->update($1 * 3600 + $2 * 60 + $3 + $4 / 100);
+        }
+        return;
     }
 
     exit main();
