@@ -101,6 +101,7 @@ package TransientDetector {
 }
 
 package main {
+    use File::Basename qw(basename);
     use File::Spec ();
     use FindBin qw($RealBin);
     use Getopt::Long qw(GetOptions);
@@ -109,10 +110,15 @@ package main {
     sub main() {
         my $BUFFER_SIZE = 554;
         my $CHANNEL     = 1;
+        my $CSVMIDI     = 'csvmidi';
         my $DIVISION    = 960;
+        my $FFMPEG      = 'ffmpeg';
         my $FILTERS     = 'asubcut=27,asupercut=20000';
         my $INPUT       = 'audio/chromatic.mp3';
         my $KEYS        = 88;
+        my $MIDI        = 1;
+        my $OUTPUT      = basename($INPUT) =~ s{\.[^\.]+$}{.mid}rx;
+        my $PIANOLIZER  = File::Spec->catfile($RealBin, '..', 'pianolizer');
         my $REFERENCE   = 48;
         my $SAMPLE_RATE = 46536;
         my $SMOOTHING   = 0.04;
@@ -120,17 +126,25 @@ package main {
 
         GetOptions(
             'buffer_size=i' => \$BUFFER_SIZE,
+            'csvmidi=s'     => \$CSVMIDI,
+            'ffmpeg=s'      => \$FFMPEG,
             'filters=s'     => \$FILTERS,
             'input=s'       => \$INPUT,
             'keys=i'        => \$KEYS,
+            'midi!'         => \$MIDI,
+            'output=s'      => \$OUTPUT,
+            'pianolizer=s'  => \$PIANOLIZER,
             'reference=i'   => \$REFERENCE,
             'sample_rate=i' => \$SAMPLE_RATE,
             'smoothing=f'   => \$SMOOTHING,
             'threshold=f'   => \$THRESHOLD,
         );
 
+        die "'$OUTPUT' already exists!\n" if $MIDI && -e $OUTPUT;
+        die "'$PIANOLIZER' not an executable!\n" unless -x $PIANOLIZER;
+
         my @ffmpeg = (
-            'ffmpeg',
+            $FFMPEG,
             '-loglevel' => 'quiet',
             '-i'        => $INPUT,
             '-ac'       => 1,
@@ -141,7 +155,7 @@ package main {
             '-',
         );
         my @pianolizer = (
-            File::Spec->catfile($RealBin, '..', 'pianolizer'),
+            $PIANOLIZER,
             '-a'        => $SMOOTHING,
             '-b'        => $BUFFER_SIZE,
             '-k'        => $KEYS,
@@ -167,6 +181,7 @@ package main {
 
             $detectors[$_]->process($levels[$_]) for 0 .. ($KEYS - 1);
         }
+        undef $buffer;
         $_->finalize for @detectors;
 
         my @header = (
@@ -181,7 +196,13 @@ package main {
             [0, 0, 'End_of_file'],
         );
 
-        say join ',', @$_ for @header, @midi, @footer;
+        $buffer = join "\n", map { join ',' => @$_ } @header, @midi, @footer;
+        if ($MIDI) {
+            my @csvmidi = ($CSVMIDI => '-' => $OUTPUT);
+            run \@csvmidi, \$buffer;
+        } else {
+            say $buffer;
+        }
         return 0;
     }
 
