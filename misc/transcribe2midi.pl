@@ -29,7 +29,7 @@ package MIDIEvent {
 
 package TransientDetector {
     use Moo;
-    use Types::Standard qw(ArrayRef Int Num Object);
+    use Types::Standard qw(ArrayRef Int Num);
 
     has key         => (is => 'ro', isa => Int, required => 1);
 
@@ -45,7 +45,7 @@ package TransientDetector {
     has sum         => (is => 'rw', isa => Num, default => sub { 0 });
     has total       => (is => 'rw', isa => Int, default => sub { 0 });
 
-    has events      => (is => 'ro', isa => ArrayRef[Object], default => sub { [] });
+    has events      => (is => 'ro', isa => ArrayRef, default => sub { [] });
     has factor      => (is => 'lazy', isa => Num);
 
     sub _build_factor($self) {
@@ -118,6 +118,7 @@ package main {
         my $KEYS        = 88;
         my $MIDI        = 1;
         my $OUTPUT;
+        my $OVERWRITE   = 0;
         my $PIANOLIZER  = File::Spec->catfile($RealBin, '..', 'pianolizer');
         my $REFERENCE   = 48;
         my $SAMPLE_RATE = 46536;
@@ -133,6 +134,7 @@ package main {
             'keys=i'        => \$KEYS,
             'midi!'         => \$MIDI,
             'output=s'      => \$OUTPUT,
+            'overwrite'     => \$OVERWRITE,
             'pianolizer=s'  => \$PIANOLIZER,
             'reference=i'   => \$REFERENCE,
             'sample_rate=i' => \$SAMPLE_RATE,
@@ -141,7 +143,7 @@ package main {
         );
 
         $OUTPUT ||= basename($INPUT) =~ s{\.[^\.]+$}{.mid}rx;
-        die "'$OUTPUT' already exists!\n" if $MIDI && -e $OUTPUT;
+        die "'$OUTPUT' already exists!\n" if $MIDI && !$OVERWRITE && -e $OUTPUT;
         die "'$PIANOLIZER' not an executable!\n" unless -x $PIANOLIZER;
 
         my @ffmpeg = (
@@ -164,7 +166,8 @@ package main {
             '-s'        => $SAMPLE_RATE,
             '-t'        => $THRESHOLD,
         );
-        run \@ffmpeg => '|' => \@pianolizer => \my $buffer, '2>' => \&ffmpeg_progress;
+        run \@ffmpeg => '|' => \@pianolizer => \my $buffer,
+            '2>' => \&ffmpeg_progress;
 
         my @detectors = map {
             TransientDetector->new(
