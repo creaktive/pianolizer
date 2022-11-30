@@ -77,6 +77,12 @@ package TransientDetector {
     }
 
     sub _generate_events($self) {
+        my $velocity = $self->sum / $self->count;
+        $self->count(0);
+
+        my $delta = $self->buffer_size * ($self->total - $self->start) / $self->sample_rate;
+        return if $delta < 0.04;
+
         my @common_opts = (
             channel     => $self->channel,
             key         => $self->key,
@@ -86,7 +92,7 @@ package TransientDetector {
             @common_opts,
             state       => 1,
             time        => $self->start,
-            velocity    => $self->sum / $self->count,
+            velocity    => $velocity,
         );
         push $self->events->@* => MIDIEvent->new(
             @common_opts,
@@ -94,7 +100,6 @@ package TransientDetector {
             time        => $self->total,
             velocity    => 0.5,
         );
-        $self->count(0);
         return;
     }
 }
