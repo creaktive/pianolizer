@@ -3,6 +3,7 @@ use 5.036;
 
 package MIDIEvent {
     use Moo;
+    use POSIX qw(round);
     use Types::Standard qw(Bool Int Num);
 
     has channel     => (is => 'ro', isa => Int, default => sub { 1 });
@@ -17,15 +18,13 @@ package MIDIEvent {
         # https://www.fourmilab.ch/webtools/midicsv/
         return [
             $self->channel,
-            _round($self->factor * $self->time),
+            round($self->factor * $self->time),
             ($self->state ? 'Note_on_c' : 'Note_off_c'),
             0,
             21 + $self->key,
-            _round($self->velocity * 127),
+            round($self->velocity * 127),
         ];
     }
-
-    sub _round($n) { return 0 + sprintf('%.0f', $n) }
 }
 
 package TransientDetector {
@@ -165,7 +164,7 @@ package main {
             '-s'        => $SAMPLE_RATE,
             '-t'        => $THRESHOLD,
         );
-        run \@ffmpeg => '|' => \@pianolizer => \my $buffer, '2>' => \&progress;
+        run \@ffmpeg => '|' => \@pianolizer => \my $buffer, '2>' => \&ffmpeg_progress;
 
         my @detectors = map {
             TransientDetector->new(
@@ -187,13 +186,14 @@ package main {
         });
 
         my $n = 0;
+        my $step = int($SAMPLE_RATE / $BUFFER_SIZE);
         for my $line (@buffer) {
             my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
             die "WTF\n" if $KEYS != scalar @levels;
 
             $detectors[$_]->process($levels[$_]) for 0 .. ($KEYS - 1);
 
-            $progress->update($n) if $n++ % 100 == 0;
+            $progress->update($n) if ++$n % $step == 0;
         }
         $progress->update($#buffer);
         @buffer = ();
@@ -232,17 +232,19 @@ package main {
         } @$detectors;
     }
 
-    sub progress ($line) {
+    sub to_seconds { return $1 * 3600 + $2 * 60 + $3 + $4 / 100 }
+
+    sub ffmpeg_progress ($line) {
         state $progress;
         my $timestamp = qr{ (\d{2,}) : (\d{2}) : (\d{2}) \. (\d{2}) }x;
         if ($line =~ m{ \b Duration: \s+ $timestamp \b }x) {
             $progress = Term::ProgressBar->new({
-                count   => $1 * 3600 + $2 * 60 + $3 + $4 / 100,
+                count   => to_seconds,
                 name    => 'Preprocess',
                 remove  => 1,
             });
         } elsif ($progress && $line =~ m{ \b time = $timestamp \b }x) {
-            $progress->update($1 * 3600 + $2 * 60 + $3 + $4 / 100);
+            $progress->update(to_seconds);
         }
         return;
     }
