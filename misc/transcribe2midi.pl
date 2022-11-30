@@ -1,13 +1,31 @@
 #!/usr/bin/env perl
 use 5.036;
 
-package NoteEvent {
+package MIDIEvent {
     use Moo;
-    use Types::Standard qw(Int Num);
+    use Types::Standard qw(Bool Int Num);
 
-    has start       => (is => 'ro', isa => Int, required => 1);
-    has finish      => (is => 'ro', isa => Int, required => 1);
+    has channel     => (is => 'ro', isa => Int, default => sub { 1 });
+    has factor      => (is => 'ro', isa => Num, required => 1);
+    has key         => (is => 'ro', isa => Int, required => 1);
+    has state       => (is => 'ro', isa => Bool, required => 1);
+    has time        => (is => 'ro', isa => Int, required => 1);
     has velocity    => (is => 'ro', isa => Num, required => 1);
+
+    sub serialize($self) {
+        # midicsv format
+        # https://www.fourmilab.ch/webtools/midicsv/
+        return [
+            $self->channel,
+            _round($self->factor * $self->time),
+            ($self->state ? 'Note_on_c' : 'Note_off_c'),
+            0,
+            21 + $self->key,
+            _round($self->velocity * 127),
+        ];
+    }
+
+    sub _round($n) { return 0 + sprintf('%.0f', $n) }
 }
 
 package TransientDetector {
@@ -22,14 +40,20 @@ package TransientDetector {
     has sample_rate => (is => 'ro', isa => Int, default => sub { 46536 });
     has tempo       => (is => 'ro', isa => Int, default => sub { 500_000 });
 
-    has events      => (is => 'ro', isa => ArrayRef[Object], default => sub { [] });
-    has messages    => (is => 'rw', isa => ArrayRef[ArrayRef]);
-
     has count       => (is => 'rw', isa => Int, default => sub { 0 });
     has last        => (is => 'rw', isa => Num, default => sub { 0 });
     has start       => (is => 'rw', isa => Int);
     has sum         => (is => 'rw', isa => Num, default => sub { 0 });
     has total       => (is => 'rw', isa => Int, default => sub { 0 });
+
+    has events      => (is => 'ro', isa => ArrayRef[Object], default => sub { [] });
+    has factor      => (is => 'lazy', isa => Num);
+    
+    sub _build_factor($self) {
+        my $pcm_factor = $self->buffer_size / $self->sample_rate;
+        my $midi_factor = $self->tempo / $self->division / 1_000_000;
+        return $pcm_factor / $midi_factor;
+    }
 
     sub process($self, $sample) {
         $sample = sqrt($sample);
@@ -41,51 +65,35 @@ package TransientDetector {
             $self->sum($self->sum + $sample);
             $self->count($self->count + 1);
         } elsif ($self->last && !$sample) {
-            $self->generate_event;
+            $self->_generate_events;
         }
-
         $self->last($sample);
         $self->total($self->total + 1);
         return;
     }
 
-    sub _round($n) { return 0 + sprintf('%.0f', $n) }
-
     sub finalize($self) {
-        $self->generate_event if $self->count;
-
-        my $pcm_factor = $self->buffer_size / $self->sample_rate;
-        my $midi_factor = $self->tempo / $self->division / 1_000_000;
-
-        my @messages;
-        for my $event ($self->events->@*) {
-            push @messages => [
-                $self->channel,
-                _round(($pcm_factor * $event->start) / $midi_factor),
-                'Note_on_c',
-                0,
-                21 + $self->key,
-                _round($event->velocity * 127),
-            ];
-            push @messages => [
-                $self->channel,
-                _round(($pcm_factor * $event->finish) / $midi_factor),
-                'Note_off_c',
-                0,
-                21 + $self->key,
-                64,
-            ];
-        }
-        $self->messages(\@messages);
-
+        $self->_generate_events if $self->count;
         return;
     }
 
-    sub generate_event($self) {
-        push $self->events->@* => NoteEvent->new( 
-            start       => $self->start,
-            finish      => $self->total,
+    sub _generate_events($self) {
+        my @common_opts = (
+            channel     => $self->channel,
+            key         => $self->key,
+            factor      => $self->factor,
+        );
+        push $self->events->@* => MIDIEvent->new(
+            @common_opts,
+            state       => 1,
+            time        => $self->start,
             velocity    => $self->sum / $self->count,
+        );
+        push $self->events->@* => MIDIEvent->new(
+            @common_opts,
+            state       => 0,
+            time        => $self->total,
+            velocity    => 0.5,
         );
         $self->count(0);
         return;
@@ -121,11 +129,12 @@ package main {
             # [$CHANNEL, 0, 'Time_signature', 4, 2, 36, 8],
        );
 
-        my @midi = sort {
-            ($a->[1] <=> $b->[1]) ||
-            ($a->[4] <=> $b->[4])
+        my @midi = map {
+            $_->serialize
+        } sort {
+            ($a->time <=> $b->time) || ($a->key <=> $b->key)
         } map {
-            $_->messages->@*
+            $_->events->@*
         } @detectors;
 
        my @footer = (
@@ -134,7 +143,6 @@ package main {
         );
 
         say join ',', @$_ for @header, @midi, @footer;
-
         return 0;
     }
 
