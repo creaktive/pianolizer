@@ -18,7 +18,7 @@ package TransientDetector {
 
     has channel     => (is => 'ro', isa => Int, default => sub { 1 });
     has buffer_size => (is => 'ro', isa => Int, default => sub { 554 });
-    has division    => (is => 'ro', isa => Int, default => sub { 96 });
+    has division    => (is => 'ro', isa => Int, default => sub { 960 });
     has sample_rate => (is => 'ro', isa => Int, default => sub { 46536 });
     has tempo       => (is => 'ro', isa => Int, default => sub { 500_000 });
 
@@ -96,7 +96,7 @@ package main {
     sub main(@argv) {
         my $KEYS = 88;
         my $CHANNEL = 1;
-        my $DIVISION = 96;
+        my $DIVISION = 960;
 
         my @detectors = map {
             TransientDetector->new(
