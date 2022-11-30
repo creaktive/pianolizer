@@ -48,7 +48,7 @@ package TransientDetector {
 
     has events      => (is => 'ro', isa => ArrayRef[Object], default => sub { [] });
     has factor      => (is => 'lazy', isa => Num);
-    
+
     sub _build_factor($self) {
         my $pcm_factor = $self->buffer_size / $self->sample_rate;
         my $midi_factor = $self->tempo / $self->division / 1_000_000;
@@ -101,20 +101,67 @@ package TransientDetector {
 }
 
 package main {
-    sub main(@argv) {
-        my $KEYS = 88;
-        my $CHANNEL = 1;
-        my $DIVISION = 960;
+    use File::Spec ();
+    use FindBin qw($RealBin);
+    use Getopt::Long qw(GetOptions);
+    use IPC::Run qw(run);
+
+    sub main() {
+        my $BUFFER_SIZE = 554;
+        my $CHANNEL     = 1;
+        my $DIVISION    = 960;
+        my $FILTERS     = 'asubcut=27,asupercut=20000';
+        my $INPUT       = 'audio/chromatic.mp3';
+        my $KEYS        = 88;
+        my $REFERENCE   = 48;
+        my $SAMPLE_RATE = 46536;
+        my $SMOOTHING   = 0.04;
+        my $THRESHOLD   = 0.05;
+
+        GetOptions(
+            'buffer_size=i' => \$BUFFER_SIZE,
+            'filters=s'     => \$FILTERS,
+            'input=s'       => \$INPUT,
+            'keys=i'        => \$KEYS,
+            'reference=i'   => \$REFERENCE,
+            'sample_rate=i' => \$SAMPLE_RATE,
+            'smoothing=f'   => \$SMOOTHING,
+            'threshold=f'   => \$THRESHOLD,
+        );
+
+        my @ffmpeg = (
+            'ffmpeg',
+            '-loglevel' => 'quiet',
+            '-i'        => $INPUT,
+            '-ac'       => 1,
+            '-af'       => $FILTERS,
+            '-ar'       => $SAMPLE_RATE,
+            '-f'        => 'f32le',
+            '-c:a'      => 'pcm_f32le',
+            '-',
+        );
+        my @pianolizer = (
+            File::Spec->catfile($RealBin, '..', 'pianolizer'),
+            '-a'        => $SMOOTHING,
+            '-b'        => $BUFFER_SIZE,
+            '-k'        => $KEYS,
+            '-r'        => $REFERENCE,
+            '-s'        => $SAMPLE_RATE,
+            '-t'        => $THRESHOLD,
+        );
+        run \@ffmpeg => '|' => \@pianolizer => \my $buffer;
 
         my @detectors = map {
             TransientDetector->new(
                 key         => $_,
                 channel     => $CHANNEL,
                 division    => $DIVISION,
+                sample_rate => $SAMPLE_RATE,
+                buffer_size => $BUFFER_SIZE,
             )
         } 0 .. ($KEYS - 1);
-        while (my $line = <>) {
-            chomp $line;
+
+        for my $line (split m{\n}x, $buffer) {
             my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
             die "WTF\n" if $KEYS != scalar @levels;
 
@@ -127,17 +174,9 @@ package main {
             [$CHANNEL, 0, 'Start_track'],
             # [$CHANNEL, 0, 'Title_t', '"\000"'],
             # [$CHANNEL, 0, 'Time_signature', 4, 2, 36, 8],
-       );
-
-        my @midi = map {
-            $_->serialize
-        } sort {
-            ($a->time <=> $b->time) || ($a->key <=> $b->key)
-        } map {
-            $_->events->@*
-        } @detectors;
-
-       my @footer = (
+        );
+        my @midi = generate_midi(\@detectors);
+        my @footer = (
             [$CHANNEL, $midi[-1]->[1], 'End_track'],
             [0, 0, 'End_of_file'],
         );
@@ -146,5 +185,15 @@ package main {
         return 0;
     }
 
-    exit main(@ARGV);
+    sub generate_midi ($detectors) {
+        return map {
+            $_->serialize
+        } sort {
+            ($a->time <=> $b->time) || ($a->key <=> $b->key)
+        } map {
+            $_->events->@*
+        } @$detectors;
+    }
+
+    exit main();
 }
