@@ -117,7 +117,7 @@ package main {
         my $INPUT       = 'audio/chromatic.mp3';
         my $KEYS        = 88;
         my $MIDI        = 1;
-        my $OUTPUT      = basename($INPUT) =~ s{\.[^\.]+$}{.mid}rx;
+        my $OUTPUT;
         my $PIANOLIZER  = File::Spec->catfile($RealBin, '..', 'pianolizer');
         my $REFERENCE   = 48;
         my $SAMPLE_RATE = 46536;
@@ -140,6 +140,7 @@ package main {
             'threshold=f'   => \$THRESHOLD,
         );
 
+        $OUTPUT ||= basename($INPUT) =~ s{\.[^\.]+$}{.mid}rx;
         die "'$OUTPUT' already exists!\n" if $MIDI && -e $OUTPUT;
         die "'$PIANOLIZER' not an executable!\n" unless -x $PIANOLIZER;
 
