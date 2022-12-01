@@ -36,6 +36,7 @@ package TransientDetector {
     has channel     => (is => 'ro', isa => Int, default => sub { 1 });
     has buffer_size => (is => 'ro', isa => Int, default => sub { 554 });
     has division    => (is => 'ro', isa => Int, default => sub { 960 });
+    has min_length  => (is => 'ro', isa => Num, default => sub { 0.04 });
     has sample_rate => (is => 'ro', isa => Int, default => sub { 46536 });
     has tempo       => (is => 'ro', isa => Int, default => sub { 500_000 });
 
@@ -46,13 +47,15 @@ package TransientDetector {
     has total       => (is => 'rw', isa => Int, default => sub { 0 });
 
     has events      => (is => 'ro', isa => ArrayRef, default => sub { [] });
-    has factor      => (is => 'lazy', isa => Num);
 
-    sub _build_factor($self) {
-        my $pcm_factor = $self->buffer_size / $self->sample_rate;
-        my $midi_factor = $self->tempo / $self->division / 1_000_000;
-        return $pcm_factor / $midi_factor;
-    }
+    has factor      => (is => 'lazy', isa => Num);
+    sub _build_factor($self) { $self->pcm_factor / $self->midi_factor }
+
+    has pcm_factor  => (is => 'lazy', isa => Num);
+    sub _build_pcm_factor($self) { $self->buffer_size / $self->sample_rate }
+
+    has midi_factor => (is => 'lazy', isa => Num);
+    sub _build_midi_factor($self) { $self->tempo / $self->division / 1_000_000 }
 
     sub process($self, $sample) {
         $sample = sqrt($sample);
@@ -80,8 +83,8 @@ package TransientDetector {
         my $velocity = $self->sum / $self->count;
         $self->count(0);
 
-        my $delta = $self->buffer_size * ($self->total - $self->start) / $self->sample_rate;
-        return if $delta < 0.04;
+        my $delta = $self->pcm_factor * ($self->total - $self->start);
+        return if $delta < $self->min_length;
 
         my @common_opts = (
             channel     => $self->channel,
@@ -122,6 +125,7 @@ package main {
         my $INPUT       = 'audio/chromatic.mp3';
         my $KEYS        = 88;
         my $MIDI        = 1;
+        my $MIN_LENGTH  = 0.04;
         my $OUTPUT;
         my $OVERWRITE   = 0;
         my $PIANOLIZER  = File::Spec->catfile($RealBin, '..', 'pianolizer');
@@ -138,6 +142,7 @@ package main {
             'input=s'       => \$INPUT,
             'keys=i'        => \$KEYS,
             'midi!'         => \$MIDI,
+            'min_length=f'  => \$MIN_LENGTH,
             'output=s'      => \$OUTPUT,
             'overwrite'     => \$OVERWRITE,
             'pianolizer=s'  => \$PIANOLIZER,
@@ -181,6 +186,7 @@ package main {
                 division    => $DIVISION,
                 sample_rate => $SAMPLE_RATE,
                 buffer_size => $BUFFER_SIZE,
+                min_length  => $MIN_LENGTH,
             )
         } 0 .. ($KEYS - 1);
 
@@ -213,8 +219,11 @@ package main {
             # [$CHANNEL, 0, 'Title_t', '"\000"'],
             # [$CHANNEL, 0, 'Time_signature', 4, 2, 36, 8],
         );
+
         my @midi = generate_midi(\@detectors);
         @detectors = ();
+        die "no music detected\n" unless @midi;
+
         my @footer = (
             [$CHANNEL, $midi[-1]->[1], 'End_track'],
             [0, 0, 'End_of_file'],
