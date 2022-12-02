@@ -1,6 +1,43 @@
 #!/usr/bin/env perl
 use 5.036;
 
+package Configuration {
+    use Moo;
+    use MooX::Options;
+
+    use File::Basename qw(basename);
+    use File::Spec ();
+    use FindBin qw($RealBin);
+
+    option buffer_size  => (is => 'ro',      format => 'i', default => sub { 554 });
+    option channel      => (is => 'ro',      format => 'i', default => sub { 1 });
+    option csvmidi      => (is => 'ro',      format => 's', default => sub { 'csvmidi' });
+    option division     => (is => 'ro',      format => 'i', default => sub { 960 });
+    option ffmpeg       => (is => 'ro',      format => 's', default => sub { 'ffmpeg' });
+    option filters      => (is => 'ro',      format => 's', default => sub { 'asubcut=27,asupercut=20000' });
+    option input        => (is => 'ro',      format => 's', default => sub { 'audio/chromatic.mp3' });
+    option keys         => (is => 'ro',      format => 'i', default => sub { 88 });
+    option midi         => (is => 'ro',   negatable => '1', default => sub { 1 });
+    option min_length   => (is => 'ro',      format => 'f', default => sub { 0.1 });
+    option output       => (is => 'ro',      format => 's', builder => 1);
+    option overwrite    => (is => 'ro');
+    option pianolizer   => (is => 'ro',      format => 's', default => sub { File::Spec->catfile($RealBin, '..', 'pianolizer') });
+    option reference    => (is => 'ro',      format => 'i', default => sub { 48 });
+    option sample_rate  => (is => 'ro',      format => 'i', default => sub { 46536 });
+    option smoothing    => (is => 'ro',      format => 'f', default => sub { 0.04 });
+    option tempo        => (is => 'ro',      format => 'i', default => sub { 500_000 });
+    option threshold    => (is => 'ro',      format => 'f', default => sub { 0.05 });
+
+    sub _build_output($self) { basename($self->input) =~ s{\.[^\.]+$}{.mid}rx }
+
+    sub BUILD($self, $args) {
+        die "'@{[ $self->output ]}' already exists! Hint: --overwrite\n\n"
+            if $self->midi && !$self->overwrite && -e $self->output;
+        die "'@{[ $self->pianolizer ]}' not an executable!\n\n"
+            unless -x $self->pianolizer;
+    }
+}
+
 package MIDIEvent {
     use Moo;
     use POSIX qw(round);
@@ -101,46 +138,12 @@ package TransientDetector {
     }
 }
 
-package Configuration {
-    use Moo;
-    use MooX::Options;
-
-    use File::Basename qw(basename);
-    use File::Spec ();
-    use FindBin qw($RealBin);
-
-    option buffer_size  => (is => 'ro',      format => 'i', default => sub { 554 });
-    option channel      => (is => 'ro',      format => 'i', default => sub { 1 });
-    option csvmidi      => (is => 'ro',      format => 's', default => sub { 'csvmidi' });
-    option division     => (is => 'ro',      format => 'i', default => sub { 960 });
-    option ffmpeg       => (is => 'ro',      format => 's', default => sub { 'ffmpeg' });
-    option filters      => (is => 'ro',      format => 's', default => sub { 'asubcut=27,asupercut=20000' });
-    option input        => (is => 'ro',      format => 's', default => sub { 'audio/chromatic.mp3' });
-    option keys         => (is => 'ro',      format => 'i', default => sub { 88 });
-    option midi         => (is => 'ro',   negatable => '1', default => sub { 1 });
-    option min_length   => (is => 'ro',      format => 'f', default => sub { 0.04 });
-    option output       => (is => 'lazy',    format => 's');
-    option overwrite    => (is => 'ro');
-    option pianolizer   => (is => 'ro',      format => 's', default => sub { File::Spec->catfile($RealBin, '..', 'pianolizer') });
-    option reference    => (is => 'ro',      format => 'i', default => sub { 48 });
-    option sample_rate  => (is => 'ro',      format => 'i', default => sub { 46536 });
-    option smoothing    => (is => 'ro',      format => 'f', default => sub { 0.04 });
-    option tempo        => (is => 'ro',      format => 'i', default => sub { 500_000 });
-    option threshold    => (is => 'ro',      format => 'f', default => sub { 0.05 });
-
-    sub _build_output($self) { basename($self->input) =~ s{\.[^\.]+$}{.mid}rx }
-}
-
 package main {
     use IPC::Run qw(run);
     use Term::ProgressBar ();
 
     sub main() {
         my $config = Configuration->new_with_options;
-        die "'@{[ $config->output ]}' already exists!\n"
-            if $config->midi && !$config->overwrite && -e $config->output;
-        die "'@{[ $config->pianolizer ]}' not an executable!\n"
-            unless -x $config->pianolizer;
 
         my @ffmpeg = (
             $config->{ffmpeg},
