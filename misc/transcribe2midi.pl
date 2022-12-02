@@ -21,25 +21,29 @@ package Configuration {
     option min_length   => (is => 'ro',      format => 'f', default => sub { 0.1 });
     option output       => (is => 'ro',      format => 's', builder => 1);
     option overwrite    => (is => 'ro');
-    option pianolizer   => (is => 'ro',      format => 's', default => sub { File::Spec->catfile($RealBin, '..', 'pianolizer') });
+    option pianolizer   => (is => 'ro',      format => 's', builder => 1);
     option reference    => (is => 'ro',      format => 'i', default => sub { 48 });
     option sample_rate  => (is => 'ro',      format => 'i', default => sub { 46536 });
     option smoothing    => (is => 'ro',      format => 'f', default => sub { 0.04 });
     option tempo        => (is => 'ro',      format => 'i', default => sub { 500_000 });
     option threshold    => (is => 'ro',      format => 'f', default => sub { 0.05 });
 
-    sub _build_output($self) { basename($self->input) =~ s{\.[^\.]+$}{.mid}rx }
+    sub _build_output($self) { basename($self->input) =~ s{ \. \w+ $ }{.mid}rx }
+    sub _build_pianolizer($self) { File::Spec->catfile($RealBin, '..', 'pianolizer') }
 
     sub BUILD($self, $args) {
+        die "'@{[ $self->input ]}' is not a file!\n\n"
+            unless -f $self->input;
         die "'@{[ $self->output ]}' already exists! Hint: --overwrite\n\n"
             if $self->midi && !$self->overwrite && -e $self->output;
-        die "'@{[ $self->pianolizer ]}' not an executable!\n\n"
+        die "'@{[ $self->pianolizer ]}' is not an executable!\n\n"
             unless -x $self->pianolizer;
     }
 }
 
 package MIDIEvent {
     use Moo;
+
     use POSIX qw(round);
     use Types::Standard qw(Bool Int Num);
 
@@ -66,7 +70,7 @@ package MIDIEvent {
 
 package TransientDetector {
     use Moo;
-    use Types::Standard qw(ArrayRef Int Num Object);
+    use Types::Standard qw(ArrayRef HashRef Int Num Object);
 
     has config      => (is => 'ro', isa => Object, required => 1);
     has key         => (is => 'ro', isa => Int, required => 1);
@@ -87,6 +91,15 @@ package TransientDetector {
 
     has midi_factor => (is => 'lazy', isa => Num);
     sub _build_midi_factor($self) { $self->config->tempo / $self->config->division / 1_000_000 }
+
+    has common_opts => (is => 'lazy', isa => HashRef);
+    sub _build_common_opts($self) {
+        return {
+            channel     => $self->config->channel,
+            key         => $self->key,
+            factor      => $self->factor,
+        };
+    }
 
     sub process($self, $sample) {
         $sample = sqrt($sample);
@@ -117,19 +130,14 @@ package TransientDetector {
         my $delta = $self->pcm_factor * ($self->total - $self->start);
         return if $delta < $self->config->min_length;
 
-        my @common_opts = (
-            channel     => $self->config->channel,
-            key         => $self->key,
-            factor      => $self->factor,
-        );
         push $self->events->@* => MIDIEvent->new(
-            @common_opts,
+            $self->common_opts->%*,
             state       => 1,
             time        => $self->start,
             velocity    => $velocity,
         );
         push $self->events->@* => MIDIEvent->new(
-            @common_opts,
+            $self->common_opts->%*,
             state       => 0,
             time        => $self->total,
             velocity    => 0.5,
