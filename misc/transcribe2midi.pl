@@ -29,16 +29,10 @@ package MIDIEvent {
 
 package TransientDetector {
     use Moo;
-    use Types::Standard qw(ArrayRef Int Num);
+    use Types::Standard qw(ArrayRef Int Num Object);
 
+    has config      => (is => 'ro', isa => Object, required => 1);
     has key         => (is => 'ro', isa => Int, required => 1);
-
-    has channel     => (is => 'ro', isa => Int, default => sub { 1 });
-    has buffer_size => (is => 'ro', isa => Int, default => sub { 554 });
-    has division    => (is => 'ro', isa => Int, default => sub { 960 });
-    has min_length  => (is => 'ro', isa => Num, default => sub { 0.04 });
-    has sample_rate => (is => 'ro', isa => Int, default => sub { 46536 });
-    has tempo       => (is => 'ro', isa => Int, default => sub { 500_000 });
 
     has count       => (is => 'rw', isa => Int, default => sub { 0 });
     has last        => (is => 'rw', isa => Num, default => sub { 0 });
@@ -52,10 +46,10 @@ package TransientDetector {
     sub _build_factor($self) { $self->pcm_factor / $self->midi_factor }
 
     has pcm_factor  => (is => 'lazy', isa => Num);
-    sub _build_pcm_factor($self) { $self->buffer_size / $self->sample_rate }
+    sub _build_pcm_factor($self) { $self->config->buffer_size / $self->config->sample_rate }
 
     has midi_factor => (is => 'lazy', isa => Num);
-    sub _build_midi_factor($self) { $self->tempo / $self->division / 1_000_000 }
+    sub _build_midi_factor($self) { $self->config->tempo / $self->config->division / 1_000_000 }
 
     sub process($self, $sample) {
         $sample = sqrt($sample);
@@ -84,10 +78,10 @@ package TransientDetector {
         $self->count(0);
 
         my $delta = $self->pcm_factor * ($self->total - $self->start);
-        return if $delta < $self->min_length;
+        return if $delta < $self->config->min_length;
 
         my @common_opts = (
-            channel     => $self->channel,
+            channel     => $self->config->channel,
             key         => $self->key,
             factor      => $self->factor,
         );
@@ -107,88 +101,76 @@ package TransientDetector {
     }
 }
 
-package main {
+package Configuration {
+    use Moo;
+    use MooX::Options;
+
     use File::Basename qw(basename);
     use File::Spec ();
     use FindBin qw($RealBin);
-    use Getopt::Long qw(GetOptions);
+
+    option buffer_size  => (is => 'ro',      format => 'i', default => sub { 554 });
+    option channel      => (is => 'ro',      format => 'i', default => sub { 1 });
+    option csvmidi      => (is => 'ro',      format => 's', default => sub { 'csvmidi' });
+    option division     => (is => 'ro',      format => 'i', default => sub { 960 });
+    option ffmpeg       => (is => 'ro',      format => 's', default => sub { 'ffmpeg' });
+    option filters      => (is => 'ro',      format => 's', default => sub { 'asubcut=27,asupercut=20000' });
+    option input        => (is => 'ro',      format => 's', default => sub { 'audio/chromatic.mp3' });
+    option keys         => (is => 'ro',      format => 'i', default => sub { 88 });
+    option midi         => (is => 'ro',   negatable => '1', default => sub { 1 });
+    option min_length   => (is => 'ro',      format => 'f', default => sub { 0.04 });
+    option output       => (is => 'lazy',    format => 's');
+    option overwrite    => (is => 'ro');
+    option pianolizer   => (is => 'ro',      format => 's', default => sub { File::Spec->catfile($RealBin, '..', 'pianolizer') });
+    option reference    => (is => 'ro',      format => 'i', default => sub { 48 });
+    option sample_rate  => (is => 'ro',      format => 'i', default => sub { 46536 });
+    option smoothing    => (is => 'ro',      format => 'f', default => sub { 0.04 });
+    option tempo        => (is => 'ro',      format => 'i', default => sub { 500_000 });
+    option threshold    => (is => 'ro',      format => 'f', default => sub { 0.05 });
+
+    sub _build_output($self) { basename($self->input) =~ s{\.[^\.]+$}{.mid}rx }
+}
+
+package main {
     use IPC::Run qw(run);
     use Term::ProgressBar ();
 
     sub main() {
-        my $BUFFER_SIZE = 554;
-        my $CHANNEL     = 1;
-        my $CSVMIDI     = 'csvmidi';
-        my $DIVISION    = 960;
-        my $FFMPEG      = 'ffmpeg';
-        my $FILTERS     = 'asubcut=27,asupercut=20000';
-        my $INPUT       = 'audio/chromatic.mp3';
-        my $KEYS        = 88;
-        my $MIDI        = 1;
-        my $MIN_LENGTH  = 0.04;
-        my $OUTPUT;
-        my $OVERWRITE   = 0;
-        my $PIANOLIZER  = File::Spec->catfile($RealBin, '..', 'pianolizer');
-        my $REFERENCE   = 48;
-        my $SAMPLE_RATE = 46536;
-        my $SMOOTHING   = 0.04;
-        my $THRESHOLD   = 0.05;
-
-        GetOptions(
-            'buffer_size=i' => \$BUFFER_SIZE,
-            'csvmidi=s'     => \$CSVMIDI,
-            'ffmpeg=s'      => \$FFMPEG,
-            'filters=s'     => \$FILTERS,
-            'input=s'       => \$INPUT,
-            'keys=i'        => \$KEYS,
-            'midi!'         => \$MIDI,
-            'min_length=f'  => \$MIN_LENGTH,
-            'output=s'      => \$OUTPUT,
-            'overwrite'     => \$OVERWRITE,
-            'pianolizer=s'  => \$PIANOLIZER,
-            'reference=i'   => \$REFERENCE,
-            'sample_rate=i' => \$SAMPLE_RATE,
-            'smoothing=f'   => \$SMOOTHING,
-            'threshold=f'   => \$THRESHOLD,
-        );
-
-        $OUTPUT ||= basename($INPUT) =~ s{\.[^\.]+$}{.mid}rx;
-        die "'$OUTPUT' already exists!\n" if $MIDI && !$OVERWRITE && -e $OUTPUT;
-        die "'$PIANOLIZER' not an executable!\n" unless -x $PIANOLIZER;
+        my $config = Configuration->new_with_options;
+        die "'@{[ $config->output ]}' already exists!\n"
+            if $config->midi && !$config->overwrite && -e $config->output;
+        die "'@{[ $config->pianolizer ]}' not an executable!\n"
+            unless -x $config->pianolizer;
 
         my @ffmpeg = (
-            $FFMPEG,
+            $config->{ffmpeg},
             '-loglevel' => 'info',
-            '-i'        => $INPUT,
+            '-i'        => $config->input,
             '-ac'       => 1,
-            '-af'       => $FILTERS,
-            '-ar'       => $SAMPLE_RATE,
+            '-af'       => $config->filters,
+            '-ar'       => $config->sample_rate,
             '-f'        => 'f32le',
             '-c:a'      => 'pcm_f32le',
             '-',
         );
         my @pianolizer = (
-            $PIANOLIZER,
-            '-a'        => $SMOOTHING,
-            '-b'        => $BUFFER_SIZE,
-            '-k'        => $KEYS,
-            '-r'        => $REFERENCE,
-            '-s'        => $SAMPLE_RATE,
-            '-t'        => $THRESHOLD,
+            $config->pianolizer,
+            '-a'        => $config->smoothing,
+            '-b'        => $config->buffer_size,
+            '-k'        => $config->keys,
+            '-r'        => $config->reference,
+            '-s'        => $config->sample_rate,
+            '-t'        => $config->threshold,
         );
         run \@ffmpeg => '|' => \@pianolizer => \my $buffer,
             '2>' => \&ffmpeg_progress;
 
         my @detectors = map {
             TransientDetector->new(
+                config      => $config,
                 key         => $_,
-                channel     => $CHANNEL,
-                division    => $DIVISION,
-                sample_rate => $SAMPLE_RATE,
-                buffer_size => $BUFFER_SIZE,
-                min_length  => $MIN_LENGTH,
             )
-        } 0 .. ($KEYS - 1);
+        } 0 .. ($config->keys - 1);
 
         my @buffer = split m{\n}x, $buffer;
         undef $buffer;
@@ -200,12 +182,12 @@ package main {
         });
 
         my $n = 0;
-        my $step = int($SAMPLE_RATE / $BUFFER_SIZE);
+        my $step = int($config->sample_rate / $config->buffer_size);
         for my $line (@buffer) {
             my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
-            die "WTF\n" if $KEYS != scalar @levels;
+            die "WTF\n" if $config->keys != scalar @levels;
 
-            $detectors[$_]->process($levels[$_]) for 0 .. ($KEYS - 1);
+            $detectors[$_]->process($levels[$_]) for 0 .. ($config->keys - 1);
 
             $progress->update($n) if ++$n % $step == 0;
         }
@@ -214,10 +196,10 @@ package main {
         $_->finalize for @detectors;
 
         my @header = (
-            [0, 0, 'Header', 0, 1, $DIVISION],
-            [$CHANNEL, 0, 'Start_track'],
-            # [$CHANNEL, 0, 'Title_t', '"\000"'],
-            # [$CHANNEL, 0, 'Time_signature', 4, 2, 36, 8],
+            [0, 0, 'Header', 0, 1, $config->division],
+            [$config->channel, 0, 'Start_track'],
+            # [$config->channel, 0, 'Title_t', '"\000"'],
+            # [$config->channel, 0, 'Time_signature', 4, 2, 36, 8],
         );
 
         my @midi = generate_midi(\@detectors);
@@ -225,13 +207,13 @@ package main {
         die "no music detected\n" unless @midi;
 
         my @footer = (
-            [$CHANNEL, $midi[-1]->[1], 'End_track'],
+            [$config->channel, $midi[-1]->[1], 'End_track'],
             [0, 0, 'End_of_file'],
         );
 
         $buffer = join "\n", map { join ',' => @$_ } @header, @midi, @footer;
-        if ($MIDI) {
-            my @csvmidi = ($CSVMIDI => '-' => $OUTPUT);
+        if ($config->midi) {
+            my @csvmidi = ($config->csvmidi => '-' => $config->output);
             run \@csvmidi, \$buffer;
         } else {
             say $buffer;
