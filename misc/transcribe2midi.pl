@@ -31,6 +31,9 @@ package Configuration {
     sub _build_output($self) { basename($self->input) =~ s{ \. \w+ $ }{.mid}rx }
     sub _build_pianolizer($self) { File::Spec->catfile($RealBin, '..', 'pianolizer') }
 
+    has K => (is => 'lazy');
+    sub _build_K($self) { $self->keys - 1 }
+
     sub BUILD($self, $args) {
         die "'@{[ $self->input ]}' is not a file!\n\n"
             unless -f $self->input;
@@ -70,9 +73,14 @@ package MIDIEvent {
 
 package TransientDetector {
     use Moo;
-    use Types::Standard qw(ArrayRef HashRef Int Num Object);
+    use Types::Standard qw(ArrayRef HashRef InstanceOf Int Num);
 
-    has config      => (is => 'ro', isa => Object, required => 1);
+    has config      => (
+        is          => 'ro',
+        isa         => InstanceOf['Configuration'],
+        handles     => [qw[buffer_size channel division sample_rate tempo]],
+        required    => 1,
+    );
     has key         => (is => 'ro', isa => Int, required => 1);
 
     has count       => (is => 'rw', isa => Int, default => sub { 0 });
@@ -87,15 +95,15 @@ package TransientDetector {
     sub _build_factor($self) { $self->pcm_factor / $self->midi_factor }
 
     has pcm_factor  => (is => 'lazy', isa => Num);
-    sub _build_pcm_factor($self) { $self->config->buffer_size / $self->config->sample_rate }
+    sub _build_pcm_factor($self) { $self->buffer_size / $self->sample_rate }
 
     has midi_factor => (is => 'lazy', isa => Num);
-    sub _build_midi_factor($self) { $self->config->tempo / $self->config->division / 1_000_000 }
+    sub _build_midi_factor($self) { $self->tempo / $self->division / 1_000_000 }
 
     has common_opts => (is => 'lazy', isa => HashRef);
     sub _build_common_opts($self) {
         return {
-            channel     => $self->config->channel,
+            channel     => $self->channel,
             key         => $self->key,
             factor      => $self->factor,
         };
@@ -154,7 +162,7 @@ package main {
         my $config = Configuration->new_with_options;
 
         my @ffmpeg = (
-            $config->{ffmpeg},
+            $config->ffmpeg,
             '-loglevel' => 'info',
             '-i'        => $config->input,
             '-ac'       => 1,
@@ -181,7 +189,7 @@ package main {
                 config      => $config,
                 key         => $_,
             )
-        } 0 .. ($config->keys - 1);
+        } 0 .. $config->K;
 
         my @buffer = split m{\n}x, $buffer;
         undef $buffer;
@@ -198,7 +206,7 @@ package main {
             my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
             die "WTF\n" if $config->keys != scalar @levels;
 
-            $detectors[$_]->process($levels[$_]) for 0 .. ($config->keys - 1);
+            $detectors[$_]->process($levels[$_]) for 0 .. $config->K;
 
             $progress->update($n) if ++$n % $step == 0;
         }
