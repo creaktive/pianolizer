@@ -80,10 +80,6 @@ package MIDIEvent {
             round($self->velocity * 127),
         );
     }
-
-    sub header_chunk($division) { pack('NNnnn', 0x4D546864, 6, 0, 1, $division) }
-    sub track_chunk($track_length) { pack('NN', 0x4D54726B, $track_length) }
-    sub end_of_track { pack('wC2w', 0, 0xFF, 0x2F, 0) }
 }
 
 package TransientDetector {
@@ -169,6 +165,78 @@ package TransientDetector {
     }
 }
 
+package Transcriber {
+    use Moo;
+    use Types::Standard qw(ArrayRef InstanceOf);
+    use Term::ProgressBar ();
+
+    has config      => (
+        is          => 'ro',
+        isa         => InstanceOf['Configuration'],
+        handles     => [qw[K buffer_size division keys sample_rate]],
+        required    => 1,
+    );
+
+    has detectors   => (is => 'lazy', isa => ArrayRef);
+    sub _build_detectors($self) {
+        return [map {
+            TransientDetector->new(
+                config      => $self->config,
+                key         => $_,
+            )
+        } 0 .. $self->K];
+    }
+
+    sub header_chunk($division) { pack('NNnnn', 0x4D546864, 6, 0, 1, $division) }
+    sub track_chunk($track_length) { pack('NN', 0x4D54726B, $track_length) }
+    sub end_of_track { pack('wC2w', 0, 0xFF, 0x2F, 0) }
+
+    sub process($self, $buffer) {
+        my @buffer = split m{\n}x, $buffer;
+
+        my $progress = Term::ProgressBar->new({
+            count   => $#buffer,
+            name    => 'Process',
+            remove  => 1,
+        });
+
+        my $n = 0;
+        my $step = int($self->sample_rate / $self->buffer_size);
+        for my $line (@buffer) {
+            my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
+            die "WTF\n" if $self->K != $#levels;
+
+            $self->detectors->[$_]->process($levels[$_]) for 0 .. $self->K;
+
+            $progress->update($n) if ++$n % $step == 0;
+        }
+        $progress->update($#buffer);
+        $_->finalize for $self->detectors->@*;
+
+        my @midi = $self->generate_midi;
+        die "no music detected\n" unless @midi;
+
+        printf STDERR "%d MIDI events extracted\n", scalar(@midi) / 2;
+
+        my $track = join '', @midi, end_of_track;
+        my $output = header_chunk($self->division);
+        $output .= track_chunk(length $track);
+        $output .= $track;
+
+        return $output;
+    }
+
+    sub generate_midi($self) {
+        return map {
+            $_->serialize
+        } sort {
+            ($a->time <=> $b->time) || ($a->key <=> $b->key)
+        } map {
+            $_->events->@*
+        } $self->detectors->@*;
+    }
+}
+
 package main {
     use Fcntl qw(O_CREAT O_WRONLY);
     use IPC::Run qw(run);
@@ -202,43 +270,8 @@ package main {
         run \@ffmpeg => '|' => \@pianolizer => \my $buffer,
             '2>' => \&ffmpeg_progress;
 
-        my @detectors = map {
-            TransientDetector->new(
-                config      => $config,
-                key         => $_,
-            )
-        } 0 .. $config->K;
-
-        my @buffer = split m{\n}x, $buffer;
-
-        my $progress = Term::ProgressBar->new({
-            count   => $#buffer,
-            name    => 'Process',
-            remove  => 1,
-        });
-
-        my $n = 0;
-        my $step = int($config->sample_rate / $config->buffer_size);
-        for my $line (@buffer) {
-            my @levels = map { $_ / 255 } unpack 'C*' => pack 'H*' => $line;
-            die "WTF\n" if $config->keys != scalar @levels;
-
-            $detectors[$_]->process($levels[$_]) for 0 .. $config->K;
-
-            $progress->update($n) if ++$n % $step == 0;
-        }
-        $progress->update($#buffer);
-        $_->finalize for @detectors;
-
-        my @midi = generate_midi(\@detectors);
-        die "no music detected\n" unless @midi;
-
-        printf STDERR "%d MIDI events extracted\n", scalar(@midi) / 2;
-
-        my $track = join '', @midi, MIDIEvent::end_of_track;
-        $buffer = MIDIEvent::header_chunk($config->division);
-        $buffer .= MIDIEvent::track_chunk(length $track);
-        $buffer .= $track;
+        my $transcriber = Transcriber->new(config => $config);
+        $buffer = $transcriber->process($buffer);
 
         my $out = \*STDOUT;
         if ($config->output ne '-') {
@@ -249,16 +282,6 @@ package main {
         syswrite($out, $buffer);
 
         return 0;
-    }
-
-    sub generate_midi ($detectors) {
-        return map {
-            $_->serialize
-        } sort {
-            ($a->time <=> $b->time) || ($a->key <=> $b->key)
-        } map {
-            $_->events->@*
-        } @$detectors;
     }
 
     sub to_seconds { return $1 * 3600 + $2 * 60 + $3 + $4 / 100 }
