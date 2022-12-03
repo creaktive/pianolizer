@@ -58,14 +58,17 @@ package MIDIEvent {
     has time        => (is => 'ro', isa => Int, required => 1);
     has velocity    => (is => 'ro', isa => Num, required => 1);
 
-    sub serialize($self, $last_time, $last_status) {
+    sub serialize($self) {
+        state $last_time = 0;
+        state $last_status = 0;
+
         my $time = round($self->factor * $self->time);
-        my $delta = $time - $$last_time;
-        $$last_time = $time;
+        my $delta = $time - $last_time;
+        $last_time = $time;
 
         my $status = ($self->state ? 0x90 : 0x80) | ($self->channel - 1);
-        my @status = $status == $$last_status ? () : ($status);
-        $$last_status = $status;
+        my @status = $status == $last_status ? () : ($status);
+        $last_status = $status;
 
         return pack(
             'wC*',
@@ -247,10 +250,8 @@ package main {
     }
 
     sub generate_midi ($detectors) {
-        my $last_time = 0;
-        my $last_status = 0;
         return map {
-            $_->serialize(\$last_time, \$last_status)
+            $_->serialize
         } sort {
             ($a->time <=> $b->time) || ($a->key <=> $b->key)
         } map {
