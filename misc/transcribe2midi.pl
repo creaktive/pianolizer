@@ -10,7 +10,7 @@ package Configuration {
     use FindBin qw($RealBin);
 
     option buffer_size  => (is => 'ro', format => 'i', default => sub { 554 });
-    option channel      => (is => 'ro', format => 'i', default => sub { 1 });
+    option channel      => (is => 'ro', format => 'i', default => sub { 0 });
     option division     => (is => 'ro', format => 'i', default => sub { 960 });
     option ffmpeg       => (is => 'ro', format => 's', default => sub { 'ffmpeg' });
     option filters      => (is => 'ro', format => 's', default => sub { 'asubcut=27,asupercut=20000' });
@@ -51,12 +51,15 @@ package MIDIEvent {
     use POSIX qw(round);
     use Types::Standard qw(Bool Int Num);
 
-    has channel     => (is => 'ro', isa => Int, default => sub { 1 });
+    has channel     => (is => 'ro', isa => Int, required => 1);
     has factor      => (is => 'ro', isa => Num, required => 1);
     has key         => (is => 'ro', isa => Int, required => 1);
     has state       => (is => 'ro', isa => Bool, required => 1);
     has time        => (is => 'ro', isa => Int, required => 1);
     has velocity    => (is => 'ro', isa => Num, required => 1);
+
+    has status      => (is => 'lazy', isa => Int);
+    sub _build_status($self) { ((0x8 + $self->state) << 4) | $self->channel }
 
     sub serialize($self) {
         state $last_time = 0;
@@ -66,9 +69,8 @@ package MIDIEvent {
         my $delta = $time - $last_time;
         $last_time = $time;
 
-        my $status = ($self->state ? 0x90 : 0x80) | ($self->channel - 1);
-        my @status = $status == $last_status ? () : ($status);
-        $last_status = $status;
+        my @status = $self->status == $last_status ? () : ($self->status);
+        $last_status = $self->status;
 
         return pack(
             'wC*',
