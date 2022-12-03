@@ -22,11 +22,13 @@ package Configuration {
     option output       => (is => 'ro',      format => 's', builder => 1);
     option overwrite    => (is => 'ro');
     option pianolizer   => (is => 'ro',      format => 's', builder => 1);
+    option pitchfork    => (is => 'ro',      format => 'f', default => sub { 440.0 });
     option reference    => (is => 'ro',      format => 'i', default => sub { 48 });
     option sample_rate  => (is => 'ro',      format => 'i', default => sub { 46536 });
     option smoothing    => (is => 'ro',      format => 'f', default => sub { 0.04 });
     option tempo        => (is => 'ro',      format => 'i', default => sub { 500_000 });
     option threshold    => (is => 'ro',      format => 'f', default => sub { 0.05 });
+    option tolerance    => (is => 'ro',      format => 'f', default => sub { 1.0 });
 
     sub _build_output($self) { basename($self->input) =~ s{ \. \w+ $ }{.mid}rx }
     sub _build_pianolizer($self) { File::Spec->catfile($RealBin, '..', 'pianolizer') }
@@ -177,9 +179,11 @@ package main {
             '-a'        => $config->smoothing,
             '-b'        => $config->buffer_size,
             '-k'        => $config->keys,
+            '-p'        => $config->pitchfork,
             '-r'        => $config->reference,
             '-s'        => $config->sample_rate,
             '-t'        => $config->threshold,
+            '-x'        => $config->tolerance,
         );
         run \@ffmpeg => '|' => \@pianolizer => \my $buffer,
             '2>' => \&ffmpeg_progress;
