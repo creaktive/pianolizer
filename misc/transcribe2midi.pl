@@ -11,13 +11,11 @@ package Configuration {
 
     option buffer_size  => (is => 'ro',      format => 'i', default => sub { 554 });
     option channel      => (is => 'ro',      format => 'i', default => sub { 1 });
-    option csvmidi      => (is => 'ro',      format => 's', default => sub { 'csvmidi' });
     option division     => (is => 'ro',      format => 'i', default => sub { 960 });
     option ffmpeg       => (is => 'ro',      format => 's', default => sub { 'ffmpeg' });
     option filters      => (is => 'ro',      format => 's', default => sub { 'asubcut=27,asupercut=20000' });
     option input        => (is => 'ro',      format => 's', default => sub { 'audio/chromatic.mp3' });
     option keys         => (is => 'ro',      format => 'i', default => sub { 88 });
-    option midi         => (is => 'ro',   negatable => '1', default => sub { 1 });
     option min_length   => (is => 'ro',      format => 'f', default => sub { 0.1 });
     option output       => (is => 'ro',      format => 's', builder => 1);
     option overwrite    => (is => 'ro');
@@ -40,13 +38,14 @@ package Configuration {
         die "'@{[ $self->input ]}' is not a file!\n\n"
             unless -f $self->input;
         die "'@{[ $self->output ]}' already exists! Hint: --overwrite\n\n"
-            if $self->midi && !$self->overwrite && -e $self->output;
+            if !$self->overwrite && -e $self->output;
         die "'@{[ $self->pianolizer ]}' is not an executable!\n\n"
             unless -x $self->pianolizer;
     }
 }
 
 package MIDIEvent {
+    # http://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html
     use Moo;
 
     use POSIX qw(round);
@@ -59,18 +58,23 @@ package MIDIEvent {
     has time        => (is => 'ro', isa => Int, required => 1);
     has velocity    => (is => 'ro', isa => Num, required => 1);
 
-    sub serialize($self) {
-        # midicsv format
-        # https://www.fourmilab.ch/webtools/midicsv/
-        return [
-            $self->channel,
-            round($self->factor * $self->time),
-            ($self->state ? 'Note_on_c' : 'Note_off_c'),
-            0,
+    sub serialize($self, $last_time) {
+        my $time = round($self->factor * $self->time);
+        my $delta = $time - $$last_time;
+        $$last_time = $time;
+
+        return pack(
+            'wC3',
+            $delta,
+            ($self->state ? 0x90 : 0x80) | ($self->channel - 1),
             21 + $self->key,
             round($self->velocity * 127),
-        ];
+        );
     }
+
+    sub header_chunk($division) { pack('NNnnn', 0x4D546864, 6, 0, 1, $division) }
+    sub track_chunk($track_length) { pack('NN', 0x4D54726B, $track_length) }
+    sub end_of_track { pack('wC2w', 0, 0xFF, 0x2F, 0) }
 }
 
 package TransientDetector {
@@ -157,6 +161,7 @@ package TransientDetector {
 }
 
 package main {
+    use Fcntl qw(O_CREAT O_WRONLY);
     use IPC::Run qw(run);
     use Term::ProgressBar ();
 
@@ -196,7 +201,6 @@ package main {
         } 0 .. $config->K;
 
         my @buffer = split m{\n}x, $buffer;
-        undef $buffer;
 
         my $progress = Term::ProgressBar->new({
             count   => $#buffer,
@@ -215,38 +219,30 @@ package main {
             $progress->update($n) if ++$n % $step == 0;
         }
         $progress->update($#buffer);
-        @buffer = ();
         $_->finalize for @detectors;
 
-        my @header = (
-            [0, 0, 'Header', 0, 1, $config->division],
-            [$config->channel, 0, 'Start_track'],
-            # [$config->channel, 0, 'Title_t', '"\000"'],
-            # [$config->channel, 0, 'Time_signature', 4, 2, 36, 8],
-        );
-
         my @midi = generate_midi(\@detectors);
-        @detectors = ();
         die "no music detected\n" unless @midi;
 
-        my @footer = (
-            [$config->channel, $midi[-1]->[1], 'End_track'],
-            [0, 0, 'End_of_file'],
-        );
+        my $track = join '', @midi, MIDIEvent::end_of_track;
+        $buffer = MIDIEvent::header_chunk($config->division);
+        $buffer .= MIDIEvent::track_chunk(length $track);
+        $buffer .= $track;
 
-        $buffer = join "\n", map { join ',' => @$_ } @header, @midi, @footer;
-        if ($config->midi) {
-            my @csvmidi = ($config->csvmidi => '-' => $config->output);
-            run \@csvmidi, \$buffer;
-        } else {
-            say $buffer;
+        my $out = \*STDOUT;
+        if ($config->output ne '-') {
+            sysopen($out, $config->output, O_CREAT | O_WRONLY)
+                || die "can't write to '@{[ $config->output ]}'\n\n";
         }
+        syswrite($out, $buffer);
+
         return 0;
     }
 
     sub generate_midi ($detectors) {
+        my $last_time = 0;
         return map {
-            $_->serialize
+            $_->serialize(\$last_time)
         } sort {
             ($a->time <=> $b->time) || ($a->key <=> $b->key)
         } map {
