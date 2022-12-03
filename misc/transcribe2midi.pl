@@ -224,6 +224,8 @@ package main {
         my @midi = generate_midi(\@detectors);
         die "no music detected\n" unless @midi;
 
+        printf STDERR "%d MIDI events extracted\n", scalar(@midi) / 2;
+
         my $track = join '', @midi, MIDIEvent::end_of_track;
         $buffer = MIDIEvent::header_chunk($config->division);
         $buffer .= MIDIEvent::track_chunk(length $track);
