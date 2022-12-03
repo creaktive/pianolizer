@@ -93,7 +93,7 @@ package TransientDetector {
     has config      => (
         is          => 'ro',
         isa         => InstanceOf['Configuration'],
-        handles     => [qw[buffer_size channel division sample_rate tempo]],
+        handles     => [qw[buffer_size channel division min_length sample_rate tempo]],
         required    => 1,
     );
     has key         => (is => 'ro', isa => Int, required => 1);
@@ -151,7 +151,7 @@ package TransientDetector {
         $self->count(0);
 
         my $delta = $self->pcm_factor * ($self->total - $self->start);
-        return if $delta < $self->config->min_length;
+        return if $delta < $self->min_length;
 
         push $self->events->@* => MIDIEvent->new(
             $self->common_opts->%*,
