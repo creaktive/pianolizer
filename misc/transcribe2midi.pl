@@ -9,24 +9,24 @@ package Configuration {
     use File::Spec ();
     use FindBin qw($RealBin);
 
-    option buffer_size  => (is => 'ro',      format => 'i', default => sub { 554 });
-    option channel      => (is => 'ro',      format => 'i', default => sub { 1 });
-    option division     => (is => 'ro',      format => 'i', default => sub { 960 });
-    option ffmpeg       => (is => 'ro',      format => 's', default => sub { 'ffmpeg' });
-    option filters      => (is => 'ro',      format => 's', default => sub { 'asubcut=27,asupercut=20000' });
-    option input        => (is => 'ro',      format => 's', default => sub { 'audio/chromatic.mp3' });
-    option keys         => (is => 'ro',      format => 'i', default => sub { 88 });
-    option min_length   => (is => 'ro',      format => 'f', default => sub { 0.1 });
-    option output       => (is => 'ro',      format => 's', builder => 1);
+    option buffer_size  => (is => 'ro', format => 'i', default => sub { 554 });
+    option channel      => (is => 'ro', format => 'i', default => sub { 1 });
+    option division     => (is => 'ro', format => 'i', default => sub { 960 });
+    option ffmpeg       => (is => 'ro', format => 's', default => sub { 'ffmpeg' });
+    option filters      => (is => 'ro', format => 's', default => sub { 'asubcut=27,asupercut=20000' });
+    option input        => (is => 'ro', format => 's', default => sub { 'audio/chromatic.mp3' });
+    option keys         => (is => 'ro', format => 'i', default => sub { 88 });
+    option min_length   => (is => 'ro', format => 'f', default => sub { 0.1 });
+    option output       => (is => 'ro', format => 's', builder => 1);
     option overwrite    => (is => 'ro');
-    option pianolizer   => (is => 'ro',      format => 's', builder => 1);
-    option pitchfork    => (is => 'ro',      format => 'f', default => sub { 440.0 });
-    option reference    => (is => 'ro',      format => 'i', default => sub { 48 });
-    option sample_rate  => (is => 'ro',      format => 'i', default => sub { 46536 });
-    option smoothing    => (is => 'ro',      format => 'f', default => sub { 0.04 });
-    option tempo        => (is => 'ro',      format => 'i', default => sub { 500_000 });
-    option threshold    => (is => 'ro',      format => 'f', default => sub { 0.05 });
-    option tolerance    => (is => 'ro',      format => 'f', default => sub { 1.0 });
+    option pianolizer   => (is => 'ro', format => 's', builder => 1);
+    option pitchfork    => (is => 'ro', format => 'f', default => sub { 440.0 });
+    option reference    => (is => 'ro', format => 'i', default => sub { 48 });
+    option sample_rate  => (is => 'ro', format => 'i', default => sub { 46536 });
+    option smoothing    => (is => 'ro', format => 'f', default => sub { 0.04 });
+    option tempo        => (is => 'ro', format => 'i', default => sub { 500_000 });
+    option threshold    => (is => 'ro', format => 'f', default => sub { 0.05 });
+    option tolerance    => (is => 'ro', format => 'f', default => sub { 1.0 });
 
     sub _build_output($self) { basename($self->input) =~ s{ \. \w+ $ }{.mid}rx }
     sub _build_pianolizer($self) { File::Spec->catfile($RealBin, '..', 'pianolizer') }
@@ -233,6 +233,7 @@ package main {
 
         my $out = \*STDOUT;
         if ($config->output ne '-') {
+            unlink $config->output;
             sysopen($out, $config->output, O_CREAT | O_WRONLY)
                 || die "can't write to '@{[ $config->output ]}'\n\n";
         }
