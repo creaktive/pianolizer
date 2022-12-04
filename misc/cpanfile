@@ -1,6 +1,5 @@
 # cpanm --installdeps --notest --skip-satisfied .
 requires perl => 5.036;
-requires 'Cpanel::JSON::XS';
 requires 'IPC::Run';
 requires 'Moo';
 requires 'MooX::Options';
