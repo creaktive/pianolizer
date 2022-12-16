@@ -17,6 +17,7 @@ package Configuration {
     option input        => (is => 'ro', format => 's', default => sub { 'audio/chromatic.mp3' });
     option keys         => (is => 'ro', format => 'i', default => sub { 88 });
     option min_length   => (is => 'ro', format => 'f', default => sub { 0.1 });
+    option normalize    => (is => 'ro', negatable => 1, default => sub { 1 });
     option output       => (is => 'ro', format => 's', builder => 1);
     option overwrite    => (is => 'ro');
     option pianolizer   => (is => 'ro', format => 's', builder => 1);
@@ -61,7 +62,7 @@ package MIDIEvent {
     has status      => (is => 'lazy', isa => Int);
     sub _build_status($self) { ((0x8 + $self->state) << 4) | $self->channel }
 
-    sub serialize($self) {
+    sub serialize($self, $max_velocity) {
         state $last_time = 0;
         state $last_status = 0;
 
@@ -77,7 +78,7 @@ package MIDIEvent {
             $delta,
             @status,
             21 + $self->key,
-            round($self->velocity * 127),
+            round(($self->velocity / $max_velocity) * 127),
         );
     }
 }
@@ -167,13 +168,14 @@ package TransientDetector {
 
 package Transcriber {
     use Moo;
+    use List::Util qw(max);
     use Types::Standard qw(ArrayRef InstanceOf);
     use Term::ProgressBar ();
 
     has config      => (
         is          => 'ro',
         isa         => InstanceOf['Configuration'],
-        handles     => [qw[K buffer_size division keys sample_rate]],
+        handles     => [qw[K buffer_size division keys normalize sample_rate]],
         required    => 1,
     );
 
@@ -227,13 +229,17 @@ package Transcriber {
     }
 
     sub generate_midi($self) {
+        my @all_events = map { $_->events->@* } $self->detectors->@*;
+
+        my $max_velocity = $self->normalize
+            ? max map { $_->velocity } @all_events
+            : 1.0;
+
         return map {
-            $_->serialize
+            $_->serialize($max_velocity)
         } sort {
             ($a->time <=> $b->time) || ($a->key <=> $b->key)
-        } map {
-            $_->events->@*
-        } $self->detectors->@*;
+        } @all_events;
     }
 }
 
