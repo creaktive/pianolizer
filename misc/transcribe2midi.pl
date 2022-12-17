@@ -125,11 +125,9 @@ package TransientDetector {
         $sample = sqrt($sample);
         if (!$self->last && $sample) {
             $self->start($self->total);
-            $self->sum($sample);
-            $self->count(1);
+            $self->_add_sample($sample);
         } elsif ($sample) {
-            $self->sum($self->sum + $sample);
-            $self->count($self->count + 1);
+            $self->_add_sample($sample);
         } elsif ($self->last && !$sample) {
             $self->_generate_events;
         }
@@ -143,8 +141,14 @@ package TransientDetector {
         return;
     }
 
+    sub _add_sample($self, $sample) {
+        $self->sum($self->sum + $sample);
+        $self->count($self->count + 1);
+    }
+
     sub _generate_events($self) {
         my $velocity = $self->sum / $self->count;
+        $self->sum(0);
         $self->count(0);
 
         my $delta = $self->pcm_factor * ($self->total - $self->start);
