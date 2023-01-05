@@ -263,7 +263,7 @@ There's plenty of links related to the details of the Sliding DFT in the [refere
 Enjoy, and do let me know of your cool projects making the use of this algorithm!
 
 ## Influenced & inspired by
-- [Speaking Piano - Now with (somewhat decent) captions!](https://youtu.be/muCPjK4nGY4) - YouTube video.
+- [Speaking Piano by Peter Ablinger](https://youtu.be/Wpt3lmSFW3k) - YouTube video.
 - [Rousseau](https://www.youtube.com/c/Rousseau) - YouTube channel.
 - [Piano LED Visualizer](https://github.com/onlaj/Piano-LED-Visualizer) - GitHub repository.
 - [Music Transcription with Convolutional Neural Networks (Jun 2016)](https://www.lunaverus.com/cnn) - the method used by [AnthemScore](https://www.lunaverus.com) (the automatic music transcription app).
