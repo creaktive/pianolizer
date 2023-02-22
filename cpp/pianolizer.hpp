@@ -12,6 +12,16 @@
 #include <memory>
 #include <vector>
 
+// For C++11 compatibility: https://herbsutter.com/gotw/_102/
+#if __cplusplus < 201402L
+  namespace std {
+    template<typename T, typename... Args>
+    std::unique_ptr<T> make_unique(Args&&... args) {
+      return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
+  }
+#endif
+
 /**
  * Reasonably fast Ring Buffer implementation.
  * Caveat: the size of the allocated memory is always a power of two!
