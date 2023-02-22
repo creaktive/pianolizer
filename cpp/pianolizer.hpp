@@ -28,7 +28,7 @@ class RingBuffer {
   private:
     unsigned mask;
     unsigned index = 0;
-    std::unique_ptr<float[]> buffer;
+    std::vector<float> buffer;
 
   public:
     unsigned size;
@@ -42,7 +42,8 @@ class RingBuffer {
       const unsigned bits = std::ceil(std::log2(requestedSize));
       size = static_cast<unsigned>(1) << bits;
       mask = size - 1;
-      buffer = std::make_unique<float[]>(size);
+      buffer.reserve(size);
+      memset(buffer.data(), 0, sizeof(float) * size);
     }
 
     /**
@@ -194,7 +195,7 @@ class MovingAverage {
     unsigned channels, sampleRate;
     int averageWindow = -1;
     int targetAverageWindow;
-    std::unique_ptr<float[]> sum;
+    std::vector<float> sum;
 
     /**
      * Creates an instance of MovingAverage.
@@ -204,7 +205,8 @@ class MovingAverage {
      */
     MovingAverage(const unsigned channels_, const unsigned sampleRate_)
       : channels(channels_), sampleRate(sampleRate_) {
-      sum = std::make_unique<float[]>(channels);
+      sum.reserve(channels);
+      memset(sum.data(), 0, sizeof(float) * channels);
     }
 
     virtual ~MovingAverage() = default;

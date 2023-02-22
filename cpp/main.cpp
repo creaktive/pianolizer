@@ -115,19 +115,19 @@ int main(int argc, char *argv[]) {
 
     size_t len;
     size_t bufferSize = samples * channels;
-    auto buffer = make_unique<float[]>(bufferSize);
-    auto input = make_unique<float[]>(samples);
+    vector<float> buffer(bufferSize);
+    vector<float> input(samples);
     const float *output = nullptr;
 
-    while ((len = fread(buffer.get(), sizeof(buffer[0]), bufferSize, stdin_handle)) > 0) {
+    while ((len = fread(buffer.data(), sizeof(buffer[0]), bufferSize, stdin_handle)) > 0) {
       if (ferror(stdin_handle) && !feof(stdin_handle))
         throw runtime_error(strerror(errno));
 
-      memset(input.get(), 0, sizeof(input[0]) * samples);
+      memset(input.data(), 0, sizeof(input[0]) * samples);
       for (unsigned i = 0; i < len; i++)
         input[i / channels] += buffer[i];
 
-      if ((output = sdft.process(input.get(), samples, averageWindow)) == nullptr)
+      if ((output = sdft.process(input.data(), samples, averageWindow)) == nullptr)
         throw runtime_error("sdft.process() returned nothing");
 
       stringstream stream;
