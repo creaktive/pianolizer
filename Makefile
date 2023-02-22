@@ -29,6 +29,7 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 		--post-js js/pianolizer-wrapper.js \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s BINARYEN_ASYNC_COMPILATION=0 \
+		-s EXPORTED_FUNCTIONS="['_malloc']" \
 		-s SINGLE_FILE=1 \
 		-s WASM=1 \
 		-o $(WASM_TARGET) \
