@@ -286,4 +286,4 @@ Enjoy, and do let me know of your cool projects making the use of this algorithm
 
 MIT License
 
-Copyright (c) 2022 Stanislaw Pusep
+Copyright (c) 2023 Stanislaw Pusep
