@@ -1,5 +1,43 @@
 {
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingImports": "information"
-    }
+    },
+    "cSpell.words": [
+        "Ablinger",
+        "ALSA",
+        "coeff",
+        "Cond",
+        "Convolutional",
+        "creaktive",
+        "DDISABLE",
+        "deltatime",
+        "DTMF",
+        "efloat",
+        "Emscripten",
+        "flac",
+        "Goertzel",
+        "GPIO",
+        "HEAPF",
+        "Imager",
+        "LEDS",
+        "Microcontrollers",
+        "micvoicec",
+        "midiin",
+        "midiinput",
+        "midiutil",
+        "Ofast",
+        "onmidimessage",
+        "pianolizer",
+        "Pianotomy",
+        "purejs",
+        "Pusep",
+        "raspios",
+        "rtmidi",
+        "sdft",
+        "Seeed",
+        "Stanislaw",
+        "traw",
+        "Veritasium",
+        "worklet"
+    ]
 }

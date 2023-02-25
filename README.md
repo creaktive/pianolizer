@@ -34,7 +34,7 @@ Examples for browser and Raspberry Pi are provided.
 
 ## Building the software
 
-The [C++ implementation](cpp/pianolizer.hpp) should compile just fine on any platform that supports C++14, there are no dependencies as the code uses C++14 standard data types. 
+The [C++ implementation](cpp/pianolizer.hpp) should compile just fine on any platform that supports C++14, there are no dependencies as the code uses C++14 standard data types.
 It is known to compile & run successfully with [Clang](https://clang.llvm.org), [GCC](https://gcc.gnu.org) and [Emscripten](https://emscripten.org).
 The target platform should support `double float` operations efficiently (in other words, hardware FPU is rather mandatory).
 
@@ -119,7 +119,7 @@ With that, it should be trivial to convert the `pianolizer` output into a static
 
 ### Raspberry Pi specific
 
-The included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)). 
+The included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)).
 Conveniently, 1m LED strip with _144 diodes/meter_ matches precisely the standard piano keyboard dimensions and is enough to cover 61 keys.
 
 Raspberry Pi has no audio input hardware at the time of writing, therefore an expansion board is required.

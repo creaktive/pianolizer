@@ -3,34 +3,5 @@
 		{
 			"path": "."
 		}
-	],
-	"settings": {
-		"cSpell.words": [
-			"ALSA",
-			"coeff",
-			"Convolutional",
-			"creaktive",
-			"DDISABLE",
-			"DTMF",
-			"efloat",
-			"Emscripten",
-			"flac",
-			"Goertzel",
-			"HEAPF",
-			"Imager",
-			"Microcontrollers",
-			"Ofast",
-			"onmidimessage",
-			"pianolizer",
-			"Pianotomy",
-			"purejs",
-			"Pusep",
-			"raspios",
-			"sdft",
-			"Seeed",
-			"Stanislaw",
-			"traw",
-			"worklet"
-		]
-	}
+	]
 }

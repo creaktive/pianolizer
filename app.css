@@ -29,6 +29,7 @@ button {
 
 input[type=range] {
   -webkit-appearance: none;
+  appearance: none;
   border-radius: 10px;
   height: 10px;
   width: 8rem;
