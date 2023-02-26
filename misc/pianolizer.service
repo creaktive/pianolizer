@@ -1,0 +1,17 @@
+# sudo ln -rs pianolizer.service /lib/systemd/system/
+# sudo systemctl enable pianolizer.service
+# sudo systemctl start pianolizer.service
+[Unit]
+Description=Pianolizer on a WS2812B RGB LED strip
+After=multi-user.target
+
+[Service]
+Nice=-19
+LimitRTPRIO=infinity
+LimitMEMLOCK=infinity
+LimitRTTIME=infinity
+WorkingDirectory=/home/pi/pianolizer
+ExecStart=/home/pi/pianolizer/misc/pianolizer.sh
+
+[Install]
+WantedBy=multi-user.target

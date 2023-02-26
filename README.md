@@ -125,7 +125,7 @@ Conveniently, 1m LED strip with _144 diodes/meter_ matches precisely the standar
 Raspberry Pi has no audio input hardware at the time of writing, therefore an expansion board is required.
 I am using [ReSpeaker 2-Mics Pi HAT by Seeed](https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html).
 
-Check [rc.local](misc/rc.local) for an example of how to drive the LED strip with a microphone.
+Check [pianolizer.sh](misc/pianolizer.sh) for an example of how to drive the LED strip with a microphone.
 You will probably need to adjust the sample rate and volume in this script, and also the I/O pin number in the [Python script](misc/hex2ws281x.py).
 
 ## Using the library

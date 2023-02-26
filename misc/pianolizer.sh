@@ -1,34 +1,5 @@
 #!/bin/bash
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
-
-# Print the IP address
-_IP=$(hostname -I) || true
-if [ "$_IP" ]; then
-  printf "My IP address is %s\n" "$_IP"
-fi
-
-set -euxo pipefail
-
-# disable WiFi power management
-iwconfig wlan0 power off
-
-# disable CPU throttling
-echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq
-echo 1 | tee /sys/devices/system/cpu/cpu*/cpufreq/stats/reset
-
-# wait for audio to initialize
-sleep 2
+# invoked via /lib/systemd/system/pianolizer.service
 
 for card in /proc/asound/*/pcm?c/info; do
     card=$(echo "${card}" | cut -d / -f 4)
@@ -63,8 +34,6 @@ if [ "${CAPTURE_DEVICE}" = "seeed2micvoicec" ]; then
 fi
 
 # start pianolizer
-cd /home/pi/pianolizer
-renice -n -19 $$
 arecord -c ${CHANNELS} -D "plughw:${CAPTURE_DEVICE}" -f FLOAT_LE -r ${SAMPLE_RATE} -t raw \
     | ./pianolizer -b ${BUFFER_SIZE} -c ${CHANNELS} -k ${KEYS} -s ${SAMPLE_RATE} -t ${THRESHOLD} \
     | misc/hex2ws281x.py --keys ${KEYS} --skip ${SKIP} --gpio ${GPIO}
