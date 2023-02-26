@@ -27,7 +27,7 @@ Examples for browser and Raspberry Pi are provided.
 
 0. Connect the ReSpeaker hat to the Raspberry Pi.
 0. Connect the LED strip to the **GP12** port of the ReSpeaker hat. Connect _GND_ of the strip to _pin 4_; _+5V_ to _pin 3_ & _DATA_ to _pin 1_ (this standard is called [Grove System](https://wiki.seeedstudio.com/Grove_System/)).
-0. Download & extract the [pianolizer-2022-11-13.img](https://sysd.org/pianolizer/pianolizer-2022-11-13.img.xz) image file (it is based on [2022-09-22-raspios-bullseye-arm64-lite.img](https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2022-09-26/2022-09-22-raspios-bullseye-arm64-lite.img.xz), BTW).
+0. Download & extract the [pianolizer-2023-02-26.img.xz](https://sysd.org/pianolizer/pianolizer-2023-02-26.img.xz) image file (it is based on [2022-09-22-raspios-bullseye-arm64-lite.img](https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2022-09-26/2022-09-22-raspios-bullseye-arm64-lite.img.xz), BTW).
 0. Write the image to the SD card. I recommend the [Raspberry Pi Imager](https://www.raspberrypi.com/software/), since it works with any OS and has a GUI to conveniently setup WiFi/SSH *before* booting.
 0. Customize the [pianolizer.txt](https://github.com/creaktive/pianolizer/blob/master/misc/pianolizer.txt) file on the initialized SD card (or leave it as-is when using the same parts as listed above).
 0. Power up! After the boot completes, the LEDs start blinking when you talk to the microphone :)
