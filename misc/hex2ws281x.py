@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import argparse
-import fileinput
 import re
 import sys
 
 from rpi_ws281x import PixelStrip, Color
 
+from graceful_killer import GracefulKiller
 from palette import Palette
 
 if __name__ == '__main__':
@@ -35,28 +35,28 @@ if __name__ == '__main__':
     validator = re.compile(r'^\s*[0-9a-f]{%d}\b' % (KEYS * 2), re.IGNORECASE)
     palette = Palette('palette.json')
 
-    try:
-        for line in fileinput.input():
-            match = validator.match(line)
-            if match:
-                levels = [c / 255 for c in bytes.fromhex(match.group())]
-                leds = list(
-                    map(
-                        lambda c: Color(c[0], c[1], c[2]),
-                        palette.getKeyColors(levels)
-                    )
+    killer = GracefulKiller()
+    while not killer.kill_now:
+        line = sys.stdin.readline()
+        match = validator.match(line)
+        if match:
+            levels = [c / 255 for c in bytes.fromhex(match.group())]
+            leds = list(
+                map(
+                    lambda c: Color(c[0], c[1], c[2]),
+                    palette.getKeyColors(levels)
                 )
+            )
 
-                for key in range(len(leds)):
-                    color = leds[key]
-                    for i in range(LEDS_PER_KEY):
-                        strip.setPixelColor(LED_OFFSET + key * LEDS_PER_KEY + i, color)
-                strip.show()
-            else:
-                print(f'bad input: {line.strip()}')
-    except KeyboardInterrupt:
-        print('')
-    finally:
-        for i in range(LED_COUNT):
-            strip.setPixelColor(i, Color(0, 0, 0))
-        strip.show()
+            for key in range(len(leds)):
+                color = leds[key]
+                for i in range(LEDS_PER_KEY):
+                    strip.setPixelColor(LED_OFFSET + key * LEDS_PER_KEY + i, color)
+            strip.show()
+        else:
+            print(f'bad input: {line.strip()}')
+
+    black = Color(0, 0, 0)
+    for i in range(LED_COUNT):
+        strip.setPixelColor(i, black)
+    strip.show()
