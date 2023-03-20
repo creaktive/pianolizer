@@ -137,9 +137,10 @@ int main(int argc, char *argv[]) {
 
       stringstream stream;
       for (unsigned i = 0; i < sdft.bands; i++) {
-        const float step1 = output[i] > threshold ? output[i] : 0.;
-        const float step2 = clamp(squareRoot ? std::sqrt(step1) : step1, 0., 1.);
-        unsigned valueInt = static_cast<unsigned>(std::round(255. * step2));
+        const float step1 = squareRoot ? std::sqrt(output[i]) : output[i];
+        const float step2 = step1 > threshold ? step1 : 0.;
+        const float step3 = clamp(step2, 0., 1.);
+        unsigned valueInt = static_cast<unsigned>(std::round(255. * step3));
         stream << setfill('0') << setw(2) << hex << valueInt;
       }
       cout << stream.str() << endl;
