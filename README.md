@@ -10,7 +10,7 @@ Examples for browser and Raspberry Pi are provided.
 ## tl;dr
 
 - [Pianolizer app](https://sysd.org/pianolizer/) - runs directly in the browser. Also, mobile browser. Chrome is recommended for the best experience.
-- [Algorithm benchmark](https://sysd.org/pianolizer/benchmark.html) - test the speed of the core algorithm, in the browser. WASM results closely match what is expected from the native binary performance, on the same machine. 44100 samples per second is enough for realtime performance. As a matter of fact, one can get decent results with as little as 8000 samples per second (saving both CPU & RAM resources!); however the resampling algorithm implementation is left as an exercise to the reader (that is, for the JS/browser; the `pianolizer` CLI utility is meant to be paired with [sox](http://sox.sourceforge.net)).
+- [Algorithm benchmark](https://sysd.org/pianolizer/benchmark.html) - test the speed of the core algorithm, in the browser. WASM results closely match what is expected from the native binary performance, on the same machine. 44100 samples per second is enough for realtime performance. As a matter of fact, one can get decent results with as little as 8000 samples per second (saving both CPU & RAM resources!); however the resampling algorithm implementation is left as an exercise to the reader (that is, for the JS/browser; the `pianolizer` CLI utility is meant to be paired with [ffmpeg](https://ffmpeg.org)).
 
 ## Building the hardware
 
@@ -75,21 +75,27 @@ make clean
 ```
 $ ./pianolizer -h
 Usage:
-        sox -V -d -traw -r44100 -b32 -c1 -efloat - | ./pianolizer | sudo misc/hex2ws281x.py
+        arecord -f FLOAT_LE -t raw | ./pianolizer -s 8000 | sudo misc/hex2ws281x.py
 
 Options:
-        -h      this
-        -b      buffer size; default: 256
-        -s      sample rate; default: 44100 (Hz)
-        -p      A4 reference frequency; default: 440 (Hz)
-        -a      average window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)
+        -h	    this
+        -b	    buffer size; default: 256 (samples)
+        -c	    number of channels; default: 1
+        -s	    sample rate; default: 44100 (Hz)
+        -p	    A4 reference frequency; default: 440 (Hz)
+        -k	    number of keys on the piano keyboard; default: 61
+        -r	    reference key index (A4); default: 33
+        -a	    average window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)
+        -t	    noise gate threshold, from 0 to 1; default: 0
+        -x	    frequency tolerance, range (0.0, 1.0]; default: 1
+        -y	    return the square root of each value; default: false
 
 Description:
 Consumes an audio stream (1 channel, 32-bit float PCM)
 and emits the volume levels of 61 notes (from C2 to C7) as a hex string.
 ```
 
-The `pianolizer` CLI utility receives an input stream of following specifications:
+The `pianolizer` CLI utility receives an input stream of following specifications, by default:
 
 ```
 Channels       : 1
@@ -112,10 +118,9 @@ And emits a stream of 122-character hexadecimal strings representing the _volume
 Each level uses 2 hexadecimal characters (therefore, the value range is 0-255).
 A new string is emitted every 256 samples (adjustable with `-b` option); that amounts to ~6ms of audio.
 
-[sox](http://sox.sourceforge.net) is recommended to provide the input for `pianolizer`.
-When using a microphone source, `sox` will insert tiny delays between the samples, so that the audio stream is synchronized with the sample rate.
-When decoding an audio file, `sox` spits out the data as fast as possible.
-With that, it should be trivial to convert the `pianolizer` output into a static spectrogram image.
+[ffmpeg](https://ffmpeg.org) is recommended to provide the input for `pianolizer` when decoding an audio file.
+It should be trivial to convert the `pianolizer` output into a static spectrogram image (TODO).
+When using a microphone source on a Raspberry Pi, use [arecord](https://linux.die.net/man/1/arecord).
 
 ### Raspberry Pi specific
 
