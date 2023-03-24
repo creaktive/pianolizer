@@ -13,7 +13,7 @@ using namespace std;
 void help();
 void help() {
   cout << "Usage:" << endl;
-  cout << "\tsox -V -d -traw -r44100 -b32 -c1 -efloat - | ./pianolizer | sudo misc/hex2ws281x.py" << endl;
+  cout << "\tarecord -f FLOAT_LE -t raw | ./pianolizer -s 8000 | sudo misc/hex2ws281x.py" << endl;
   cout << endl;
   cout << "Options:" << endl;
   cout << "\t-h\tthis" << endl;
