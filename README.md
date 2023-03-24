@@ -36,7 +36,7 @@ Examples for browser and Raspberry Pi are provided.
 
 ## Building the software
 
-The [C++ implementation](cpp/pianolizer.hpp) should compile just fine on any platform that supports C++14, there are no dependencies as the code uses C++14 standard data types.
+The [C++ implementation](cpp/pianolizer.hpp) should compile just fine on any platform that supports C++11, there are no dependencies as the code uses C++11 standard data types.
 It is known to compile & run successfully with [Clang](https://clang.llvm.org), [GCC](https://gcc.gnu.org) and [Emscripten](https://emscripten.org).
 The target platform should support `double float` operations efficiently (in other words, hardware FPU is rather mandatory).
 
@@ -151,7 +151,7 @@ Once you have an instance of `SlidingDFT`, you can start pumping the audio sampl
 
 ### C++
 
-Standard: C++14
+Standard: C++11 (but C++14 or higher is recommended)
 
 - Include [pianolizer.hpp](cpp/pianolizer.hpp) in your project. It is reasonably well commented and documented and relevant examples are provided inline.
 - [benchmark.cpp](cpp/benchmark.cpp) is a good starting point.
