@@ -62,6 +62,10 @@ package MIDIEvent {
     has status      => (is => 'lazy', isa => Int);
     sub _build_status($self) { ((0x8 + $self->state) << 4) | $self->channel }
 
+    sub header_chunk($division = 960) { pack('NNnnn', 0x4D546864, 6, 0, 1, $division) }
+    sub track_chunk($track_length) { pack('NN', 0x4D54726B, $track_length) }
+    sub end_of_track { pack('wC2w', 0, 0xFF, 0x2F, 0) }
+
     sub serialize($self, $max_velocity) {
         state $last_time = 0;
         state $last_status = 0;
@@ -193,10 +197,6 @@ package Transcriber {
         } 0 .. $self->K];
     }
 
-    sub header_chunk($division) { pack('NNnnn', 0x4D546864, 6, 0, 1, $division) }
-    sub track_chunk($track_length) { pack('NN', 0x4D54726B, $track_length) }
-    sub end_of_track { pack('wC2w', 0, 0xFF, 0x2F, 0) }
-
     sub process($self, $buffer) {
         my @buffer = split m{\n}x, $buffer;
 
@@ -224,9 +224,9 @@ package Transcriber {
 
         printf STDERR "%d MIDI events extracted\n", scalar(@midi) / 2;
 
-        my $track = join '', @midi, end_of_track;
-        my $output = header_chunk($self->division);
-        $output .= track_chunk(length $track);
+        my $track = join '', @midi, MIDIEvent::end_of_track;
+        my $output = MIDIEvent::header_chunk($self->division);
+        $output .= MIDIEvent::track_chunk(length $track);
         $output .= $track;
 
         return $output;
