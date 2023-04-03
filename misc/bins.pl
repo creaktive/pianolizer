@@ -5,16 +5,17 @@ use Getopt::Long qw(GetOptions);
 use List::Util qw(max);
 use POSIX qw(floor);
 
-sub key2freq($n, $s) {
+sub key2freq($n, $s, $o = 0) {
     state $r = { 61 => 33, 88 => 48 };
-    my $o = $n - ($r->{$s} || die "don't know manuals with $s keys\n");
-    return 440 * (2 ** ($o / 12));
+    $o ||= $r->{$s} || die "don't know manuals with $s keys; specify --offset\n";
+    return 440 * (2 ** (($n - $o) / 12));
 }
 
 GetOptions(
     'sample_rate=i'     => \my $sample_rate,
     'keyboard_size=i'   => \my $keyboard_size,
     'tolerance=f'       => \my $tolerance,
+    'offset=i'          => \my $offset,
 );
 $sample_rate ||= 44100;
 $keyboard_size ||= 61;
@@ -22,8 +23,8 @@ $tolerance ||= 1;
 
 my $highest_error = 0;
 for my $key (0 .. $keyboard_size - 1) {
-    my $old_freq = key2freq($key, $keyboard_size);
-    my $bandwidth = 2 * (key2freq($key + 0.5 * $tolerance, $keyboard_size) - $old_freq);
+    my $old_freq = key2freq($key, $keyboard_size, $offset);
+    my $bandwidth = 2 * (key2freq($key + 0.5 * $tolerance, $keyboard_size, $offset) - $old_freq);
     my $N = floor($sample_rate / $bandwidth);
     my $k = floor($old_freq / $bandwidth);
 
