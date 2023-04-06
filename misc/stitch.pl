@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use 5.036;
 
+use File::Basename qw(basename);
 use File::Spec ();
 use File::Temp ();
 use FindBin qw($RealBin);
@@ -139,6 +140,7 @@ sub render_midi($filename) {
         '-r'            => REFERENCE,
         '-s'            => SAMPLE_RATE,
         '-y',
+        '-d',
     );
 
     run \@ffmpeg => '|' => \@pianolizer => \my $buffer;
@@ -151,7 +153,7 @@ sub pianolizer_matrix($data) {
 
     for my $line (split m{\n}sx, $data) {
         chomp $line;
-        my @frame = map { $_ / 255 } unpack('C*', pack('H*', $line));
+        my @frame = split m{\s+}x, $line;
         push @roll, \@frame;
     }
 
@@ -160,29 +162,35 @@ sub pianolizer_matrix($data) {
 
 sub main() {
     GetOptions(
-        'midi=s'        => \my $midi,
+        'input=s'       => \my $input,
+        'output=s'      => \my $output,
         'image'         => \my $image,
     );
+    $output ||= basename($input) =~ s{ \. \w+ $ }{.dat}rx;
 
-    my $midi_data = load_midi($midi);
+    my $midi_data = load_midi($input);
     my $midi_matrix = midi_matrix($midi_data);
 
-    my $audio_data = render_midi($midi);
+    my $audio_data = render_midi($input);
     my $audio_matrix = pianolizer_matrix($audio_data);
 
+    open(my $fh, '>', $output)
+        or die "Can't write to $output: $!\n";
+
     if ($image) {
-        printf "P2\n%d\n%d\n255\n", BINS + KEYBOARD_SIZE, scalar(@$midi_matrix);
+        printf $fh "P2\n%d\n%d\n255\n", BINS + KEYBOARD_SIZE, scalar(@$midi_matrix);
     }
 
     for (my $i = 0; $i <= $#$midi_matrix; $i++) {
         my @row = ($audio_matrix->[$i]->@*, $midi_matrix->[$i]->@*);
         if ($image) {
-            say join(' ', map { sprintf '%.0f', $_ * 255 } @row);
+            say $fh join(' ', map { sprintf '%.0f', $_ * 255 } @row);
         } else {
-            say join(' ', map { sprintf '%.06f', $_ } @row);
+            say $fh join(' ', map { sprintf '%.06f', $_ } @row);
         }
     }
 
+    close $fh;
     return 0;
 }
 
