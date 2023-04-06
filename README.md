@@ -77,20 +77,21 @@ make clean
 ```
 $ ./pianolizer -h
 Usage:
-        arecord -f FLOAT_LE -t raw | ./pianolizer -s 8000 | sudo misc/hex2ws281x.py
+	arecord -f FLOAT_LE -t raw | ./pianolizer -s 8000 | sudo misc/hex2ws281x.py
 
 Options:
-        -h	    this
-        -b	    buffer size; default: 256 (samples)
-        -c	    number of channels; default: 1
-        -s	    sample rate; default: 44100 (Hz)
-        -p	    A4 reference frequency; default: 440 (Hz)
-        -k	    number of keys on the piano keyboard; default: 61
-        -r	    reference key index (A4); default: 33
-        -a	    average window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)
-        -t	    noise gate threshold, from 0 to 1; default: 0
-        -x	    frequency tolerance, range (0.0, 1.0]; default: 1
-        -y	    return the square root of each value; default: false
+	-h	this
+	-b	buffer size; default: 256 (samples)
+	-c	number of channels; default: 1
+	-s	sample rate; default: 44100 (Hz)
+	-p	A4 reference frequency; default: 440 (Hz)
+	-k	number of keys on the piano keyboard; default: 61
+	-r	reference key index (A4); default: 33
+	-a	average window (effectively a low-pass filter for the output); default: 0.04 (seconds; 0 to disable)
+	-t	noise gate threshold, from 0 to 1; default: 0
+	-x	frequency tolerance, range (0.0, 1.0]; default: 1
+	-y	return the square root of each value; default: false
+	-d	serialize as space-separated decimals; default: hex
 
 Description:
 Consumes an audio stream (1 channel, 32-bit float PCM)
