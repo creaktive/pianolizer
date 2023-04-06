@@ -27,6 +27,7 @@ void help() {
   cout << "\t-t\tnoise gate threshold, from 0 to 1; default: 0" << endl;
   cout << "\t-x\tfrequency tolerance, range (0.0, 1.0]; default: 1" << endl;
   cout << "\t-y\treturn the square root of each value; default: false" << endl;
+  cout << "\t-d\tserialize as space-separated decimals; default: hex" << endl;
   cout << endl;
   cout << "Description:" << endl;
   cout << "Consumes an audio stream (1 channel, 32-bit float PCM)" << endl;
@@ -52,9 +53,10 @@ int main(int argc, char *argv[]) {
   float threshold = 0.;
   double tolerance = 1.;
   bool squareRoot = false;
+  bool decimal = false;
 
   for (;;) {
-    switch (getopt(argc, argv, "b:c:s:p:k:r:a:t:x:yh")) {
+    switch (getopt(argc, argv, "b:c:s:p:k:r:a:t:x:ydh")) {
       case -1:
         break;
       case 'b':
@@ -86,6 +88,9 @@ int main(int argc, char *argv[]) {
         continue;
       case 'y':
         squareRoot = true;
+        continue;
+      case 'd':
+        decimal = true;
         continue;
       case 'h':
       default:
@@ -139,9 +144,15 @@ int main(int argc, char *argv[]) {
       for (unsigned i = 0; i < sdft.bands; i++) {
         const float step1 = squareRoot ? std::sqrt(output[i]) : output[i];
         const float step2 = step1 > threshold ? step1 : 0.;
-        const float step3 = clamp(step2, 0., 1.);
-        unsigned valueInt = static_cast<unsigned>(std::round(255. * step3));
-        stream << setfill('0') << setw(2) << hex << valueInt;
+        const float valueFloat = clamp(step2, 0., 1.);
+        if (decimal) {
+          stream << valueFloat;
+          if (i < sdft.bands - 1)
+            stream << ' ';
+        } else {
+          unsigned valueInt = static_cast<unsigned>(std::round(255. * valueFloat));
+          stream << setfill('0') << setw(2) << hex << valueInt;
+        }
       }
       cout << stream.str() << endl;
     }
