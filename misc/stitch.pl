@@ -186,7 +186,7 @@ sub main() {
     for (my $i = 0; $i <= $#$midi_matrix; $i++) {
         my @row = ($audio_matrix->[$i]->@*, $midi_matrix->[$i]->@*);
         if ($image) {
-            say $fh join(' ', map { sprintf '%.0f', $_ * 255 } @row);
+            say $fh join(' ', map { sprintf '%3d', $_ * 255 } @row);
         } else {
             say $fh join(' ', map { sprintf '%.06f', $_ } @row);
         }
