@@ -167,7 +167,8 @@ sub main() {
         'output=s'      => \my $output,
         'image'         => \my $image,
     );
-    $output ||= basename($input) =~ s{ \. \w+ $ }{.dat}rx;
+    my $extension = $image ? '.pgm' : '.dat';
+    $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
 
     my $midi_data = load_midi($input);
     my $midi_matrix = midi_matrix($midi_data);
