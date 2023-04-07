@@ -112,6 +112,7 @@ sub render_midi($filename) {
         PIANOTEQ,
         '--quiet',
         '--headless',
+        '--multicore'   => 'max',
         '--midi'        => $filename,
         '--preset'      => 'HB Steinway D Prelude',
         '--bit-depth'   => 32,
