@@ -107,8 +107,9 @@ sub midi_matrix($data) {
 
 sub render_midi($filename) {
     my $wav = File::Temp->new(SUFFIX => '.wav');
+    my $buffer;
 
-    run(
+    my @pianoteq = (
         PIANOTEQ,
         '--quiet',
         '--headless',
@@ -120,6 +121,8 @@ sub render_midi($filename) {
         '--rate'        => SAMPLE_RATE,
         '--wav'         => $wav->filename,
     );
+
+    run \@pianoteq => '>&' => \$buffer;
 
     my @ffmpeg = (
         FFMPEG,
