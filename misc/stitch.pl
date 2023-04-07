@@ -44,17 +44,28 @@ sub load_midi($filename) {
 
     my $tempo = 500_000;
     my $division = 960;
+    my $ticks = 0.0;
+    my $seconds = 0.0;
 
     my @midi_data = ();
     while (my $line = readline $pipe) {
         chomp $line;
         my @row = split m{\s*,\s*}x, $line;
-        $row[MIDI_TRACK] += 0;
+
+        # convert time to seconds
+        my $delta = $row[MIDI_TIME] - $ticks;
+        $seconds += $delta * ($tempo / $division / 1_000_000) if $delta;
+        $ticks = $row[MIDI_TIME];
+        $row[MIDI_TIME] = $seconds;
+
         $row[MIDI_TYPE] = uc $row[MIDI_TYPE];
-        push @midi_data, \@row;
-        if ($row[MIDI_TYPE] eq MIDI_NOTE_ON_C) {
+        if (($row[MIDI_TYPE] eq MIDI_NOTE_ON_C) && ($row[MIDI_VELOCITY] != 0)) {
             ++$on;
+        } elsif (($row[MIDI_TYPE] eq MIDI_NOTE_ON_C) && ($row[MIDI_VELOCITY] == 0)) {
+            ++$off;
         } elsif ($row[MIDI_TYPE] eq MIDI_NOTE_OFF_C) {
+            $row[MIDI_TYPE] = MIDI_NOTE_ON_C;
+            $row[MIDI_VELOCITY] = 0;
             ++$off;
         } elsif ($row[MIDI_TYPE] eq MIDI_HEADER) {
             # clock pulses per quarter note
@@ -63,16 +74,15 @@ sub load_midi($filename) {
             # seconds per quarter note
             $tempo = $row[MIDI_CHANNEL];
         }
-        # convert time to seconds
-        $row[MIDI_TIME] = $row[MIDI_TIME] * ($tempo / $division / 1_000_000);
+
+        push @midi_data, \@row;
     }
     close $pipe;
 
     @midi_data = sort {
         ($a->[MIDI_TIME] <=> $b->[MIDI_TIME]) || ($a->[MIDI_CHANNEL] <=> $b->[MIDI_CHANNEL])
     } grep {
-        (($_->[MIDI_TYPE] eq MIDI_NOTE_ON_C) || ($_->[MIDI_TYPE] eq MIDI_NOTE_OFF_C))
-        && !($_->[MIDI_NOTE] == 0 && $_->[MIDI_VELOCITY] == 0)
+        ($_->[MIDI_TYPE] eq MIDI_NOTE_ON_C) && !($_->[MIDI_NOTE] == 0 && $_->[MIDI_VELOCITY] == 0)
     } @midi_data;
 
     die "Unable to parse '$filename'\n" unless @midi_data;
@@ -87,17 +97,11 @@ sub midi_matrix($data) {
     my $length = $step * $data->[-1]->[MIDI_TIME];
     my @roll = ();
     my $frame = [(0) x KEYBOARD_SIZE];
-    for (my $clock = 0; $clock <= $length; $clock++) {
-        my $time = $clock / $step;
-        while ($data->[0]->[MIDI_TIME] < $time) {
+    for (my $ticks = 0; $ticks <= $length; $ticks++) {
+        my $seconds = $ticks / $step;
+        while ($data->[0]->[MIDI_TIME] < $seconds) {
             my $event = shift @$data;
-            if ($event->[MIDI_TYPE] eq MIDI_NOTE_ON_C) {
-                $frame->[$event->[MIDI_NOTE]] = $event->[MIDI_VELOCITY] / 127;
-            } elsif ($event->[MIDI_TYPE] eq MIDI_NOTE_OFF_C) {
-                $frame->[$event->[MIDI_NOTE]] = 0;
-            } else {
-                die "WTF\n";
-            }
+            $frame->[$event->[MIDI_NOTE]] = $event->[MIDI_VELOCITY] / 127;
         }
         push @roll, [@$frame];
     }
@@ -111,7 +115,6 @@ sub render_midi($filename) {
 
     my @pianoteq = (
         PIANOTEQ,
-        '--quiet',
         '--headless',
         '--multicore'   => 'max',
         '--midi'        => $filename,
@@ -147,7 +150,7 @@ sub render_midi($filename) {
         '-d',
     );
 
-    run \@ffmpeg => '|' => \@pianolizer => \my $buffer;
+    run \@ffmpeg => '|' => \@pianolizer => \$buffer;
 
     return $buffer;
 }
