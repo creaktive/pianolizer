@@ -7,6 +7,7 @@ use File::Temp ();
 use FindBin qw($RealBin);
 use Getopt::Long qw(GetOptions);
 use IPC::Run qw(run);
+use Scalar::Util qw(looks_like_number);
 
 # external commands
 use constant MIDICSV        => 'midicsv';
@@ -39,56 +40,58 @@ sub load_midi($filename) {
     open(my $pipe, '-|', @command)
         or die "Can't pipe from [midicsv '$filename']: $!\n";
 
-    my $on = 0;
-    my $off = 0;
+    my @midi_data = ();
+    while (my $line = readline $pipe) {
+        chomp $line;
+        my @row = split m{\s*,\s*}x, $line;
+        push @midi_data, \@row;
+    }
+    close $pipe;
+
+    my @midi_data_sorted = sort {
+        ($a->[MIDI_TIME] <=> $b->[MIDI_TIME]) || ($a->[MIDI_CHANNEL] <=> $b->[MIDI_CHANNEL])
+    } grep {
+        looks_like_number($_->[MIDI_TIME]) && looks_like_number($_->[MIDI_CHANNEL])
+    } @midi_data;
+    @midi_data = ();
 
     my $tempo = 500_000;
     my $division = 960;
     my $ticks = 0.0;
     my $seconds = 0.0;
 
-    my @midi_data = ();
-    while (my $line = readline $pipe) {
-        chomp $line;
-        my @row = split m{\s*,\s*}x, $line;
-
-        # convert time to seconds
-        my $delta = $row[MIDI_TIME] - $ticks;
-        $seconds += $delta * ($tempo / $division / 1_000_000) if $delta;
-        $ticks = $row[MIDI_TIME];
-        $row[MIDI_TIME] = $seconds;
-
-        $row[MIDI_TYPE] = uc $row[MIDI_TYPE];
-        if (($row[MIDI_TYPE] eq MIDI_NOTE_ON_C) && ($row[MIDI_VELOCITY] != 0)) {
-            ++$on;
-        } elsif (($row[MIDI_TYPE] eq MIDI_NOTE_ON_C) && ($row[MIDI_VELOCITY] == 0)) {
-            ++$off;
-        } elsif ($row[MIDI_TYPE] eq MIDI_NOTE_OFF_C) {
-            $row[MIDI_TYPE] = MIDI_NOTE_ON_C;
-            $row[MIDI_VELOCITY] = 0;
-            ++$off;
-        } elsif ($row[MIDI_TYPE] eq MIDI_HEADER) {
+    my $switch = {
+        MIDI_HEADER ,=> sub ($event) {
             # clock pulses per quarter note
-            $division = $row[MIDI_VELOCITY];
-        } elsif ($row[MIDI_TYPE] eq MIDI_TEMPO) {
+            $division = $event->[MIDI_VELOCITY];
+        },
+        MIDI_TEMPO ,=> sub ($event) {
             # seconds per quarter note
-            $tempo = $row[MIDI_CHANNEL];
+            $tempo = $event->[MIDI_CHANNEL];
+        },
+        MIDI_NOTE_ON_C ,=> sub ($event) {
+            push @midi_data, $event;
+        },
+        MIDI_NOTE_OFF_C ,=> sub ($event) {
+            $event->[MIDI_TYPE] = MIDI_NOTE_ON_C;
+            $event->[MIDI_VELOCITY] = 0;
+            push @midi_data, $event;
+        },
+    };
+
+    for my $event (@midi_data_sorted) {
+        # convert time to seconds
+        my $delta = $event->[MIDI_TIME] - $ticks;
+        $seconds += $delta * ($tempo / $division / 1_000_000) if $delta;
+        $ticks = $event->[MIDI_TIME];
+        $event->[MIDI_TIME] = $seconds;
+
+        if (my $cb = $switch->{uc($event->[MIDI_TYPE])}) {
+            $cb->($event);
         }
-
-        push @midi_data, \@row;
     }
-    close $pipe;
-
-    @midi_data = sort {
-        ($a->[MIDI_TIME] <=> $b->[MIDI_TIME]) || ($a->[MIDI_CHANNEL] <=> $b->[MIDI_CHANNEL])
-    } grep {
-        ($_->[MIDI_TYPE] eq MIDI_NOTE_ON_C) && !($_->[MIDI_NOTE] == 0 && $_->[MIDI_VELOCITY] == 0)
-    } @midi_data;
 
     die "Unable to parse '$filename'\n" unless @midi_data;
-    warn "Note on/off mismatch for $filename: $on NOTE_ON_C but $off NOTE_OFF_C found!\n"
-        if $on != $off;
-
     return \@midi_data;
 }
 
