@@ -49,9 +49,9 @@ sub load_midi($filename) {
     close $pipe;
 
     my @midi_data_sorted = sort {
-        ($a->[MIDI_TIME] <=> $b->[MIDI_TIME]) || ($a->[MIDI_CHANNEL] <=> $b->[MIDI_CHANNEL])
+        $a->[MIDI_TIME] <=> $b->[MIDI_TIME]
     } grep {
-        looks_like_number($_->[MIDI_TIME]) && looks_like_number($_->[MIDI_CHANNEL])
+        looks_like_number $_->[MIDI_TIME]
     } @midi_data;
     @midi_data = ();
 
