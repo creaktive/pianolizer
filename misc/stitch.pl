@@ -6,6 +6,7 @@ use File::Spec ();
 use File::Temp ();
 use FindBin qw($RealBin);
 use Getopt::Long qw(GetOptions);
+use IO::Compress::Xz qw(xz);
 use IPC::Run qw(run);
 use Scalar::Util qw(looks_like_number);
 
@@ -123,8 +124,8 @@ sub render_midi($filename) {
         '--headless',
         '--multicore'   => 'max',
         '--midi'        => $filename,
-        '--preset'      => 'HB Steinway D Prelude',
-        '--bit-depth'   => 32,
+        '--preset'      => 'HB Steinway Model D',
+        '--bit-depth'   => 16,
         '--mono',
         '--rate'        => SAMPLE_RATE,
         '--wav'         => $wav->filename,
@@ -148,6 +149,7 @@ sub render_midi($filename) {
         PIANOLIZER,
         '-a'            => BUFFER_SIZE / SAMPLE_RATE,
         '-b'            => BUFFER_SIZE,
+        '-c'            => 1,
         '-k'            => BINS,
         '-r'            => REFERENCE,
         '-s'            => SAMPLE_RATE,
@@ -177,6 +179,7 @@ sub main() {
         'input=s'       => \my $input,
         'output=s'      => \my $output,
         'image'         => \my $image,
+        'compress'      => \my $compress,
     );
     my $extension = $image ? '.pgm' : '.dat';
     $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
@@ -204,6 +207,12 @@ sub main() {
     }
 
     close $fh;
+
+    if ($compress) {
+        xz($output, $output . '.xz', Preset => 9)
+            && unlink($output);
+    }
+
     return 0;
 }
 
