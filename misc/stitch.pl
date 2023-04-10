@@ -18,7 +18,7 @@ use constant PIANOLIZER     => File::Spec->catfile($RealBin, '..', 'pianolizer')
 # params
 use constant SAMPLE_RATE    => 48_000;
 use constant BUFFER_SIZE    => 480;
-use constant BINS           => 115;
+use constant BINS           => 100;
 use constant REFERENCE      => 48;
 use constant KEYBOARD_SIZE  => 88;
 
@@ -137,7 +137,7 @@ sub render_midi($filename) {
         '-loglevel'     => 'fatal',
         '-i'            => $wav->filename,
         '-ac'           => 1,
-        '-af'           => 'asubcut=27,asupercut=20000',
+        # '-af'           => 'asubcut=27,asupercut=20000',
         '-ar'           => SAMPLE_RATE,
         '-f'            => 'f32le',
         '-c:a'          => 'pcm_f32le',
@@ -146,7 +146,7 @@ sub render_midi($filename) {
 
     my @pianolizer = (
         PIANOLIZER,
-        '-a'            => 0,
+        '-a'            => BUFFER_SIZE / SAMPLE_RATE,
         '-b'            => BUFFER_SIZE,
         '-k'            => BINS,
         '-r'            => REFERENCE,
