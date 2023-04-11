@@ -8,7 +8,7 @@ TEST_BINARY=test
 NATIVE_BINARY=pianolizer
 
 # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
-CFLAGS=-ffast-math -flto -std=c++14 \
+CFLAGS=-ffast-math -flto -std=c++14 -pedantic \
 	-Werror -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
 	-Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast \
 	-Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo \
