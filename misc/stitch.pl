@@ -106,8 +106,9 @@ sub midi_matrix($data) {
         while ($data->[0]->[MIDI_TIME] < $seconds) {
             my $event = shift @$data;
             my $note = $event->[MIDI_NOTE];
-            next if $note >= KEYBOARD_SIZE;
-            $frame->[$note] = $event->[MIDI_VELOCITY] / 127;
+            my $key = $note - 21;
+            next if $key >= KEYBOARD_SIZE;
+            $frame->[$key] = $event->[MIDI_VELOCITY] / 127;
         }
         push @roll, [@$frame];
     }
