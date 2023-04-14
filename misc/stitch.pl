@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use 5.036;
 
+use Digest::MD5 ();
 use File::Basename qw(basename);
 use File::Spec ();
 use File::Temp ();
@@ -116,28 +117,43 @@ sub midi_matrix($data) {
     return \@roll;
 }
 
+sub midi_digest($filename) {
+    open(my $fh, '<:raw', $filename)
+        or die "Can't read from $filename: $!\n";
+    my $md5 = Digest::MD5->new->addfile($fh);
+    close $fh;
+    return $md5->hexdigest;
+}
+
 sub render_midi($filename) {
-    my $wav = File::Temp->new(SUFFIX => '.wav');
+    my $digest = midi_digest($filename);
+    my $audio = File::Spec->catfile(File::Spec->tmpdir, $digest . '.flac');
     my $buffer;
 
-    my @pianoteq = (
-        PIANOTEQ,
-        '--headless',
-        '--multicore'   => 'max',
-        '--midi'        => $filename,
-        '--preset'      => 'HB Steinway Model D',
-        '--bit-depth'   => 16,
-        '--mono',
-        '--rate'        => SAMPLE_RATE,
-        '--wav'         => $wav->filename,
-    );
+    unless (-f $audio) {
+        my $tmp = $audio . '.tmp';
 
-    run \@pianoteq => '>&' => \$buffer;
+        my @pianoteq = (
+            PIANOTEQ,
+            '--headless',
+            '--multicore'   => 'max',
+            '--midi'        => $filename,
+            '--preset'      => 'HB Steinway Model D',
+            '--bit-depth'   => 16,
+            '--mono',
+            '--rate'        => SAMPLE_RATE,
+            '--flac'        => $tmp,
+        );
+
+        run \@pianoteq => '>&' => \$buffer;
+
+        rename $tmp => $audio;
+    }
 
     my @ffmpeg = (
         FFMPEG,
         '-loglevel'     => 'fatal',
-        '-i'            => $wav->filename,
+        '-i'            => $audio,
         '-ac'           => 1,
         # '-af'           => 'asubcut=27,asupercut=20000',
         '-ar'           => SAMPLE_RATE,
@@ -181,9 +197,14 @@ sub main() {
         'output=s'      => \my $output,
         'image'         => \my $image,
         'compress'      => \my $compress,
+        'overwrite'     => \my $overwrite,
     );
     my $extension = $image ? '.pgm' : '.dat';
     $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
+    if (!$overwrite && (-f $output || -f $output . '.xz')) {
+        warn "$output already exists!\n";
+        return 0;
+    }
 
     my $midi_data = load_midi($input);
     my $midi_matrix = midi_matrix($midi_data);
