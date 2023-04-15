@@ -122,32 +122,37 @@ sub midi_digest($filename) {
         or die "Can't read from $filename: $!\n";
     my $md5 = Digest::MD5->new->addfile($fh);
     close $fh;
-    return $md5->hexdigest;
+    return $md5;
 }
 
-sub render_midi($filename) {
-    my $digest = midi_digest($filename);
-    my $audio = File::Spec->catfile(File::Spec->tmpdir, $digest . '.flac');
-    my $buffer;
+sub render_midi($filename, $preset) {
+    my $dir = File::Spec->catdir(File::Spec->tmpdir, 'stitch');
+    mkdir $dir unless -d $dir;
 
+    my @synth_params = (
+        '--preset'      => $preset,
+        '--rate'        => SAMPLE_RATE,
+    );
+
+    my $digest = midi_digest($filename);
+    $digest->add(join('|', @synth_params));
+
+    my $audio = File::Spec->catfile($dir, $digest->hexdigest . '.flac');
     unless (-f $audio) {
         my $tmp = $audio . '.tmp';
 
         my @pianoteq = (
             PIANOTEQ,
             '--headless',
+            '--mono',
             '--multicore'   => 'max',
             '--midi'        => $filename,
-            '--preset'      => 'HB Steinway Model D',
-            '--bit-depth'   => 16,
-            '--mono',
-            '--rate'        => SAMPLE_RATE,
             '--flac'        => $tmp,
+            @synth_params,
         );
 
-        run \@pianoteq => '>&' => \$buffer;
-
-        rename $tmp => $audio;
+        run(\@pianoteq => '>&' => \my $buffer)
+            && rename($tmp => $audio);
     }
 
     my @ffmpeg = (
@@ -174,8 +179,7 @@ sub render_midi($filename) {
         '-d',
     );
 
-    run \@ffmpeg => '|' => \@pianolizer => \$buffer;
-
+    run \@ffmpeg => '|' => \@pianolizer => \my $buffer;
     return $buffer;
 }
 
@@ -198,6 +202,7 @@ sub main() {
         'image'         => \my $image,
         'compress'      => \my $compress,
         'overwrite'     => \my $overwrite,
+        'preset=s'      => \my $preset,
     );
     my $extension = $image ? '.pgm' : '.dat';
     $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
@@ -205,11 +210,12 @@ sub main() {
         warn "$output already exists!\n";
         return 0;
     }
+    $preset ||= 'HB Steinway Model D';
 
     my $midi_data = load_midi($input);
     my $midi_matrix = midi_matrix($midi_data);
 
-    my $audio_data = render_midi($input);
+    my $audio_data = render_midi($input, $preset);
     my $audio_matrix = pianolizer_matrix($audio_data);
 
     open(my $fh, '>', $output)
