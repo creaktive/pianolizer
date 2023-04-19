@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <title>oscillator test</title>
+  </head>
+  <body>
+    <script type="module">
+      /*
+      function init () {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+
+        const oscillatorNode = audioContext.createOscillator()
+        oscillatorNode.type = 'sine'
+
+        const gainNode = audioContext.createGain()
+
+        oscillatorNode.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        oscillatorNode.start()
+
+        function update () {
+          const currentTime = audioContext.currentTime
+          const level = (1 + Math.sin(currentTime * 20)) / 2
+          // gainNode.gain.setValueAtTime(level, currentTime)
+          gainNode.gain.value = level
+          setInterval(update, 1 / 128)
+        }
+
+        update()
+      }
+      */
+      function init () {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+
+        const oscillatorNode = audioContext.createOscillator()
+        oscillatorNode.frequency.value = 440.0
+        oscillatorNode.type = 'sine'
+
+        const lfoNode = audioContext.createOscillator()
+        lfoNode.frequency.value = 10.0
+        lfoNode.type = 'sine'
+
+        const gainNode = audioContext.createGain()
+        lfoNode.connect(gainNode.gain)
+
+        oscillatorNode.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        oscillatorNode.start()
+        lfoNode.start()
+      }
+
+      document.getElementById('play-toggle').onclick = () => init()
+    </script>
+    <button id="play-toggle">Play</button>
+  </body>
+</html>

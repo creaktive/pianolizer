@@ -169,7 +169,7 @@ sub render_midi($filename, $preset) {
 
     my @pianolizer = (
         PIANOLIZER,
-        '-a'            => BUFFER_SIZE / SAMPLE_RATE,
+        '-a'            => 0, # BUFFER_SIZE / SAMPLE_RATE,
         '-b'            => BUFFER_SIZE,
         '-c'            => 1,
         '-k'            => BINS,
