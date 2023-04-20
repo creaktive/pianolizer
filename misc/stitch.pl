@@ -7,7 +7,7 @@ use File::Spec ();
 use File::Temp ();
 use FindBin qw($RealBin);
 use Getopt::Long qw(GetOptions);
-use IO::Compress::Xz qw(xz);
+use IO::Compress::Bzip2 qw(bzip2);
 use IPC::Run qw(run);
 
 # external commands
@@ -201,7 +201,7 @@ sub main() {
     );
     my $extension = $image ? '.pgm' : '.dat';
     $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
-    if (!$overwrite && (-f $output || -f $output . '.xz')) {
+    if (!$overwrite && (-f $output || -f $output . '.bz2')) {
         warn "$output already exists!\n";
         return 0;
     }
@@ -232,7 +232,7 @@ sub main() {
     close $fh;
 
     if ($compress) {
-        xz($output, $output . '.xz', Preset => 9)
+        bzip2($output, $output . '.bz2')
             && unlink($output);
     }
 
