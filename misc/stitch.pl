@@ -9,7 +9,6 @@ use FindBin qw($RealBin);
 use Getopt::Long qw(GetOptions);
 use IO::Compress::Xz qw(xz);
 use IPC::Run qw(run);
-use Scalar::Util qw(looks_like_number);
 
 # external commands
 use constant MIDICSV        => 'midicsv';
@@ -35,6 +34,7 @@ use constant MIDI_VELOCITY  => 5;
 use constant MIDI_NOTE_ON_C => 'NOTE_ON_C';
 use constant MIDI_NOTE_OFF_C=> 'NOTE_OFF_C';
 use constant MIDI_HEADER    => 'HEADER';
+use constant MIDI_START_TRACK => 'START_TRACK';
 use constant MIDI_TEMPO     => 'TEMPO';
 
 sub load_midi($filename) {
@@ -43,20 +43,7 @@ sub load_midi($filename) {
         or die "Can't pipe from [midicsv '$filename']: $!\n";
 
     my @midi_data = ();
-    while (my $line = readline $pipe) {
-        chomp $line;
-        my @row = split m{\s*,\s*}x, $line;
-        push @midi_data, \@row;
-    }
-    close $pipe;
-
-    my @midi_data_sorted = sort {
-        $a->[MIDI_TIME] <=> $b->[MIDI_TIME]
-    } grep {
-        looks_like_number $_->[MIDI_TIME]
-    } @midi_data;
-    @midi_data = ();
-
+    my $tracks = 0;
     my $tempo = 500_000;
     my $division = 960;
     my $ticks = 0.0;
@@ -66,6 +53,10 @@ sub load_midi($filename) {
         MIDI_HEADER ,=> sub ($event) {
             # clock pulses per quarter note
             $division = $event->[MIDI_VELOCITY];
+        },
+        MIDI_START_TRACK ,=> sub ($event) {
+            die "Only one track per file is supported!\n"
+                if $tracks++;
         },
         MIDI_TEMPO ,=> sub ($event) {
             # seconds per quarter note
@@ -81,18 +72,22 @@ sub load_midi($filename) {
         },
     };
 
-    for my $event (@midi_data_sorted) {
-        # convert time to seconds
-        my $delta = $event->[MIDI_TIME] - $ticks;
-        $seconds += $delta * ($tempo / $division / 1_000_000) if $delta;
-        $ticks = $event->[MIDI_TIME];
-        $event->[MIDI_TIME] = $seconds;
+    while (my $line = readline $pipe) {
+        chomp $line;
+        my @event = split m{\s*,\s*}x, $line;
 
-        if (my $cb = $switch->{uc($event->[MIDI_TYPE])}) {
-            $cb->($event);
+        # convert time to seconds
+        my $delta = $event[MIDI_TIME] - $ticks;
+        $seconds += $delta * ($tempo / $division / 1_000_000) if $delta;
+        $ticks = $event[MIDI_TIME];
+        $event[MIDI_TIME] = $seconds;
+
+        if (my $cb = $switch->{uc($event[MIDI_TYPE])}) {
+            $cb->(\@event);
         }
     }
 
+    close $pipe;
     die "Unable to parse '$filename'\n" unless @midi_data;
     return \@midi_data;
 }
