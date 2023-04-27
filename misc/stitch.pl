@@ -92,7 +92,7 @@ sub load_midi($filename) {
     return \@midi_data;
 }
 
-sub midi_matrix($data) {
+sub midi_matrix($data, $velocity = 0) {
     my $step = SAMPLE_RATE / BUFFER_SIZE;
     my $length = $step * $data->[-1]->[MIDI_TIME];
     my @roll = ();
@@ -104,7 +104,9 @@ sub midi_matrix($data) {
             my $note = $event->[MIDI_NOTE];
             my $key = $note - 21;
             next if $key >= KEYBOARD_SIZE;
-            $frame->[$key] = $event->[MIDI_VELOCITY] / 127;
+            $frame->[$key] = $velocity
+                ? $event->[MIDI_VELOCITY] / 127
+                : !!$event->[MIDI_VELOCITY];
         }
         push @roll, [@$frame];
     }
@@ -198,6 +200,7 @@ sub main() {
         'compress'      => \my $compress,
         'overwrite'     => \my $overwrite,
         'preset=s'      => \my $preset,
+        'velocity'      => \my $velocity,
     );
     my $extension = $image ? '.pgm' : '.dat';
     $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
@@ -208,7 +211,7 @@ sub main() {
     $preset ||= 'HB Steinway Model D';
 
     my $midi_data = load_midi($input);
-    my $midi_matrix = midi_matrix($midi_data);
+    my $midi_matrix = midi_matrix($midi_data, $velocity);
 
     my $audio_data = render_midi($input, $preset);
     my $audio_matrix = pianolizer_matrix($audio_data);
