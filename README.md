@@ -125,6 +125,19 @@ A new string is emitted every 256 samples (adjustable with `-b` option); that am
 It should be trivial to convert the `pianolizer` output into a static spectrogram image (TODO).
 When using a microphone source on a Raspberry Pi, use [arecord](https://linux.die.net/man/1/arecord).
 
+### Desktop Linux
+
+On a desktop linux pc - without any 'native' gpios - it is possible to use an arduino that is running an [AdaLight (or compatible) sketch](https://github.com/hyperion-project/hyperion.ng/blob/master/assets/firmware/arduino/adalight/adalight.ino).
+Capturing and visualizing the audio that Pulse-Audio receives and pipes to it's speakers:
+
+```
+RATE=22050
+pacat --record --rate $RATE --device=alsa_output.pci-0000_00_1b.0.analog-stereo.monitor | \
+    ffmpeg -f s16le -ar $RATE -ac 2 -i - -f f32le -ar $RATE -ac 1 - | \
+    ./pianolizer -s $RATE -t 0.03 -a 0.02 | ./misc/hex2adalight.py /dev/ttyACM0
+```
+Note that [pacat](https://linux.die.net/man/1/pacat) also can directly convert to '--format float32le', but for some reason leaving this up to ffmpeg introduces less latency between notes beeing played and the visualization showing the corresponding keys.
+
 ### Raspberry Pi specific
 
 The included [Python script](misc/hex2ws281x.py) consumes the hexadecimal output of `pianolizer` and drives a WS2812B LED strip (depends on the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi-ws281x-python)).
