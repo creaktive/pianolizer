@@ -192,6 +192,29 @@ sub pianolizer_matrix($data) {
     return \@roll;
 }
 
+sub stitch($audio_matrix, $midi_matrix, $output, $image = 0, $compress = 0) {
+    open(my $fh, '>', $output)
+        or die "Can't write to $output: $!\n";
+
+    if ($image) {
+        printf $fh "P2\n%d\n%d\n255\n", BINS + KEYBOARD_SIZE, scalar(@$midi_matrix);
+    }
+
+    for (my $i = 0; $i <= $#$midi_matrix; $i++) {
+        my @row = ($audio_matrix->[$i]->@*, $midi_matrix->[$i]->@*);
+        say $fh $image
+            ? join(' ', map { sprintf '%3d', $_ * 255 } @row)
+            : join(' ', map { sprintf '%.06f', $_ } @row);
+    }
+
+    close $fh;
+
+    if ($compress) {
+        bzip2($output, $output . '.bz2')
+            && unlink($output);
+    }
+}
+
 sub main() {
     GetOptions(
         'input=s'       => \my $input,
@@ -216,28 +239,7 @@ sub main() {
     my $audio_data = render_midi($input, $preset);
     my $audio_matrix = pianolizer_matrix($audio_data);
 
-    open(my $fh, '>', $output)
-        or die "Can't write to $output: $!\n";
-
-    if ($image) {
-        printf $fh "P2\n%d\n%d\n255\n", BINS + KEYBOARD_SIZE, scalar(@$midi_matrix);
-    }
-
-    for (my $i = 0; $i <= $#$midi_matrix; $i++) {
-        my @row = ($audio_matrix->[$i]->@*, $midi_matrix->[$i]->@*);
-        if ($image) {
-            say $fh join(' ', map { sprintf '%3d', $_ * 255 } @row);
-        } else {
-            say $fh join(' ', map { sprintf '%.06f', $_ } @row);
-        }
-    }
-
-    close $fh;
-
-    if ($compress) {
-        bzip2($output, $output . '.bz2')
-            && unlink($output);
-    }
+    stitch($audio_matrix, $midi_matrix, $output, $image, $compress);
 
     return 0;
 }
