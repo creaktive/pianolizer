@@ -92,9 +92,10 @@ sub load_midi($filename) {
     return \@midi_data;
 }
 
-sub midi_matrix($data, $velocity = 0) {
+sub midi_matrix($data, $velocity = 0, $window = 1, $slide = 0) {
     my $step = SAMPLE_RATE / BUFFER_SIZE;
     my $length = $step * $data->[-1]->[MIDI_TIME];
+    my @window = ();
     my @roll = ();
     my $frame = [(0) x KEYBOARD_SIZE];
     for (my $ticks = 0; $ticks <= $length; $ticks++) {
@@ -108,7 +109,31 @@ sub midi_matrix($data, $velocity = 0) {
                 ? $event->[MIDI_VELOCITY] / 127
                 : !!$event->[MIDI_VELOCITY];
         }
-        push @roll, [@$frame];
+
+        push @window, [@$frame];
+        if (@window == $window) {
+            my $cframe = [(0) x KEYBOARD_SIZE];
+            for my $iframe (@window) {
+                for my $i (0 .. KEYBOARD_SIZE - 1) {
+                    $cframe->[$i] += $iframe->[$i];
+                }
+            }
+
+            for my $i (0 .. KEYBOARD_SIZE - 1) {
+                if ($velocity) {
+                    $cframe->[$i] /= $window;
+                } else {
+                    $cframe->[$i] = !!$cframe->[$i];
+                }
+            }
+
+            push @roll, $cframe;
+            if ($slide) {
+                shift @window;
+            } else {
+                @window = ();
+            }
+        }
     }
 
     return \@roll;
@@ -180,24 +205,34 @@ sub render_midi($filename, $preset) {
     return $buffer;
 }
 
-sub pianolizer_matrix($data) {
+sub pianolizer_matrix($data, $window = 1, $slide = 0) {
+    my @window = ();
     my @roll = ();
 
     for my $line (split m{\n}sx, $data) {
         chomp $line;
         my @frame = split m{\s+}x, $line;
-        push @roll, \@frame;
+
+        push @window, \@frame;
+        if (@window == $window) {
+            push @roll, [map { @$_ } @window];
+            if ($slide) {
+                shift @window;
+            } else {
+                @window = ();
+            }
+        }
     }
 
     return \@roll;
 }
 
-sub stitch($audio_matrix, $midi_matrix, $output, $image = 0, $compress = 0) {
+sub stitch($audio_matrix, $midi_matrix, $output, $image = 0, $compress = 0, $window = 1) {
     open(my $fh, '>', $output)
         or die "Can't write to $output: $!\n";
 
     if ($image) {
-        printf $fh "P2\n%d\n%d\n255\n", BINS + KEYBOARD_SIZE, scalar(@$midi_matrix);
+        printf $fh "P2\n%d\n%d\n255\n", ($window * BINS) + KEYBOARD_SIZE, scalar(@$midi_matrix);
     }
 
     for (my $i = 0; $i <= $#$midi_matrix; $i++) {
@@ -224,6 +259,8 @@ sub main() {
         'overwrite'     => \my $overwrite,
         'preset=s'      => \my $preset,
         'velocity'      => \my $velocity,
+        'window=i'      => \my $window,
+        'slide'         => \my $slide,
     );
     my $extension = $image ? '.pgm' : '.dat';
     $output ||= basename($input) =~ s{ \. \w+ $ }{$extension}rx;
@@ -232,14 +269,15 @@ sub main() {
         return 0;
     }
     $preset ||= 'HB Steinway Model D';
+    $window ||= 1;
 
     my $midi_data = load_midi($input);
-    my $midi_matrix = midi_matrix($midi_data, $velocity);
+    my $midi_matrix = midi_matrix($midi_data, $velocity, $window, $slide);
 
     my $audio_data = render_midi($input, $preset);
-    my $audio_matrix = pianolizer_matrix($audio_data);
+    my $audio_matrix = pianolizer_matrix($audio_data, $window, $slide);
 
-    stitch($audio_matrix, $midi_matrix, $output, $image, $compress);
+    stitch($audio_matrix, $midi_matrix, $output, $image, $compress, $window);
 
     return 0;
 }
