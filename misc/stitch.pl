@@ -43,7 +43,6 @@ sub load_midi($filename) {
         or die "Can't pipe from [midicsv '$filename']: $!\n";
 
     my @midi_data = ();
-    my $tracks = 0;
     my $tempo = 500_000;
     my $division = 960;
     my $ticks = 0.0;
@@ -54,10 +53,9 @@ sub load_midi($filename) {
             # clock pulses per quarter note
             $division = $event->[MIDI_VELOCITY];
         },
-        MIDI_START_TRACK ,=> sub ($event) {
-            die "Only one track per file is supported!\n"
-                if $tracks++;
-        },
+        # MIDI_START_TRACK ,=> sub ($event) {
+        #     $seconds = $ticks = 0.0;
+        # },
         MIDI_TEMPO ,=> sub ($event) {
             # seconds per quarter note
             $tempo = $event->[MIDI_CHANNEL];
@@ -72,22 +70,32 @@ sub load_midi($filename) {
         },
     };
 
+    my @midi_events;
     while (my $line = readline $pipe) {
         chomp $line;
         my @event = split m{\s*,\s*}x, $line;
+        $event[MIDI_TYPE] = uc $event[MIDI_TYPE];
+        push @midi_events, \@event;
+    }
+    close $pipe;
 
+    @midi_events = sort {
+        ($a->[MIDI_TIME] <=> $b->[MIDI_TIME]) ||
+        ($a->[MIDI_TRACK] <=> $b->[MIDI_TRACK])
+    } @midi_events;
+
+    for my $event (@midi_events) {
         # convert time to seconds
-        my $delta = $event[MIDI_TIME] - $ticks;
+        my $delta = $event->[MIDI_TIME] - $ticks;
         $seconds += $delta * ($tempo / $division / 1_000_000) if $delta;
-        $ticks = $event[MIDI_TIME];
-        $event[MIDI_TIME] = $seconds;
+        $ticks = $event->[MIDI_TIME];
+        $event->[MIDI_TIME] = $seconds;
 
-        if (my $cb = $switch->{uc($event[MIDI_TYPE])}) {
-            $cb->(\@event);
+        if (my $cb = $switch->{$event->[MIDI_TYPE]}) {
+            $cb->($event);
         }
     }
 
-    close $pipe;
     die "Unable to parse '$filename'\n" unless @midi_data;
     return \@midi_data;
 }
