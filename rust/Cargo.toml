@@ -6,6 +6,10 @@ description = "Real-time music spectral analysis using Sliding Discrete Fourier 
 license = "MIT"
 authors = ["Stanislaw Pusep"]
 
+[[bin]]
+name = "benchmark"
+required-features = ["default-moving-average"]
+
 [features]
 default = ["default-moving-average"]
 default-moving-average = []

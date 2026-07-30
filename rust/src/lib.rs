@@ -57,18 +57,25 @@ impl RingBuffer {
     /// Read a value at a given position behind the current write head.
     /// `position=0` returns the most recently written value.
     pub fn read(&self, position: u32) -> f32 {
-        let abs_pos = (self.index + (!position as usize)) & self.mask;
+        let abs_pos = self.index.wrapping_sub((position + 1) as usize) & self.mask;
         self.buffer[abs_pos]
+    }
+}
+
+impl Default for RingBuffer {
+    /// Creates a ring buffer with 1024 capacity.
+    fn default() -> Self {
+        Self::new(1024)
     }
 }
 
 // ─── Complex Number ───────────────────────────────────────────────────────────
 // In-place arithmetic — no allocations per operation.
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Complex {
-    pub re: f64,
-    pub im: f64,
+    re: f64,
+    im: f64,
 }
 
 impl Complex {
@@ -96,9 +103,33 @@ impl Complex {
         )
     }
 
+    /// Returns the real part.
+    pub fn re(&self) -> f64 {
+        self.re
+    }
+
+    /// Returns the imaginary part.
+    pub fn im(&self) -> f64 {
+        self.im
+    }
+
     /// Squared magnitude (norm).
     pub fn norm(&self) -> f64 {
         self.re * self.re + self.im * self.im
+    }
+}
+
+impl std::ops::Add for &Complex {
+    type Output = Complex;
+    fn add(self, other: Self) -> Complex {
+        Complex::new(self.re + other.re, self.im + other.im)
+    }
+}
+
+impl std::ops::Sub for &Complex {
+    type Output = Complex;
+    fn sub(self, other: Self) -> Complex {
+        Complex::new(self.re - other.re, self.im - other.im)
     }
 }
 
@@ -110,9 +141,9 @@ pub struct DFTBin {
     r: f64,
     coeff: Complex,
     dft: Complex,
-    pub k: u32,
-    pub n: u32,
-    pub reference_amplitude: f64,
+    k: u32,
+    n: u32,
+    reference_amplitude: f64,
 }
 
 impl DFTBin {
@@ -135,11 +166,21 @@ impl DFTBin {
             total_power: 0.0,
             r,
             coeff,
-            dft: Complex::new(0.0, 0.0),
+            dft: Complex::default(),
             k,
             n,
             reference_amplitude: 1.0,
         }
+    }
+
+    /// Returns the frequency bin index k.
+    pub fn k(&self) -> u32 {
+        self.k
+    }
+
+    /// Returns the sample count N.
+    pub fn n(&self) -> u32 {
+        self.n
     }
 
     /// Update the DFT bin with a new sample pair.
@@ -155,12 +196,12 @@ impl DFTBin {
 
     /// Root Mean Square.
     pub fn rms(&self) -> f64 {
-        (self.total_power / self.n as f64).sqrt()
+        (self.total_power / self.n() as f64).sqrt()
     }
 
     /// Amplitude spectrum in volts RMS.
     pub fn amplitude_spectrum(&self) -> f64 {
-        std::f64::consts::SQRT_2 * self.dft.norm().sqrt() / self.n as f64
+        std::f64::consts::SQRT_2 * self.dft.norm().sqrt() / self.n() as f64
     }
 
     /// Normalized amplitude spectrum, always in `[0.0, 1.0]`.
@@ -175,6 +216,13 @@ impl DFTBin {
     /// Logarithmic unit decibels.
     pub fn logarithmic_unit_decibels(&self) -> f64 {
         20.0 * (self.amplitude_spectrum() / self.reference_amplitude).log10()
+    }
+}
+
+impl Default for DFTBin {
+    /// Creates a default DFTBin for A4 (k=17, n=1704 at 44100Hz).
+    fn default() -> Self {
+        Self::new(17, 1704)
     }
 }
 
@@ -337,7 +385,7 @@ pub trait Tuning {
     fn sample_rate(&self) -> u32;
     fn bands(&self) -> usize;
     fn frequency_and_bandwidth_to_k_and_n(&self, frequency: f64, bandwidth: f64) -> TuningValues;
-    fn mapping(&self) -> Vec<TuningValues>;
+    fn mapping(&self) -> &[TuningValues];
 }
 
 // ─── Piano Tuning ─────────────────────────────────────────────────────────────
@@ -349,18 +397,23 @@ pub struct PianoTuning {
     reference_key: i32,
     pitch_fork: f64,
     tolerance: f64,
+    mapping_cache: Vec<TuningValues>,
 }
 
 impl PianoTuning {
     /// Creates a new PianoTuning.
     pub fn new(sample_rate: u32, keys_num: u32, reference_key: u32, pitch_fork: f64, tolerance: f64) -> Self {
-        Self {
+        let mut tuning = Self {
             sample_rate,
             bands: keys_num as usize,
             reference_key: reference_key as i32,
             pitch_fork,
             tolerance,
-        }
+            mapping_cache: Vec::new(),
+        };
+        // Compute and cache the mapping eagerly so it's done once.
+        tuning.mapping_cache = tuning.compute_mapping();
+        tuning
     }
 
     /// Creates a default PianoTuning for the given sample rate (61 keys, A4=440Hz).
@@ -371,6 +424,16 @@ impl PianoTuning {
     /// Convert a piano key index to its fundamental frequency in Hz.
     pub fn key_to_freq(&self, key: f64) -> f64 {
         self.pitch_fork * 2.0f64.powf((key - self.reference_key as f64) / 12.0)
+    }
+
+    fn compute_mapping(&self) -> Vec<TuningValues> {
+        let mut output = Vec::with_capacity(self.bands);
+        for key in 0..self.bands {
+            let frequency = self.key_to_freq(key as f64);
+            let bandwidth = 2.0 * (self.key_to_freq(key as f64 + 0.5 * self.tolerance) - frequency);
+            output.push(self.frequency_and_bandwidth_to_k_and_n(frequency, bandwidth));
+        }
+        output
     }
 }
 
@@ -401,14 +464,8 @@ impl Tuning for PianoTuning {
         TuningValues { k, n }
     }
 
-    fn mapping(&self) -> Vec<TuningValues> {
-        let mut output = Vec::with_capacity(self.bands);
-        for key in 0..self.bands {
-            let frequency = self.key_to_freq(key as f64);
-            let bandwidth = 2.0 * (self.key_to_freq(key as f64 + 0.5 * self.tolerance) - frequency);
-            output.push(self.frequency_and_bandwidth_to_k_and_n(frequency, bandwidth));
-        }
-        output
+    fn mapping(&self) -> &[TuningValues] {
+        &self.mapping_cache
     }
 }
 
@@ -425,9 +482,10 @@ impl SlidingDFTNoMA {
     pub fn new(tuning: &dyn Tuning) -> Self {
         let bands = tuning.bands();
         let mut bins = Vec::with_capacity(bands);
+        let mapping = tuning.mapping();
         let mut max_n = 0u32;
 
-        for band in tuning.mapping().iter() {
+        for band in mapping.iter() {
             bins.push(DFTBin::new(band.k, band.n));
             if band.n > max_n {
                 max_n = band.n;
@@ -441,8 +499,8 @@ impl SlidingDFTNoMA {
         }
     }
 
-    /// Process a batch of samples. Returns squared amplitude values in `[0.0, 1.0]`.
-    pub fn process(&mut self, samples: &[f32]) -> Vec<f32> {
+    /// Process a batch of samples. Returns a reference to the latest amplitude values in `[0.0, 1.0]`.
+    pub fn process(&mut self, samples: &[f32]) -> &[f32] {
         let bins_num = self.bins.len();
 
         for i in 0..samples.len() {
@@ -450,24 +508,61 @@ impl SlidingDFTNoMA {
             self.ring_buffer.write(current_sample);
 
             for band in 0..bins_num {
-                let previous_sample = self.ring_buffer.read(self.bins[band].n);
+                let previous_sample = self.ring_buffer.read(self.bins[band].n());
                 self.bins[band].update(previous_sample as f64, current_sample as f64);
                 self.levels[band] = self.bins[band].normalized_amplitude_spectrum() as f32;
             }
         }
 
-        self.levels.clone()
+        &self.levels
     }
 }
 
 // ─── Sliding DFT — With Moving Average (compiled with default feature) ────────
 
 #[cfg(feature = "default-moving-average")]
+pub enum MovingAverageType {
+    Fast(FastMovingAverage),
+    Heavy(HeavyMovingAverage),
+}
+
+#[cfg(feature = "default-moving-average")]
+impl MovingAverage for MovingAverageType {
+    fn update(&mut self, levels: &[f32]) {
+        match self {
+            Self::Fast(ma) => ma.update(levels),
+            Self::Heavy(ma) => ma.update(levels),
+        }
+    }
+
+    fn read(&self, n: usize) -> f32 {
+        match self {
+            Self::Fast(ma) => ma.read(n),
+            Self::Heavy(ma) => ma.read(n),
+        }
+    }
+
+    fn average_window_in_seconds(&self) -> f32 {
+        match self {
+            Self::Fast(ma) => ma.average_window_in_seconds(),
+            Self::Heavy(ma) => ma.average_window_in_seconds(),
+        }
+    }
+
+    fn set_average_window_in_seconds(&mut self, value: f32) {
+        match self {
+            Self::Fast(ma) => ma.set_average_window_in_seconds(value),
+            Self::Heavy(ma) => ma.set_average_window_in_seconds(value),
+        }
+    }
+}
+
+#[cfg(feature = "default-moving-average")]
 pub struct SlidingDFT {
     bins: Vec<DFTBin>,
     levels: Vec<f32>,
     ring_buffer: RingBuffer,
-    moving_average: Option<Box<dyn MovingAverage>>,
+    moving_average: Option<MovingAverageType>,
 }
 
 #[cfg(feature = "default-moving-average")]
@@ -478,23 +573,24 @@ impl SlidingDFT {
         let bands = tuning.bands();
         let sample_rate = tuning.sample_rate();
         let mut bins = Vec::with_capacity(bands);
+        let mapping = tuning.mapping();
         let mut max_n = 0u32;
 
-        for band in tuning.mapping().iter() {
+        for band in mapping.iter() {
             bins.push(DFTBin::new(band.k, band.n));
             if band.n > max_n {
                 max_n = band.n;
             }
         }
 
-        let moving_average: Option<Box<dyn MovingAverage>> = if max_average_window_in_seconds > 0.0 {
-            Some(Box::new(HeavyMovingAverage::new(
+        let moving_average: Option<MovingAverageType> = if max_average_window_in_seconds > 0.0 {
+            Some(MovingAverageType::Heavy(HeavyMovingAverage::new(
                 bands as u32,
                 sample_rate,
                 (sample_rate as f64 * max_average_window_in_seconds).round() as u32,
             )))
         } else if max_average_window_in_seconds < 0.0 {
-            Some(Box::new(FastMovingAverage::new(bands as u32, sample_rate)))
+            Some(MovingAverageType::Fast(FastMovingAverage::new(bands as u32, sample_rate)))
         } else {
             None
         };
@@ -508,7 +604,7 @@ impl SlidingDFT {
     }
 
     /// Process a batch of samples with an optional average window override.
-    pub fn process(&mut self, samples: &[f32], average_window_in_seconds: f64) -> Vec<f32> {
+    pub fn process(&mut self, samples: &[f32], average_window_in_seconds: f64) -> &[f32] {
         if let Some(ref mut ma) = self.moving_average {
             ma.set_average_window_in_seconds(average_window_in_seconds as f32);
         }
@@ -520,7 +616,7 @@ impl SlidingDFT {
             self.ring_buffer.write(current_sample);
 
             for band in 0..bins_num {
-                let previous_sample = self.ring_buffer.read(self.bins[band].n);
+                let previous_sample = self.ring_buffer.read(self.bins[band].n());
                 self.bins[band].update(previous_sample as f64, current_sample as f64);
                 self.levels[band] = self.bins[band].normalized_amplitude_spectrum() as f32;
             }
@@ -539,6 +635,6 @@ impl SlidingDFT {
             }
         }
 
-        self.levels.clone()
+        &self.levels
     }
 }
