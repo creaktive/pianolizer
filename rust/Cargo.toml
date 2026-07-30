@@ -6,5 +6,8 @@ description = "Real-time music spectral analysis using Sliding Discrete Fourier 
 license = "MIT"
 authors = ["Stanislaw Pusep"]
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [[bin]]
 name = "benchmark"

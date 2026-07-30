@@ -569,3 +569,71 @@ impl SlidingDFT {
         &self.levels
     }
 }
+
+// ─── FFI Exports for WebAssembly ──────────────────────────────────────────────
+// C-style interface for JavaScript interop. No wasm-bindgen or external deps.
+
+/// Opaque handle to a SlidingDFT instance.
+pub struct PianolizerHandle {
+    pub sdft: SlidingDFT,
+}
+
+#[no_mangle]
+pub extern "C" fn pianolizer_new(
+    sample_rate: u32,
+    keys_num: u32,
+    reference_key: u32,
+    pitch_fork: f64,
+    tolerance: f64,
+) -> *mut PianolizerHandle {
+    let tuning = PianoTuning::new(sample_rate, keys_num, reference_key, pitch_fork, tolerance);
+    // Fast moving average by default (matches current Emscripten behavior)
+    let sdft = SlidingDFT::new(&tuning, -1.0);
+    Box::into_raw(Box::new(PianolizerHandle { sdft }))
+}
+
+#[no_mangle]
+pub extern "C" fn pianolizer_process(
+    ptr: *mut PianolizerHandle,
+    samples: *const f32,
+    samples_len: usize,
+    output: *mut f32,
+    average_window_in_seconds: f64,
+) -> usize {
+    unsafe {
+        let handle = &mut *ptr;
+        let samples = std::slice::from_raw_parts(samples, samples_len);
+        let levels = handle.sdft.process(samples, average_window_in_seconds);
+        let len = levels.len();
+        let out = std::slice::from_raw_parts_mut(output, len);
+        out.copy_from_slice(levels);
+        len
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn pianolizer_delete(ptr: *mut PianolizerHandle) {
+    if !ptr.is_null() {
+        unsafe { drop(Box::from_raw(ptr)) }
+    }
+}
+
+/// Allocate `size` f32 values in WASM linear memory. Returns pointer or null on failure.
+#[no_mangle]
+pub extern "C" fn pianolizer_alloc(size: usize) -> *mut f32 {
+    if size == 0 {
+        return std::ptr::null_mut();
+    }
+    let mut buf = Vec::<f32>::with_capacity(size);
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
+    ptr
+}
+
+/// Free a buffer previously allocated by `pianolizer_alloc`.
+#[no_mangle]
+pub extern "C" fn pianolizer_free(ptr: *mut f32, size: usize) {
+    if !ptr.is_null() && size > 0 {
+        unsafe { drop(Vec::from_raw_parts(ptr, size, size)) }
+    }
+}

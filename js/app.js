@@ -2,6 +2,7 @@ import { PianoKeyboard, Spectrogram, Palette } from './visualization.js'
 
 const HEIGHT = 'height'
 const PUREJS = 'purejs'
+const RUST = 'rust'
 const PITCHFORK = 'pitchfork'
 const TOLERANCE = 'tolerance'
 
@@ -55,26 +56,40 @@ async function setupAudio () {
   if (audioContext === undefined) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
-    // Thanks for nothing, Firefox!
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1572644
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1636121
-    // https://github.com/WebAudio/web-audio-api-v2/issues/109#issuecomment-756634198
-    const fetchText = url => fetch(url).then(response => response.text())
-    const pianolizerImplementation = searchParams.has(PUREJS)
-      ? 'js/pianolizer.js'
-      : 'js/pianolizer-wasm.js'
-    const modules = await Promise.all([
-      fetchText(pianolizerImplementation),
-      fetchText('js/pianolizer-worklet.js')
-    ])
-    const blob = new Blob(modules, { type: 'application/javascript' })
-    await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
+    const useRust = searchParams.has(RUST) || !searchParams.has(PUREJS)
+    const usePureJS = searchParams.has(PUREJS)
 
-    const processorOptions = {
-      pitchFork: parseFloat(searchParams.get(PITCHFORK)) || 440.0,
-      tolerance: parseFloat(searchParams.get(TOLERANCE)) || 1.0
+    if (useRust && !usePureJS) {
+      // Rust WASM path: fetch .wasm binary and pass ArrayBuffer via processorOptions
+      const wasmResponse = await fetch('js/pianolizer-rust.wasm')
+      const wasmBytes = await wasmResponse.arrayBuffer()
+      await audioContext.audioWorklet.addModule('js/pianolizer-rust-worklet.js')
+
+      const processorOptions = {
+        wasmBytes,
+        pitchFork: parseFloat(searchParams.get(PITCHFORK)) || 440.0,
+        tolerance: parseFloat(searchParams.get(TOLERANCE)) || 1.0
+      }
+      pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-rust-worklet', { processorOptions })
+    } else {
+      // PureJS or legacy Emscripten path (blob-based)
+      const fetchText = url => fetch(url).then(response => response.text())
+      const pianolizerImplementation = usePureJS
+        ? 'js/pianolizer.js'
+        : 'js/pianolizer-wasm.js'
+      const modules = await Promise.all([
+        fetchText(pianolizerImplementation),
+        fetchText('js/pianolizer-worklet.js')
+      ])
+      const blob = new Blob(modules, { type: 'application/javascript' })
+      await audioContext.audioWorklet.addModule(URL.createObjectURL(blob))
+
+      const processorOptions = {
+        pitchFork: parseFloat(searchParams.get(PITCHFORK)) || 440.0,
+        tolerance: parseFloat(searchParams.get(TOLERANCE)) || 1.0
+      }
+      pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet', { processorOptions })
     }
-    pianolizer = new AudioWorkletNode(audioContext, 'pianolizer-worklet', { processorOptions })
     pianolizer.port.onmessage = event => {
       // TODO: use SharedArrayBuffer for syncing levels
       levels.set(event.data)

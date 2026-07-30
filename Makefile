@@ -16,10 +16,10 @@ CFLAGS=-ffast-math -flto -std=c++14 -pedantic \
 	#-fsanitize=address
 	#-Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wundef
 
-all: $(NATIVE_BINARY) $(WASM_TARGET)
+all: $(NATIVE_BINARY) $(WASM_TARGET) rust-wasm
 
 clean:
-	$(RM) -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY)
+	$(RM) -f $(WASM_TARGET) $(TEST_BINARY) $(NATIVE_BINARY) js/pianolizer-rust.wasm
 
 emscripten: $(WASM_TARGET)
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
@@ -53,6 +53,7 @@ $(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
 
 RUST_TEST_TARGET=rust/target
 RUST_BENCHMARK_TARGET=rust/target/release/benchmark
+RUST_WASM_TARGET=js/pianolizer-rust.wasm
 
 rust-test:
 	cd rust && cargo test
@@ -64,4 +65,9 @@ rust-benchmark: $(RUST_BENCHMARK_TARGET)
 $(RUST_BENCHMARK_TARGET):
 	cd rust && cargo build --release --bin benchmark
 
-.PHONY: rust-test rust-benchmark
+rust-wasm: $(RUST_WASM_TARGET)
+$(RUST_WASM_TARGET): rust/src/lib.rs rust/Cargo.toml
+	cd rust && cargo build --target wasm32-unknown-unknown --release
+	wasm-gc rust/target/wasm32-unknown-unknown/release/pianolizer.wasm $(RUST_WASM_TARGET) 2>/dev/null || cp rust/target/wasm32-unknown-unknown/release/pianolizer.wasm $(RUST_WASM_TARGET)
+
+all: $(NATIVE_BINARY) $(WASM_TARGET) rust-wasm
