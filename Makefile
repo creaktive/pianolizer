@@ -50,3 +50,18 @@ $(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
 		-o $(NATIVE_BINARY) \
 		cpp/main.cpp
 	$(STRIP) $(NATIVE_BINARY)
+
+RUST_TEST_TARGET=rust/target
+RUST_BENCHMARK_TARGET=rust/target/release/benchmark
+
+rust-test:
+	cd rust && cargo test
+	cd rust && cargo test --no-default-features
+
+rust-benchmark: $(RUST_BENCHMARK_TARGET)
+	cargo run --release --manifest-path rust/Cargo.toml --bin benchmark
+
+$(RUST_BENCHMARK_TARGET):
+	cd rust && cargo build --release --bin benchmark
+
+.PHONY: rust-test rust-benchmark

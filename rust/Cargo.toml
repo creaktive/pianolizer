@@ -1,0 +1,11 @@
+[package]
+name = "pianolizer"
+version = "0.1.0"
+edition = "2021"
+description = "Real-time music spectral analysis using Sliding Discrete Fourier Transform"
+license = "MIT"
+authors = ["Stanislaw Pusep"]
+
+[features]
+default = ["default-moving-average"]
+default-moving-average = []
