@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn piano_tuning_mapping() {
         let tuning = PianoTuning::with_defaults(44100);
-        let m = tuning.mapping();
+        let m = &tuning.mapping_cache;
         assert_eq!(m.len(), 61, "should have 61 keys");
         assert_eq!(m[0].k, 17, "C2 k");
         assert_eq!(m[0].n, 11462, "C2 N");
@@ -155,14 +155,13 @@ mod tests {
     fn piano_tuning_mapping_cached() {
         let tuning = PianoTuning::with_defaults(44100);
         // Call mapping multiple times — should return the same cached slice, not recompute.
-        let m1 = tuning.mapping();
-        let m2 = tuning.mapping();
+        let m1 = &tuning.mapping_cache;
+        let m2 = &tuning.mapping_cache;
         assert!(std::ptr::eq(m1.as_ptr(), m2.as_ptr()), "mapping should be cached");
     }
 
-    // ─── SlidingDFTNoMA Tests (no default features) ────────────────────────────
+    // ─── SlidingDFTNoMA Tests ──────────────────────────────────────────────────
 
-    #[cfg(not(feature = "default-moving-average"))]
     mod no_ma_tests {
         use super::*;
 
@@ -178,7 +177,7 @@ mod tests {
                 let phase = frequency * t;
                 let value = match wave_type {
                     OscillatorType::Sine => phase.sin(),
-                    OscillatorType::Sawtooth => (2.0 * phase.fract() - 1.0),
+                    OscillatorType::Sawtooth => 2.0 * phase.fract() - 1.0,
                     OscillatorType::Square => if phase.fract() < 0.5 { 1.0 } else { -1.0 },
                 };
                 buffer.push(value as f32);
@@ -209,9 +208,8 @@ mod tests {
         }
     }
 
-    // ─── SlidingDFT Tests (with default features) ──────────────────────────────
+    // ─── SlidingDFT Tests ──────────────────────────────────────────────────────
 
-    #[cfg(feature = "default-moving-average")]
     mod ma_tests {
         use super::*;
 
@@ -227,7 +225,7 @@ mod tests {
                 let phase = frequency * t;
                 let value = match wave_type {
                     OscillatorType::Sine => phase.sin(),
-                    OscillatorType::Sawtooth => (2.0 * phase.fract() - 1.0),
+                    OscillatorType::Sawtooth => 2.0 * phase.fract() - 1.0,
                     OscillatorType::Square => if phase.fract() < 0.5 { 1.0 } else { -1.0 },
                 };
                 buffer.push(value as f32);
@@ -306,7 +304,9 @@ mod tests {
     #[derive(Clone, Copy)]
     enum OscillatorType {
         Sine,
+        #[allow(dead_code)]
         Sawtooth,
+        #[allow(dead_code)]
         Square,
     }
 }

@@ -2,7 +2,7 @@
 //!
 //! Detects 61 piano keys (C2–C7) from audio input and outputs normalized amplitude values in `[0.0, 1.0]`.
 //!
-//! # Example (requires `default-moving-average` feature)
+//! # Example
 //! ```ignore
 //! use pianolizer::{PianoTuning, SlidingDFT};
 //!
@@ -143,7 +143,6 @@ pub struct DFTBin {
     dft: Complex,
     k: u32,
     n: u32,
-    reference_amplitude: f64,
 }
 
 impl DFTBin {
@@ -169,7 +168,6 @@ impl DFTBin {
             dft: Complex::default(),
             k,
             n,
-            reference_amplitude: 1.0,
         }
     }
 
@@ -213,10 +211,7 @@ impl DFTBin {
         }
     }
 
-    /// Logarithmic unit decibels.
-    pub fn logarithmic_unit_decibels(&self) -> f64 {
-        20.0 * (self.amplitude_spectrum() / self.reference_amplitude).log10()
-    }
+
 }
 
 impl Default for DFTBin {
@@ -238,7 +233,6 @@ pub trait MovingAverage {
 // ─── Fast Moving Average (cfg-gated) ──────────────────────────────────────────
 // Exponential approximation of the moving average — minimal memory.
 
-#[cfg(feature = "default-moving-average")]
 pub struct FastMovingAverage {
     channels: usize,
     sample_rate: u32,
@@ -247,7 +241,6 @@ pub struct FastMovingAverage {
     sum: Vec<f32>,
 }
 
-#[cfg(feature = "default-moving-average")]
 impl FastMovingAverage {
     pub fn new(channels: u32, sample_rate: u32) -> Self {
         Self {
@@ -268,7 +261,6 @@ impl FastMovingAverage {
     }
 }
 
-#[cfg(feature = "default-moving-average")]
 impl MovingAverage for FastMovingAverage {
     fn update(&mut self, levels: &[f32]) {
         self.update_average_window();
@@ -301,7 +293,6 @@ impl MovingAverage for FastMovingAverage {
 // ─── Heavy Moving Average (cfg-gated) ─────────────────────────────────────────
 // Proper implementation using RingBuffers per channel — more memory, exact average.
 
-#[cfg(feature = "default-moving-average")]
 pub struct HeavyMovingAverage {
     channels: usize,
     sample_rate: u32,
@@ -311,7 +302,6 @@ pub struct HeavyMovingAverage {
     history: Vec<RingBuffer>,
 }
 
-#[cfg(feature = "default-moving-average")]
 impl HeavyMovingAverage {
     pub fn new(channels: u32, sample_rate: u32, max_window: u32) -> Self {
         let channels = channels as usize;
@@ -340,7 +330,6 @@ impl HeavyMovingAverage {
     }
 }
 
-#[cfg(feature = "default-moving-average")]
 impl MovingAverage for HeavyMovingAverage {
     fn update(&mut self, levels: &[f32]) {
         for n in 0..self.channels {
@@ -381,23 +370,16 @@ pub struct TuningValues {
     pub n: u32,
 }
 
-pub trait Tuning {
-    fn sample_rate(&self) -> u32;
-    fn bands(&self) -> usize;
-    fn frequency_and_bandwidth_to_k_and_n(&self, frequency: f64, bandwidth: f64) -> TuningValues;
-    fn mapping(&self) -> &[TuningValues];
-}
-
 // ─── Piano Tuning ─────────────────────────────────────────────────────────────
 // Maps 61 piano keys (C2–C7) to DFT parameters based on equal temperament.
 
 pub struct PianoTuning {
-    sample_rate: u32,
-    bands: usize,
+    pub sample_rate: u32,
+    pub bands: usize,
     reference_key: i32,
     pitch_fork: f64,
     tolerance: f64,
-    mapping_cache: Vec<TuningValues>,
+    pub mapping_cache: Vec<TuningValues>,
 }
 
 impl PianoTuning {
@@ -437,15 +419,7 @@ impl PianoTuning {
     }
 }
 
-impl Tuning for PianoTuning {
-    fn sample_rate(&self) -> u32 {
-        self.sample_rate
-    }
-
-    fn bands(&self) -> usize {
-        self.bands
-    }
-
+impl PianoTuning {
     fn frequency_and_bandwidth_to_k_and_n(&self, frequency: f64, bandwidth: f64) -> TuningValues {
         let mut n = (self.sample_rate as f64 / bandwidth).floor() as u32;
         let k = (frequency / bandwidth).floor() as u32;
@@ -463,10 +437,6 @@ impl Tuning for PianoTuning {
         }
         TuningValues { k, n }
     }
-
-    fn mapping(&self) -> &[TuningValues] {
-        &self.mapping_cache
-    }
 }
 
 // ─── Sliding DFT — No Moving Average (compiled with --no-default-features) ────
@@ -479,10 +449,10 @@ pub struct SlidingDFTNoMA {
 
 impl SlidingDFTNoMA {
     /// Creates a new SlidingDFT without moving average.
-    pub fn new(tuning: &dyn Tuning) -> Self {
-        let bands = tuning.bands();
+    pub fn new(tuning: &PianoTuning) -> Self {
+        let bands = tuning.bands;
         let mut bins = Vec::with_capacity(bands);
-        let mapping = tuning.mapping();
+        let mapping = &tuning.mapping_cache;
         let mut max_n = 0u32;
 
         for band in mapping.iter() {
@@ -518,62 +488,23 @@ impl SlidingDFTNoMA {
     }
 }
 
-// ─── Sliding DFT — With Moving Average (compiled with default feature) ────────
+// ─── Sliding DFT — With Moving Average ────────────────────────────────────────
 
-#[cfg(feature = "default-moving-average")]
-pub enum MovingAverageType {
-    Fast(FastMovingAverage),
-    Heavy(HeavyMovingAverage),
-}
-
-#[cfg(feature = "default-moving-average")]
-impl MovingAverage for MovingAverageType {
-    fn update(&mut self, levels: &[f32]) {
-        match self {
-            Self::Fast(ma) => ma.update(levels),
-            Self::Heavy(ma) => ma.update(levels),
-        }
-    }
-
-    fn read(&self, n: usize) -> f32 {
-        match self {
-            Self::Fast(ma) => ma.read(n),
-            Self::Heavy(ma) => ma.read(n),
-        }
-    }
-
-    fn average_window_in_seconds(&self) -> f32 {
-        match self {
-            Self::Fast(ma) => ma.average_window_in_seconds(),
-            Self::Heavy(ma) => ma.average_window_in_seconds(),
-        }
-    }
-
-    fn set_average_window_in_seconds(&mut self, value: f32) {
-        match self {
-            Self::Fast(ma) => ma.set_average_window_in_seconds(value),
-            Self::Heavy(ma) => ma.set_average_window_in_seconds(value),
-        }
-    }
-}
-
-#[cfg(feature = "default-moving-average")]
 pub struct SlidingDFT {
     bins: Vec<DFTBin>,
     levels: Vec<f32>,
     ring_buffer: RingBuffer,
-    moving_average: Option<MovingAverageType>,
+    moving_average: Option<Box<dyn MovingAverage>>,
 }
 
-#[cfg(feature = "default-moving-average")]
 impl SlidingDFT {
     /// Creates a new SlidingDFT.
     /// `max_average_window_in_seconds`: positive → HeavyMovingAverage, negative → FastMovingAverage, zero → disabled.
-    pub fn new(tuning: &dyn Tuning, max_average_window_in_seconds: f64) -> Self {
-        let bands = tuning.bands();
-        let sample_rate = tuning.sample_rate();
+    pub fn new(tuning: &PianoTuning, max_average_window_in_seconds: f64) -> Self {
+        let bands = tuning.bands;
+        let sample_rate = tuning.sample_rate;
         let mut bins = Vec::with_capacity(bands);
-        let mapping = tuning.mapping();
+        let mapping = &tuning.mapping_cache;
         let mut max_n = 0u32;
 
         for band in mapping.iter() {
@@ -583,14 +514,14 @@ impl SlidingDFT {
             }
         }
 
-        let moving_average: Option<MovingAverageType> = if max_average_window_in_seconds > 0.0 {
-            Some(MovingAverageType::Heavy(HeavyMovingAverage::new(
+        let moving_average: Option<Box<dyn MovingAverage>> = if max_average_window_in_seconds > 0.0 {
+            Some(Box::new(HeavyMovingAverage::new(
                 bands as u32,
                 sample_rate,
                 (sample_rate as f64 * max_average_window_in_seconds).round() as u32,
             )))
         } else if max_average_window_in_seconds < 0.0 {
-            Some(MovingAverageType::Fast(FastMovingAverage::new(bands as u32, sample_rate)))
+            Some(Box::new(FastMovingAverage::new(bands as u32, sample_rate)))
         } else {
             None
         };
