@@ -24,7 +24,7 @@ clean:
 emscripten: $(WASM_TARGET)
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 	$(EMCC) $(CFLAGS) $(DEFS) \
-		-O3 \
+		-O3 -std=c++17 \
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
 		-s BINARYEN_ASYNC_COMPILATION=0 \
@@ -36,7 +36,7 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 
 $(TEST_BINARY): cpp/test.cpp cpp/pianolizer.hpp
 	$(CPP) $(CFLAGS) $(DEFS) \
-		-Ofast \
+		-O3 \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp \
 		-lgtest -lgtest_main
@@ -45,7 +45,7 @@ $(TEST_BINARY): cpp/test.cpp cpp/pianolizer.hpp
 
 $(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
 	$(CPP) $(CFLAGS) $(DEFS) \
-		-Ofast \
+		-O3 \
 		-o $(NATIVE_BINARY) \
 		cpp/main.cpp
 	$(STRIP) $(NATIVE_BINARY)

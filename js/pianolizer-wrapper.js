@@ -30,7 +30,7 @@ class Pianolizer {
     this.samplesBuffer = Module._malloc(this.samplesBufferSize * Float32Array.BYTES_PER_ELEMENT)
     const startOffset = this.samplesBuffer / Float32Array.BYTES_PER_ELEMENT
     const endOffset = startOffset + this.samplesBufferSize
-    this.samplesView = Module.HEAPF32.subarray(startOffset, endOffset)
+    this.samplesView = new Float32Array(wasmMemory.buffer, startOffset * 4, this.samplesBufferSize)
   }
 
   process (samples, averageWindowInSeconds = 0) {
