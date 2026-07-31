@@ -28,6 +28,7 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
 		-s BINARYEN_ASYNC_COMPILATION=0 \
+		-s ENVIRONMENT="worker" \
 		-s EXPORTED_FUNCTIONS="['_malloc']" \
 		-s SINGLE_FILE=1 \
 		-s WASM=1 \
