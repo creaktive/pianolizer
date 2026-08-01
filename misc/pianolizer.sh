@@ -4,7 +4,7 @@
 for card in /proc/asound/*/pcm?c/info; do
     card=$(echo "${card}" | cut -d / -f 4)
     if [[ "${card}" != card* ]]; then
-        CAPTURE_DEVICE="${card}"
+        CAPTURE_DEVICE="plughw:${card}"
     fi
 done
 
@@ -28,13 +28,13 @@ fi
 
 # This configuration is specific to seeed-voicecard
 # https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html
-if [ "${CAPTURE_DEVICE}" = "seeed2micvoicec" ]; then
+if [ "${CAPTURE_DEVICE}" = "plughw:seeed2micvoicec" ]; then
     # a reasonable microphone setting for seeed-voicecard
     amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
 fi
 
 # start pianolizer
-arecord -c ${CHANNELS} -D "plughw:${CAPTURE_DEVICE}" -f FLOAT_LE -r ${SAMPLE_RATE} -t raw \
+arecord -c ${CHANNELS} -D ${CAPTURE_DEVICE} -f FLOAT_LE -r ${SAMPLE_RATE} -t raw \
     | ./pianolizer -b ${BUFFER_SIZE} -c ${CHANNELS} -k ${KEYS} -s ${SAMPLE_RATE} -t ${THRESHOLD} \
     | misc/hex2ws281x.py --keys ${KEYS} --skip ${SKIP} --gpio ${GPIO}
 

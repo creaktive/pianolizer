@@ -1,4 +1,4 @@
-# CAPTURE_DEVICE=seeed2micvoicec
+# CAPTURE_DEVICE=plughw:seeed2micvoicec
 # SAMPLE_RATE=24000
 # CHANNELS=2
 # BUFFER_SIZE=240

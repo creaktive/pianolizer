@@ -15,7 +15,7 @@
 
 #define SAMPLE_RATE     8000  // 8 kHz is enough for doorbells
 #define BUFFER_SIZE     64    // 8 ms latency at 8 kHz
-#define BANDWIDTH       2.    // Hz
+#define BANDWIDTH       5.    // Hz
 #define AVERAGE_WINDOW  .05   // seconds
 #define SENSITIVITY     .1    // threshold for detection
 #define COOLDOWN        10    // seconds
@@ -32,7 +32,7 @@ class DoorbellTuning : public Tuning {
 
     const vector<tuningValues> mapping() {
       return {
-        frequencyAndBandwidthToKAndN(727., BANDWIDTH),
+        frequencyAndBandwidthToKAndN(730., BANDWIDTH),
         frequencyAndBandwidthToKAndN(977., BANDWIDTH),
       };
     }
@@ -110,7 +110,7 @@ void monitorDoorbell() {
   snd_pcm_hw_params_t *params;
   int err;
 
-  if ((err = snd_pcm_open(&handle, "default", SND_PCM_STREAM_CAPTURE, 0)) < 0)
+  if ((err = snd_pcm_open(&handle, "plug:dsnoop", SND_PCM_STREAM_CAPTURE, 0)) < 0)
     throw runtime_error("Cannot open audio device: " + string(snd_strerror(err)));
 
   snd_pcm_hw_params_alloca(&params);
