@@ -8,8 +8,10 @@
 #include <thread>
 #include <unistd.h>
 
+#ifndef DEBUG
 #include <alsa/asoundlib.h>
 #include <curl/curl.h>
+#endif
 
 #include "pianolizer.hpp"
 
@@ -24,26 +26,21 @@
 using namespace std;
 
 class DoorbellTuning : public Tuning {
-  public:
-    DoorbellTuning(
-      const unsigned sampleRate_
-    ) : Tuning{ sampleRate_, 2 }
-    {}
+public:
+  DoorbellTuning(const unsigned sampleRate_) : Tuning{sampleRate_, 2} {}
 
-    const vector<tuningValues> mapping() {
-      return {
+  const vector<tuningValues> mapping() {
+    return {
         frequencyAndBandwidthToKAndN(730., BANDWIDTH),
         frequencyAndBandwidthToKAndN(977., BANDWIDTH),
-      };
-    }
+    };
+  }
 };
 
 volatile sig_atomic_t alarmTriggered = 0;
 volatile sig_atomic_t shouldExit = 0;
 
-void alarmHandler(int sig) {
-  alarmTriggered = 0;
-}
+void alarmHandler(int sig) { alarmTriggered = 0; }
 
 void alarmReset() {
   alarmTriggered = 1;
@@ -51,9 +48,55 @@ void alarmReset() {
   alarm(COOLDOWN);
 }
 
-void signalHandler(int sig) {
-  shouldExit = 1;
-}
+void signalHandler(int sig) { shouldExit = 1; }
+
+class AudioSource {
+public:
+  virtual ~AudioSource() = default;
+  virtual ssize_t read(float *buffer, size_t frames) = 0;
+};
+
+#ifndef DEBUG
+class AlsaSource : public AudioSource {
+private:
+  snd_pcm_t *handle;
+
+public:
+  AlsaSource(const char *device) {
+    int err;
+    snd_pcm_hw_params_t *params;
+
+    if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_CAPTURE, 0)) < 0)
+      throw runtime_error("Cannot open audio device: " +
+                          string(snd_strerror(err)));
+
+    snd_pcm_hw_params_alloca(&params);
+    snd_pcm_hw_params_any(handle, params);
+    snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
+    snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_FLOAT_LE);
+    snd_pcm_hw_params_set_channels(handle, params, 1);
+    snd_pcm_hw_params_set_rate(handle, params, SAMPLE_RATE, 0);
+
+    if ((err = snd_pcm_hw_params(handle, params)) < 0)
+      throw runtime_error("Cannot set hardware parameters: " +
+                          string(snd_strerror(err)));
+
+    snd_pcm_prepare(handle);
+  }
+
+  ~AlsaSource() override { snd_pcm_close(handle); }
+
+  ssize_t read(float *buffer, size_t frames) override {
+    int err = snd_pcm_readi(handle, buffer, frames);
+    if (err < 0) {
+      err = snd_pcm_recover(handle, err, 0);
+      if (err < 0)
+        throw runtime_error("Read error: " + string(snd_strerror(err)));
+      return 0;
+    }
+    return err;
+  }
+};
 
 void pushNotification(const string message) {
   cerr << message << endl;
@@ -69,22 +112,16 @@ void pushNotification(const string message) {
     struct curl_httppost *lastptr = NULL;
 
     // Private key
-    curl_formadd(&formpost, &lastptr,
-      CURLFORM_COPYNAME, "k",
-      CURLFORM_COPYCONTENTS, PUSHSAFER_KEY,
-      CURLFORM_END);
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "k",
+                 CURLFORM_COPYCONTENTS, PUSHSAFER_KEY, CURLFORM_END);
 
     // Critical priority
-    curl_formadd(&formpost, &lastptr,
-      CURLFORM_COPYNAME, "pr",
-      CURLFORM_COPYCONTENTS, "2",
-      CURLFORM_END);
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "pr",
+                 CURLFORM_COPYCONTENTS, "2", CURLFORM_END);
 
     // Message
-    curl_formadd(&formpost, &lastptr,
-      CURLFORM_COPYNAME, "m",
-      CURLFORM_COPYCONTENTS, message.c_str(),
-      CURLFORM_END);
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "m",
+                 CURLFORM_COPYCONTENTS, message.c_str(), CURLFORM_END);
 
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 
@@ -94,36 +131,41 @@ void pushNotification(const string message) {
     curl_easy_cleanup(curl);
   }).detach();
 }
+#else
+class FileSource : public AudioSource {
+private:
+  FILE *fp;
 
-void monitorDoorbell() {
+public:
+  explicit FileSource(const char *path) {
+    fp = fopen(path, "rb");
+    if (!fp)
+      throw runtime_error("Cannot open audio file: " + string(path));
+  }
+
+  ~FileSource() override { fclose(fp); }
+
+  ssize_t read(float *buffer, size_t frames) override {
+    return fread(buffer, sizeof(float), frames, fp);
+  }
+};
+
+void pushNotification(const string message) {
+  cerr << message << endl;
+  shouldExit = 1;
+}
+#endif
+
+void monitorDoorbell(AudioSource &source) {
   // pushNotification("TEST");
 
   // Sliding DFT setup
-  auto sdft = SlidingDFT(make_shared<DoorbellTuning>(SAMPLE_RATE), -AVERAGE_WINDOW);
+  auto sdft =
+      SlidingDFT(make_shared<DoorbellTuning>(SAMPLE_RATE), -AVERAGE_WINDOW);
 
   size_t len;
   vector<float> input(BUFFER_SIZE);
   const float *output = nullptr;
-
-  // ALSA setup
-  snd_pcm_t *handle;
-  snd_pcm_hw_params_t *params;
-  int err;
-
-  if ((err = snd_pcm_open(&handle, "plug:dsnoop", SND_PCM_STREAM_CAPTURE, 0)) < 0)
-    throw runtime_error("Cannot open audio device: " + string(snd_strerror(err)));
-
-  snd_pcm_hw_params_alloca(&params);
-  snd_pcm_hw_params_any(handle, params);
-  snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-  snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_FLOAT_LE);
-  snd_pcm_hw_params_set_channels(handle, params, 1);
-  snd_pcm_hw_params_set_rate(handle, params, SAMPLE_RATE, 0);
-
-  if ((err = snd_pcm_hw_params(handle, params)) < 0)
-    throw runtime_error("Cannot set hardware parameters: " + string(snd_strerror(err)));
-
-  snd_pcm_prepare(handle);
 
   // Signal handling
   signal(SIGALRM, alarmHandler);
@@ -131,21 +173,21 @@ void monitorDoorbell() {
   signal(SIGTERM, signalHandler);
 
   while (!shouldExit) {
-    if ((err = snd_pcm_readi(handle, input.data(), BUFFER_SIZE)) != BUFFER_SIZE) {
-      if (err < 0) {
-        err = snd_pcm_recover(handle, err, 0);
-        if (err < 0)
-          throw runtime_error("Read error: " + string(snd_strerror(err)));
-      }
+    if ((len = source.read(input.data(), BUFFER_SIZE)) != BUFFER_SIZE) {
+      if (len < 0)
+        throw runtime_error("Read returned error");
       continue;
     }
 
-    if ((output = sdft.process(input.data(), BUFFER_SIZE, AVERAGE_WINDOW)) == nullptr)
+    if ((output = sdft.process(input.data(), BUFFER_SIZE, AVERAGE_WINDOW)) ==
+        nullptr)
       throw runtime_error("sdft.process() returned nothing");
 
-    if (alarmTriggered) continue;
+    if (alarmTriggered)
+      continue;
 
-    // cout << fixed << setprecision(3) << output[0] << "\t" << output[1] << endl;
+    // cout << fixed << setprecision(3) << output[0] << "\t" << output[1] <<
+    // endl;
     if (output[0] >= SENSITIVITY) {
       alarmReset();
       pushNotification("DOWNSTAIRS DOORBELL");
@@ -155,14 +197,21 @@ void monitorDoorbell() {
     }
   }
 
-  snd_pcm_close(handle);
   alarm(0);
 }
 
 int main(int argc, char *argv[]) {
+#ifndef DEBUG
+  const char *device = (argc > 1) ? argv[1] : "plug:dsnoop";
+  AlsaSource source(device);
+#else
+  const char *file = (argc > 1) ? argv[1] : "doorbell.raw";
+  FileSource source(file);
+#endif
+
   try {
-    monitorDoorbell();
-  } catch (const exception& e) {
+    monitorDoorbell(source);
+  } catch (const exception &e) {
     cerr << "ERROR: " << e.what() << endl;
     return EXIT_FAILURE;
   }
