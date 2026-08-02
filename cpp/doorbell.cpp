@@ -18,7 +18,7 @@
 #define SAMPLE_RATE     8000  // 8 kHz is enough for doorbells
 #define BUFFER_SIZE     64    // 8 ms latency at 8 kHz
 #define BANDWIDTH       5.    // Hz
-#define AVERAGE_WINDOW  .05   // seconds
+#define AVERAGE_WINDOW  1.    // seconds - capture full melody pattern across bursts
 #define SENSITIVITY     .1    // threshold for detection
 #define COOLDOWN        10    // seconds
 #define PUSHSAFER_KEY   "<YOUR_PRIVATE_KEY>"
@@ -27,12 +27,14 @@ using namespace std;
 
 class DoorbellTuning : public Tuning {
 public:
-  DoorbellTuning(const unsigned sampleRate_) : Tuning{sampleRate_, 2} {}
+  DoorbellTuning(const unsigned sampleRate_) : Tuning{sampleRate_, 4} {}
 
   const vector<tuningValues> mapping() {
     return {
-        frequencyAndBandwidthToKAndN(730., BANDWIDTH),
-        frequencyAndBandwidthToKAndN(977., BANDWIDTH),
+      frequencyAndBandwidthToKAndN(570., BANDWIDTH), // downstairs, low
+      frequencyAndBandwidthToKAndN(732., BANDWIDTH), // downstairs, high
+      frequencyAndBandwidthToKAndN(489., BANDWIDTH), // upstairs, low
+      frequencyAndBandwidthToKAndN(978., BANDWIDTH), // upstairs, high
     };
   }
 };
@@ -67,8 +69,7 @@ public:
     snd_pcm_hw_params_t *params;
 
     if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_CAPTURE, 0)) < 0)
-      throw runtime_error("Cannot open audio device: " +
-                          string(snd_strerror(err)));
+      throw runtime_error("Cannot open audio device: " + string(snd_strerror(err)));
 
     snd_pcm_hw_params_alloca(&params);
     snd_pcm_hw_params_any(handle, params);
@@ -78,8 +79,7 @@ public:
     snd_pcm_hw_params_set_rate(handle, params, SAMPLE_RATE, 0);
 
     if ((err = snd_pcm_hw_params(handle, params)) < 0)
-      throw runtime_error("Cannot set hardware parameters: " +
-                          string(snd_strerror(err)));
+      throw runtime_error("Cannot set hardware parameters: " + string(snd_strerror(err)));
 
     snd_pcm_prepare(handle);
   }
@@ -112,16 +112,13 @@ void pushNotification(const string message) {
     struct curl_httppost *lastptr = NULL;
 
     // Private key
-    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "k",
-                 CURLFORM_COPYCONTENTS, PUSHSAFER_KEY, CURLFORM_END);
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "k", CURLFORM_COPYCONTENTS, PUSHSAFER_KEY, CURLFORM_END);
 
     // Critical priority
-    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "pr",
-                 CURLFORM_COPYCONTENTS, "2", CURLFORM_END);
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "pr", CURLFORM_COPYCONTENTS, "2", CURLFORM_END);
 
     // Message
-    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "m",
-                 CURLFORM_COPYCONTENTS, message.c_str(), CURLFORM_END);
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "m", CURLFORM_COPYCONTENTS, message.c_str(), CURLFORM_END);
 
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 
@@ -139,8 +136,7 @@ private:
 public:
   explicit FileSource(const char *path) {
     fp = fopen(path, "rb");
-    if (!fp)
-      throw runtime_error("Cannot open audio file: " + string(path));
+    if (!fp) throw runtime_error("Cannot open audio file: " + string(path));
   }
 
   ~FileSource() override { fclose(fp); }
@@ -160,10 +156,9 @@ void monitorDoorbell(AudioSource &source) {
   // pushNotification("TEST");
 
   // Sliding DFT setup
-  auto sdft =
-      SlidingDFT(make_shared<DoorbellTuning>(SAMPLE_RATE), -AVERAGE_WINDOW);
+  auto sdft = SlidingDFT(make_shared<DoorbellTuning>(SAMPLE_RATE), -AVERAGE_WINDOW);
 
-  size_t len;
+  ssize_t len;
   vector<float> input(BUFFER_SIZE);
   const float *output = nullptr;
 
@@ -174,24 +169,23 @@ void monitorDoorbell(AudioSource &source) {
 
   while (!shouldExit) {
     if ((len = source.read(input.data(), BUFFER_SIZE)) != BUFFER_SIZE) {
-      if (len < 0)
-        throw runtime_error("Read returned error");
+      if (len == 0) break;
+      if (len < 0) throw runtime_error("Read returned error");
       continue;
     }
 
-    if ((output = sdft.process(input.data(), BUFFER_SIZE, AVERAGE_WINDOW)) ==
-        nullptr)
+    if ((output = sdft.process(input.data(), BUFFER_SIZE, AVERAGE_WINDOW)) == nullptr)
       throw runtime_error("sdft.process() returned nothing");
 
-    if (alarmTriggered)
-      continue;
+    if (alarmTriggered) continue;
 
-    // cout << fixed << setprecision(3) << output[0] << "\t" << output[1] <<
-    // endl;
-    if (output[0] >= SENSITIVITY) {
+    float d_bins = output[0] + output[1];  // 568 + 730 Hz - downstairs melody
+    float u_bins = output[2] + output[3];  // 489 + 978 Hz - upstairs melody
+
+    if (d_bins >= SENSITIVITY && d_bins > u_bins) {
       alarmReset();
       pushNotification("DOWNSTAIRS DOORBELL");
-    } else if (output[1] >= SENSITIVITY) {
+    } else if (u_bins >= SENSITIVITY && u_bins > d_bins) {
       alarmReset();
       pushNotification("UPSTAIRS DOORBELL");
     }
