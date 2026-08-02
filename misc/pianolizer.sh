@@ -8,6 +8,13 @@ for card in /proc/asound/*/pcm?c/info; do
     fi
 done
 
+# This configuration is specific to seeed-voicecard
+# https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html
+if [[ "${CAPTURE_DEVICE}" == *seeed* ]]; then
+    # a reasonable microphone setting for seeed-voicecard
+    amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
+fi
+
 SAMPLE_RATE=24000
 CHANNELS=2
 BUFFER_SIZE=240
@@ -24,13 +31,6 @@ fi
 if [ -z "${CAPTURE_DEVICE}" ]; then
     echo "No capture device"
     exit 1
-fi
-
-# This configuration is specific to seeed-voicecard
-# https://www.seeedstudio.com/ReSpeaker-2-Mics-Pi-HAT.html
-if [ "${CAPTURE_DEVICE}" = "plughw:seeed2micvoicec" ]; then
-    # a reasonable microphone setting for seeed-voicecard
-    amixer -c ${CAPTURE_DEVICE} sset 'ADC PCM' 100%
 fi
 
 # start pianolizer
