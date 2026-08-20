@@ -1,8 +1,11 @@
 import json
+from pathlib import Path
+
+MODULE_DIR = Path(__file__).resolve().parent
 
 class Palette(object):
     def __init__(self, palette_file):
-        with open(palette_file, 'r') as file:
+        with open(MODULE_DIR / palette_file, 'r') as file:
             self.palette = json.loads(file.read())
 
         self.paletteLength = len(self.palette)
