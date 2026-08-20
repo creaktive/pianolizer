@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <climits>
 #include <cstring>
 #include <iomanip>
@@ -33,13 +34,6 @@ void help() {
   cout << "Consumes an audio stream (1 channel, 32-bit float PCM)" << endl;
   cout << "and emits the volume levels of 61 notes (from C2 to C7) as a hex string." << endl;
   exit(EXIT_SUCCESS);
-}
-
-// C++17's <algorithm> header has this already
-double clamp(double d, double min, double max);
-double clamp(double d, double min, double max) {
-  const double t = d < min ? min : d;
-  return t > max ? max : t;
 }
 
 int main(int argc, char *argv[]) {
@@ -144,7 +138,7 @@ int main(int argc, char *argv[]) {
       for (unsigned i = 0; i < sdft.bands; i++) {
         const float step1 = squareRoot ? std::sqrt(output[i]) : output[i];
         const float step2 = step1 > threshold ? step1 : 0.;
-        const float valueFloat = clamp(step2, 0., 1.);
+        const float valueFloat = std::clamp(step2, 0.f, 1.f);
         if (decimal) {
           stream << valueFloat;
           if (i < sdft.bands - 1)

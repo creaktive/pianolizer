@@ -1,5 +1,5 @@
 /*
- * g++ -Ofast -std=c++14 -o doorbell doorbell.cpp -lasound -lcurl -pthread
+ * g++ -Ofast -std=c++17 -o doorbell doorbell.cpp -lasound -lcurl -pthread
  */
 #include <iomanip>
 #include <iostream>

@@ -1,5 +1,5 @@
 CPP=g++
-EMCC=emcc
+EMCC=em++
 RM=rm
 STRIP=strip
 
@@ -8,7 +8,7 @@ TEST_BINARY=test
 NATIVE_BINARY=pianolizer
 
 # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
-CFLAGS=-ffast-math -flto -std=c++14 -pedantic \
+CFLAGS=-O3 -ffast-math -flto -std=c++17 -pedantic \
 	-Werror -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
 	-Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast \
 	-Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo \
@@ -24,7 +24,6 @@ clean:
 emscripten: $(WASM_TARGET)
 $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 	$(EMCC) $(CFLAGS) $(DEFS) \
-		-O3 -std=c++17 \
 		--bind \
 		--post-js js/pianolizer-wrapper.js \
 		-s BINARYEN_ASYNC_COMPILATION=0 \
@@ -35,18 +34,21 @@ $(WASM_TARGET): cpp/pianolizer.cpp cpp/pianolizer.hpp js/pianolizer-wrapper.js
 		-o $(WASM_TARGET) \
 		cpp/pianolizer.cpp
 
+GTEST_CXXFLAGS ?= $(shell pkg-config --cflags gtest 2>/dev/null)
+GTEST_LDFLAGS ?= $(shell pkg-config --libs gtest 2>/dev/null)
+
 $(TEST_BINARY): cpp/test.cpp cpp/pianolizer.hpp
 	$(CPP) $(CFLAGS) $(DEFS) \
-		-O3 \
+		$(GTEST_CXXFLAGS) \
 		-o $(TEST_BINARY) \
 		cpp/test.cpp \
-		-lgtest -lgtest_main
+		-lgtest_main \
+		$(GTEST_LDFLAGS)
 	$(STRIP) $(TEST_BINARY)
 	./$(TEST_BINARY)
 
 $(NATIVE_BINARY): cpp/main.cpp cpp/pianolizer.hpp
 	$(CPP) $(CFLAGS) $(DEFS) \
-		-O3 \
 		-o $(NATIVE_BINARY) \
 		cpp/main.cpp
 	$(STRIP) $(NATIVE_BINARY)

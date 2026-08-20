@@ -1,5 +1,5 @@
 /*
- * g++ -Ofast -std=c++14 -DDISABLE_MOVING_AVERAGE -o benchmark benchmark.cpp
+ * g++ -Ofast -std=c++17 -DDISABLE_MOVING_AVERAGE -o benchmark benchmark.cpp
  */
 #include <chrono>
 #include <iostream>
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
       }
     }
     if (errors)
-      return EXIT_FAILURE;      
+      return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
